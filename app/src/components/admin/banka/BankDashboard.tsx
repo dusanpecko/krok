@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { CalendarDays, Search, Filter, Loader2, CheckCircle2 } from 'lucide-react'
+import { CalendarDays, Search, Filter, Loader2, CheckCircle2, Sparkles, RefreshCw } from 'lucide-react'
 import TransactionList from './TransactionList'
 import MatchDonorDialog from './MatchDonorDialog'
-import { matchTransaction, bulkMatchAnonymous } from '@/app/admin/banka/actions'
+import SuggestedMatchesDialog from './SuggestedMatchesDialog'
+import { matchTransaction, bulkMatchAnonymous, syncFioTransactions } from '@/app/admin/banka/actions'
 
 interface BankDashboardProps {
   years: number[]
@@ -37,6 +38,39 @@ export default function BankDashboard(props: BankDashboardProps) {
   // Otevárame Match Dialog
   const [pairingTx, setPairingTx] = useState<any>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [isSuggestedOpen, setIsSuggestedOpen] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  const handleSyncBanka = async () => {
+    setIsSyncing(true)
+    try {
+      const res = await syncFioTransactions()
+      if (res.success) {
+        let msg = `Synchronizácia úspešná. Stiahnutých: ${res.total || 0} platieb`
+        if (res.imported !== undefined) {
+          msg += `, nových: ${res.imported}`
+        }
+        if (res.matched !== undefined) {
+          msg += `, spárovaných s darcami: ${res.matched}`
+        }
+        if (res.message) {
+          msg += ` (${res.message})`
+        }
+        setSuccessMsg(msg)
+        setTimeout(() => setSuccessMsg(null), 6000)
+        
+        startTransition(() => {
+          router.refresh()
+        })
+      } else {
+        alert(res.error || 'Nastala neočakávaná chyba pri synchronizácii.')
+      }
+    } catch (e: any) {
+      alert(e.message || 'Nastala neočakávaná chyba pri komunikácii so serverom.')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   const handleQuickMatchAnon = async (tx: any) => {
     startTransition(async () => {
@@ -122,14 +156,34 @@ export default function BankDashboard(props: BankDashboardProps) {
           ))}
         </div>
 
-        <button 
-          onClick={handleBulkMatchAnon}
-          disabled={isPending}
-          className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 text-white text-xs font-black rounded-xl shadow-lg shadow-orange-600/20 transition-all flex items-center gap-2"
-        >
-          {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-          Spárovať nespárované v tomto období (Anonymné)
-        </button>
+        <div className="flex flex-wrap gap-3 w-full md:w-auto justify-end">
+          <button 
+            onClick={handleSyncBanka}
+            disabled={isSyncing || isPending}
+            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2"
+          >
+            {isSyncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            Synchronizovať banku
+          </button>
+
+          <button 
+            onClick={() => setIsSuggestedOpen(true)}
+            disabled={isSyncing || isPending}
+            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2"
+          >
+            <Sparkles size={14} />
+            Inteligentné návrhy
+          </button>
+
+          <button 
+            onClick={handleBulkMatchAnon}
+            disabled={isSyncing || isPending}
+            className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 text-white text-xs font-black rounded-xl shadow-lg shadow-orange-600/20 transition-all flex items-center gap-2"
+          >
+            {isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+            Spárovať nespárované (Anonymné)
+          </button>
+        </div>
       </div>
 
       {/* FILTER TOOLBAR */}
@@ -239,6 +293,16 @@ export default function BankDashboard(props: BankDashboardProps) {
           onClose={() => setPairingTx(null)} 
           onSuccess={() => {
              setPairingTx(null)
+             updateFilters('page', String(props.currentPage)) // trigger re-render / fetch
+          }}
+        />
+      )}
+
+      {/* SUGGESTED MATCHING MODAL */}
+      {isSuggestedOpen && (
+        <SuggestedMatchesDialog 
+          onClose={() => setIsSuggestedOpen(false)}
+          onSuccess={() => {
              updateFilters('page', String(props.currentPage)) // trigger re-render / fetch
           }}
         />

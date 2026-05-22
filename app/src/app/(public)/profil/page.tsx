@@ -21,7 +21,7 @@ export default async function ProfilePage() {
   const donations = await getDonorDonations(donor.id)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="bg-blue-deep min-h-screen">
       <ProfileContent donor={donor} donations={donations} />
     </div>
   )

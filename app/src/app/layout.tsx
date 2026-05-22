@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="sk" className="h-full antialiased relative">
+    <html lang="sk" className="h-full antialiased relative" data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col font-sans">
         <SupabaseProvider session={null}>
           {children}

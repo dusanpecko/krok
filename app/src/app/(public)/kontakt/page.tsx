@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function KontaktPage() {
   return (
-    <div className="bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30 min-h-screen">
+    <div className="bg-blue-deep min-h-screen">
       <ContactForm />
     </div>
   )

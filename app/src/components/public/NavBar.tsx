@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Menu, X, Landmark, Users, HandHeart, MessageCircle } from 'lucide-react'
 import KrokLogo from '@/components/KrokLogo'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
@@ -13,6 +14,9 @@ const navLinks = [
 ]
 
 export default function NavBar() {
+  const pathname = usePathname()
+  const isHome = pathname === '/'
+  const isDarkHeroPage = pathname === '/' || pathname === '/kontakt' || pathname === '/profil'
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { session } = useSupabase()
@@ -25,24 +29,47 @@ export default function NavBar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Dynamické štýly podľa podstránky a stavu skrolovania
+  const navBgClass = isDarkHeroPage
+    ? (scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-2 border-b border-gray-100' : 'bg-transparent py-4')
+    : 'bg-white/95 backdrop-blur-md shadow-sm py-2 border-b border-gray-100'
+
+  const logoVariant = isDarkHeroPage ? (scrolled ? 'color' : 'white') : 'color'
+
+  const linkClass = isDarkHeroPage && !scrolled
+    ? 'text-sm font-medium text-white/90 hover:text-white transition-colors'
+    : 'text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors'
+
+  const profileLinkClass = isDarkHeroPage && !scrolled
+    ? 'text-sm font-medium text-white/90 hover:text-white transition-colors'
+    : 'text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors'
+
+  const adminLinkClass = isDarkHeroPage && !scrolled
+    ? 'text-sm font-medium text-white border border-white/50 px-4 py-2 rounded-full hover:bg-white/10 transition-colors'
+    : 'text-sm font-medium text-blue-600 border border-blue-600 px-4 py-2 rounded-full hover:bg-blue-50 transition-colors'
+
+  const loginLinkClass = isDarkHeroPage && !scrolled
+    ? 'text-sm font-medium text-white/80 hover:text-white transition-colors'
+    : 'text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors'
+
+  const mobileMenuBtnClass = isDarkHeroPage && !scrolled ? 'text-white p-2' : 'text-gray-700 p-2'
+
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-2' : 'bg-transparent py-4'
-    }`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBgClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center group">
-            <KrokLogo variant={scrolled ? 'color' : 'white'} height={36} />
+            <KrokLogo variant={logoVariant} height={36} />
           </Link>
-
+ 
           {/* Desktop Links */}
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                className={linkClass}
               >
                 {link.label}
               </Link>
@@ -55,18 +82,18 @@ export default function NavBar() {
               <HandHeart size={18} />
               Chcem podporiť
             </Link>
-
+ 
             {session ? (
               <div className="flex items-center gap-4">
                 <Link 
                   href="/profil"
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                  className={profileLinkClass}
                 >
                   Profil
                 </Link>
                 <Link 
                   href="/admin"
-                  className="text-sm font-medium text-blue-600 border border-blue-600 px-4 py-2 rounded-full hover:bg-blue-50 transition-colors"
+                  className={adminLinkClass}
                 >
                   Admin
                 </Link>
@@ -74,18 +101,18 @@ export default function NavBar() {
             ) : (
               <Link 
                 href="/prihlasenie"
-                className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                className={loginLinkClass}
               >
                 Prihlásiť sa
               </Link>
             )}
           </div>
-
+ 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 p-2"
+              className={mobileMenuBtnClass}
             >
               {isOpen ? <X size={28} /> : <Menu size={28} />}
             </button>

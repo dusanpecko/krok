@@ -25,6 +25,7 @@ import {
 } from 'framer-motion';
 import KrokLogo from '@/components/KrokLogo';
 import Image from 'next/image';
+import { getPublicStats } from './actions';
 
 // ==========================================
 // 1. DYNAMICKÉ PLACEHOLDERY A NASTAVENIE DÁT
@@ -202,8 +203,29 @@ export default function KrokLandingPage() {
   // Stav pre rotujúci hero text (Variant 0 je predvolený pre SSR/SEO)
   const [heroIndex, setHeroIndex] = useState(0);
 
+  // Dynamické štatistiky z databázy
+  const [donorsCount, setDonorsCount] = useState<number>(PLACEHOLDER_DONORS_COUNT);
+  const [totalAmount, setTotalAmount] = useState<number>(PLACEHOLDER_TOTAL_AMOUNT);
+  const [projectsCount, setProjectsCount] = useState<number>(PLACEHOLDER_PROJECTS_COUNT);
+
   useEffect(() => {
     setMounted(true);
+
+    // Načítanie dynamických štatistík z databázy
+    async function loadStats() {
+      try {
+        const stats = await getPublicStats();
+        if (stats.donorsCount > 0 || stats.totalAmount > 0 || stats.projectsCount > 0) {
+          setDonorsCount(stats.donorsCount);
+          setTotalAmount(stats.totalAmount);
+          setProjectsCount(stats.projectsCount);
+        }
+      } catch (err) {
+        console.error('Error loading public stats:', err);
+      }
+    }
+    loadStats();
+
     // Získanie posledného zobrazeného indexu zo sessionStorage (len na klientovi)
     let lastIndex: number | null = null;
     try {
@@ -597,7 +619,7 @@ export default function KrokLandingPage() {
                 <Users size={22} />
               </div>
               <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-zinc-300 font-mono tracking-wide mb-3 bg-white/5 py-2.5 px-4 rounded-xl border border-white/5 text-center select-all">
-                {"{{POCET_DARCOV}}"}
+                {mounted ? <CountUpNumber value={donorsCount} /> : donorsCount}
               </div>
               <p className="text-zinc-200 font-extrabold text-sm tracking-wide uppercase mb-1">Darcov v rodine</p>
               <p className="text-zinc-500 text-xs">
@@ -613,7 +635,7 @@ export default function KrokLandingPage() {
                 <Gift size={22} />
               </div>
               <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-gold font-mono tracking-wide mb-3 bg-white/5 py-2.5 px-4 rounded-xl border border-white/5 text-center select-all">
-                {"{{CELKOVA_SUMA}} €"}
+                {mounted ? <CountUpNumber value={totalAmount} suffix=" €" /> : `${totalAmount.toLocaleString('sk-SK')} €`}
               </div>
               <p className="text-gold font-extrabold text-sm tracking-wide uppercase mb-1">Vyzbieraná suma</p>
               <p className="text-zinc-500 text-xs">
@@ -629,7 +651,7 @@ export default function KrokLandingPage() {
                 <TrendingUp size={22} />
               </div>
               <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-zinc-300 font-mono tracking-wide mb-3 bg-white/5 py-2.5 px-4 rounded-xl border border-white/5 text-center select-all">
-                {"{{POCET_PODPORENYCH_PROJEKTOV}}"}
+                {mounted ? <CountUpNumber value={projectsCount} /> : projectsCount}
               </div>
               <p className="text-zinc-200 font-extrabold text-sm tracking-wide uppercase mb-1">Podporených projektov</p>
               <p className="text-zinc-500 text-xs">

@@ -1,0 +1,10 @@
+# Local data directory containing large PDFs and sensitive XML exports
+/data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp / scratch files
+/scratch/
+*.log

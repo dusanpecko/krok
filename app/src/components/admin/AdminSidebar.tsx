@@ -21,6 +21,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
+import Image from 'next/image'
 
 // KROK brand farby z logomanuálu
 const KROK = {
@@ -84,19 +85,30 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
       {/* Header – KROK logo */}
       <div className={`flex-shrink-0 border-b border-white/10 ${isCollapsed ? 'p-3' : 'p-5'}`}>
         <div className="flex items-center gap-3">
-          {/* Logo icon */}
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center font-black text-white text-sm"
-               style={{ background: `linear-gradient(135deg, ${KROK.blue}, ${KROK.lightBlue})` }}>
-            K
-          </div>
-          {!isCollapsed && (
-            <div className="flex-1">
-              <h2 className="text-base font-bold text-white tracking-wide">KROK</h2>
-              <p className="text-[10px] text-blue-200/70 uppercase tracking-widest">Admin panel</p>
+          {/* Logo */}
+          {isCollapsed ? (
+            /* Zbalený: len malá ikona loga */
+            <div className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-white/10">
+              <Image
+                src="/logo/logo_w.webp"
+                alt="KROK"
+                width={55}
+                height={32}
+                className="object-contain"
+              />
             </div>
+          ) : (
+            /* Rozbalený: plné biele logo */
+            <Image
+              src="/logo/logo_w.webp"
+              alt="KROK – Pastoračný fond Žilinskej diecézy"
+              width={55}
+              height={32}
+              priority
+            />
           )}
           {onToggle && !isMobile && (
-            <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors hidden lg:flex">
+            <button onClick={onToggle} className="ml-auto p-1.5 rounded-lg hover:bg-white/10 transition-colors hidden lg:flex">
               {isCollapsed ? <ChevronRight size={14} className="text-blue-200" /> : <ChevronLeft size={14} className="text-blue-200" />}
             </button>
           )}

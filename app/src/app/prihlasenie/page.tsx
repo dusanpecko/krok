@@ -4,6 +4,7 @@ import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
+import Image from 'next/image'
 
 const KROK = {
   blue: '#003DA5',
@@ -73,11 +74,16 @@ function LoginForm() {
 
         <div className="relative z-10 text-center px-12">
           {/* KROK Logo */}
-          <div className="mb-8">
-            <h1 className="text-5xl font-black text-white tracking-wider">
-              KR<span style={{ color: KROK.yellow }}>O</span>K
-            </h1>
-            <div className="mt-3 h-0.5 w-24 mx-auto" style={{ backgroundColor: KROK.yellow }} />
+          <div className="mb-8 flex flex-col items-center">
+            <Image
+              src="/logo/logo_w.webp"
+              alt="KROK – Pastoračný fond Žilinskej diecézy"
+              width={97}
+              height={56}
+              className="mx-auto"
+              priority
+            />
+            <div className="mt-4 h-0.5 w-24 mx-auto" style={{ backgroundColor: KROK.yellow }} />
           </div>
           <p className="text-lg text-blue-100/80 font-medium">Pastoračný fond</p>
           <p className="text-sm text-blue-200/60 mt-1">Žilinskej diecézy</p>
@@ -103,10 +109,15 @@ function LoginForm() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
-            <h1 className="text-3xl font-black tracking-wider" style={{ color: KROK.blue }}>
-              KR<span style={{ color: KROK.yellow }}>O</span>K
-            </h1>
-            <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest">Administrácia</p>
+            <Image
+              src="/logo/logo_c.webp"
+              alt="KROK – Pastoračný fond Žilinskej diecézy"
+              width={69}
+              height={40}
+              className="mx-auto"
+              priority
+            />
+            <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest">Administrácia</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">

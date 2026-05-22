@@ -1,5 +1,5 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import KrokLogo from '@/components/KrokLogo'
 
 export default function Footer() {
   return (
@@ -8,7 +8,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <KrokLogo className="h-12 mb-6" height={48} />
+            <div className="mb-6">
+              <Image
+                src="/logo/logo_w.webp"
+                alt="KROK – Pastoračný fond Žilinskej diecézy"
+                width={83}
+                height={48}
+                className=""
+              />
+            </div>
             <p className="text-gray-400 max-w-sm mb-6">
               Pastoračný fond Žilinskej diecézy podporuje aktivity v oblasti pastorácie, vzdelávania a pomoci blížnym.
             </p>

@@ -33,7 +33,7 @@ export default function NavBar() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center group">
-            <KrokLogo className="h-10" height={40} />
+            <KrokLogo variant={scrolled ? 'color' : 'white'} height={36} />
           </Link>
 
           {/* Desktop Links */}

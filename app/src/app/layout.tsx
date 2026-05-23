@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "KROK – Pastoračný fond Žilinskej diecézy",
@@ -18,7 +19,14 @@ export default function RootLayout({
         <SupabaseProvider session={null}>
           {children}
         </SupabaseProvider>
+        {/* Umami Analytics */}
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="bd55db02-e225-436f-9095-645bec96ed34"
+        />
       </body>
     </html>
   );
 }
+

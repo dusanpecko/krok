@@ -38,13 +38,16 @@ const mainLinks = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/darcovia', label: 'Darcovia', icon: Users },
   { href: '/admin/banka', label: 'Banka', icon: Landmark },
+  { href: '/admin/granty', label: 'Granty', icon: FolderHeart },
+  { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
 ]
 
 const settingsLinks = [
-  { href: '/admin/projekty', label: 'Projekty', icon: FolderHeart },
+  { href: '/admin/projekty', label: 'Projekty', icon: Database },
   { href: '/admin/nastavenia/farnosti', label: 'Farnosti', icon: Church },
   { href: '/admin/nastavenia/dekanaty', label: 'Dekanáty', icon: Map },
   { href: '/admin/import', label: 'Import výpisu', icon: FileUp },
+  { href: '/admin/roly', label: 'Správa rolí', icon: Users },
   { href: '/admin/exporty', label: 'Exporty', icon: FileText },
 ]
 

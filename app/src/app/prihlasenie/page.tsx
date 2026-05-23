@@ -60,6 +60,26 @@ function LoginForm() {
     }
   }
 
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`
+        }
+      })
+      if (oauthError) {
+        setError(oauthError.message)
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Nepodarilo sa spustiť prihlásenie cez Google.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Ľavá strana – branding */}
@@ -185,7 +205,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 rounded-lg text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg disabled:opacity-60"
+                className="w-full py-2.5 rounded-lg text-white font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg disabled:opacity-60 cursor-pointer"
                 style={{ backgroundColor: KROK.blue }}
               >
                 {loading ? (
@@ -195,11 +215,36 @@ function LoginForm() {
                   </>
                 ) : (
                   <>
-                    Prihlásiť sa <ArrowRight size={16} />
+                    Prihlásiť sa e-mailom <ArrowRight size={16} />
                   </>
                 )}
               </button>
             </form>
+
+            {/* Separátor a prihlásenie cez Google */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-150" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-black text-gray-400 tracking-wider">
+                <span className="bg-white px-3">Alebo</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs flex items-center justify-center gap-3 transition-all duration-200 hover:shadow-md cursor-pointer disabled:opacity-60"
+            >
+              <svg className="w-4.5 h-4.5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.57h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.53c0,-0.29 -0.03,-0.57 -0.08,-0.84Z" fill="#4285F4" />
+                <path d="M12,20.68c2.43,0 4.47,-0.81 5.96,-2.21l-3.3,-2.57c-0.91,0.61 -2.08,0.98 -3.3,1.02c-2.33,0.08 -4.38,-1.48 -5.09,-3.66l-3.41,2.64c1.69,3.35 5.17,5.78 9.14,5.78Z" fill="#34A853" />
+                <path d="M6.91,13.26c-0.18,-0.54 -0.28,-1.12 -0.28,-1.71c0,-0.59 0.1,-1.17 0.28,-1.71l-3.41,-2.64c-0.63,1.26 -0.99,2.69 -0.99,4.21c0,1.52 0.36,2.95 0.99,4.21l3.41,-2.67Z" fill="#FBBC05" />
+                <path d="M12,6.09c1.32,0 2.51,0.45 3.44,1.35l2.58,-2.58c-1.56,-1.45 -3.59,-2.34 -6.02,-2.34c-3.97,0 -7.45,2.43 -9.14,5.78l3.41,2.64c0.71,-2.18 2.76,-3.74 5.09,-3.66Z" fill="#EA4335" />
+              </svg>
+              Prihlásiť sa cez Google
+            </button>
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">

@@ -9,6 +9,7 @@ import { useSupabase } from '@/components/providers/SupabaseProvider'
 
 const navLinks = [
   { href: '/projekty', label: 'Projekty', icon: Landmark },
+  { href: '/aktuality', label: 'Aktuality', icon: MessageCircle },
   { href: '/o-nas', label: 'O nás', icon: Users },
   { href: '/kontakt', label: 'Kontakt', icon: MessageCircle },
 ]
@@ -19,7 +20,8 @@ export default function NavBar() {
   const isDarkHeroPage = pathname === '/' || pathname === '/kontakt' || pathname === '/profil'
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { session } = useSupabase()
+  const { session, supabase } = useSupabase()
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +30,29 @@ export default function NavBar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!session?.user) {
+      setIsAdmin(false)
+      return
+    }
+
+    const checkAdmin = async () => {
+      try {
+        const { data } = await supabase
+          .from('admin_users')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        setIsAdmin(!!data)
+      } catch {
+        setIsAdmin(false)
+      }
+    }
+
+    checkAdmin()
+  }, [session, supabase])
 
   // Dynamické štýly podľa podstránky a stavu skrolovania
   const navBgClass = isDarkHeroPage
@@ -91,12 +116,14 @@ export default function NavBar() {
                 >
                   Profil
                 </Link>
-                <Link 
-                  href="/admin"
-                  className={adminLinkClass}
-                >
-                  Admin
-                </Link>
+                {isAdmin && (
+                  <Link 
+                    href="/admin"
+                    className={adminLinkClass}
+                  >
+                    Admin
+                  </Link>
+                )}
               </div>
             ) : (
               <Link 
@@ -150,13 +177,15 @@ export default function NavBar() {
               >
                 Môj Profil
               </Link>
-              <Link 
-                href="/admin"
-                className="block w-full text-center py-2 text-blue-600 font-medium"
-                onClick={() => setIsOpen(false)}
-              >
-                Do administrácie
-              </Link>
+              {isAdmin && (
+                <Link 
+                  href="/admin"
+                  className="block w-full text-center py-2 text-blue-600 font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Do administrácie
+                </Link>
+              )}
             </div>
           ) : (
             <Link 

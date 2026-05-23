@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import { 
   User, History, Heart, Save, AlertCircle, 
   CheckCircle2, CreditCard, Mail, Phone, MapPin, 
-  ChevronRight, Landmark, ArrowRight
+  ChevronRight, Landmark, ArrowRight, LogOut
 } from 'lucide-react'
 import { updateProfile } from '@/app/(public)/profil/actions'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
+import { useRouter } from 'next/navigation'
 
 interface ProfileContentProps {
   donor: any
@@ -55,6 +57,8 @@ function BackgroundSparkles() {
 }
 
 export default function ProfileContent({ donor, donations }: ProfileContentProps) {
+  const { supabase } = useSupabase()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('data')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -68,6 +72,12 @@ export default function ProfileContent({ donor, donations }: ProfileContentProps
   })
 
   const prefersReducedMotion = useReducedMotion()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/prihlasenie')
+    router.refresh()
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -159,11 +169,21 @@ export default function ProfileContent({ donor, donations }: ProfileContentProps
             </div>
           </div>
 
-          <div className="flex flex-col items-start md:items-end bg-gold/5 border border-gold/25 rounded-2xl px-5 py-3.5 backdrop-blur-sm shadow-inner min-w-[200px] relative z-10 self-start md:self-auto">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gold-bright/70">Variabilný symbol</span>
-            <span className="text-2xl sm:text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white tracking-wider mt-1">
-              {donor.variable_symbol}
-            </span>
+          <div className="flex flex-col sm:flex-row items-start md:items-center gap-4 relative z-10 self-start md:self-auto w-full sm:w-auto md:justify-end">
+            <div className="flex flex-col items-start md:items-end bg-gold/5 border border-gold/25 rounded-2xl px-5 py-3.5 backdrop-blur-sm shadow-inner min-w-[180px] w-full sm:w-auto">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gold-bright/70">Variabilný symbol</span>
+              <span className="text-2xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white tracking-wider mt-1">
+                {donor.variable_symbol}
+              </span>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="px-5 py-3.5 rounded-2xl bg-red-500/10 border border-red-500/25 hover:bg-red-500/20 text-red-400 font-extrabold text-xs transition-all duration-300 hover:shadow-md cursor-pointer flex items-center justify-center gap-2 w-full sm:w-auto"
+            >
+              <LogOut size={14} className="text-red-400" />
+              Odhlásiť sa
+            </button>
           </div>
         </motion.div>
 

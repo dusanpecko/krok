@@ -93,12 +93,15 @@ export async function createDonor(data: any) {
   // Generate VS if not provided
   const vs = data.variable_symbol || await generateNextVS()
 
+  // Vyberieme project_ids pred insertom — nie je stĺpec v tabuľke donors
+  const { project_ids, ...donorData } = data
+
   const { data: newDonor, error } = await supabase
     .from('donors')
     .insert([{
-      ...data,
+      ...donorData,
       variable_symbol: vs,
-      status: data.status || 'active'
+      status: donorData.status || 'active'
     }])
     .select()
     .single()
@@ -108,9 +111,9 @@ export async function createDonor(data: any) {
     return { success: false, error: error.message }
   }
 
-  // Handle projects for new donor
-  if (data.project_ids && data.project_ids.length > 0) {
-    const pData = data.project_ids.map((pId: string) => ({
+  // Handle projects for new donor (cez vzťahovú tabuľku donor_projects)
+  if (project_ids && project_ids.length > 0) {
+    const pData = project_ids.map((pId: string) => ({
       donor_id: newDonor.id,
       project_id: pId
     }))

@@ -6,7 +6,7 @@ import {
   User, Mail, Phone, MapPin, Landmark, 
   CreditCard, FileText, Save, ArrowLeft, 
   CheckCircle2, AlertCircle, Building2, 
-  Globe, ShieldCheck, Heart
+  Globe, ShieldCheck, Heart, Lock, Unlock
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -62,6 +62,7 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [vsUnlocked, setVsUnlocked] = useState(false)
   
   // Initialize state with donor data or defaults
   const [formData, setFormData] = useState<Partial<Donor>>(donor || {
@@ -82,6 +83,14 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
     const { name, value, type } = e.target as HTMLInputElement
     const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     setFormData(prev => ({ ...prev, [name]: val }))
+  }
+
+  const handlePostalCode = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Ponechaj len číslice, max 5
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 5)
+    // Formát: ### ##
+    const formatted = digits.length > 3 ? `${digits.slice(0, 3)} ${digits.slice(3)}` : digits
+    setFormData(prev => ({ ...prev, postal_code: formatted }))
   }
 
   const toggleProject = (projectId: string) => {
@@ -168,7 +177,17 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Oslovenie</label>
-                <input name="formal_addressing" value={formData.formal_addressing || ''} onChange={handleChange} placeholder="Vážený pán / Vážená pani" className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm" />
+                <select
+                  name="formal_addressing"
+                  value={formData.formal_addressing || ''}
+                  onChange={handleChange}
+                  className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm"
+                >
+                  <option value="">— nevybrané —</option>
+                  <option value="Vážený pán">Vážený pán</option>
+                  <option value="Vážená pani">Vážená pani</option>
+                  <option value="Vážená slečna">Vážená slečna</option>
+                </select>
               </div>
               
               <div className="space-y-2">
@@ -254,7 +273,15 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">PSČ</label>
-                      <input name="postal_code" value={formData.postal_code || ''} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm" />
+                      <input
+                        name="postal_code"
+                        value={formData.postal_code || ''}
+                        onChange={handlePostalCode}
+                        placeholder="010 01"
+                        maxLength={6}
+                        inputMode="numeric"
+                        className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-mono tracking-wider"
+                      />
                     </div>
                   </div>
                 </div>
@@ -334,8 +361,37 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Variabilný symbol</label>
                 <div className="relative">
                   <CreditCard size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600" />
-                  <input readOnly value={formData.variable_symbol || 'Generuje sa automaticky'} className="w-full pl-10 pr-4 py-3 bg-blue-50/50 border border-blue-100 rounded-xl text-sm font-mono font-black text-blue-700 cursor-not-allowed" />
+                  <input
+                    name="variable_symbol"
+                    value={formData.variable_symbol || ''}
+                    onChange={handleChange}
+                    readOnly={!vsUnlocked}
+                    placeholder="Generuje sa automaticky"
+                    className={`w-full pl-10 pr-12 py-3 border rounded-xl text-sm font-mono font-black transition-all ${
+                      vsUnlocked
+                        ? 'bg-amber-50 border-amber-300 text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-300'
+                        : 'bg-blue-50/50 border-blue-100 text-blue-700 cursor-not-allowed'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVsUnlocked(v => !v)}
+                    title={vsUnlocked ? 'Zamknúť VS' : 'Ručne upraviť VS'}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-all ${
+                      vsUnlocked
+                        ? 'text-amber-600 hover:bg-amber-100'
+                        : 'text-blue-400 hover:bg-blue-100'
+                    }`}
+                  >
+                    {vsUnlocked ? <Unlock size={15} /> : <Lock size={15} />}
+                  </button>
                 </div>
+                {vsUnlocked && (
+                  <p className="text-[10px] text-amber-600 font-semibold flex items-center gap-1">
+                    <AlertCircle size={10} />
+                    Uistite sa, že VS je unikátny a neopakuje sa u iného darcu.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">

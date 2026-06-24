@@ -3,12 +3,13 @@
 import { 
   Mail, Phone, MapPin, ExternalLink, MoreVertical, 
   ShieldCheck, ShieldAlert, Pencil, Trash2, 
-  UserCog, CreditCard, UserX, UserCheck, Loader2
+  UserCog, CreditCard, UserX, UserCheck, Loader2,
+  ArrowUpDown, ArrowUp, ArrowDown
 } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { toggleDonorStatus } from '@/app/admin/darcovia/actions'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Donor {
   id: string
@@ -35,7 +36,83 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [isUpdating, setIsUpdating] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const currentYear = new Date().getFullYear()
+
+  // Row Selection Engine
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  
+  useEffect(() => {
+    const saved = localStorage.getItem('krok_selected_donors')
+    if (saved) {
+      try {
+        setSelectedIds(JSON.parse(saved))
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }, [])
+
+  const saveSelected = (ids: string[]) => {
+    setSelectedIds(ids)
+    localStorage.setItem('krok_selected_donors', JSON.stringify(ids))
+    window.dispatchEvent(new Event('krok_selected_donors_changed'))
+  }
+
+  const handleSelectRow = (donorId: string, checked: boolean) => {
+    let updated = [...selectedIds]
+    if (checked) {
+      if (!updated.includes(donorId)) updated.push(donorId)
+    } else {
+      updated = updated.filter(id => id !== donorId)
+    }
+    saveSelected(updated)
+  }
+
+  const visibleIds = donors.map(d => d.id)
+  const isAllSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.includes(id))
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked
+    let updated = [...selectedIds]
+    if (checked) {
+      visibleIds.forEach(id => {
+        if (!updated.includes(id)) updated.push(id)
+      })
+    } else {
+      updated = updated.filter(id => !visibleIds.includes(id))
+    }
+    saveSelected(updated)
+  }
+
+  // Sorting
+  const handleSort = (field: string) => {
+    const sortBy = searchParams.get('sortBy') || 'last_name'
+    const sortOrder = searchParams.get('sortOrder') || 'asc'
+    
+    let newOrder = 'asc'
+    if (sortBy === field && sortOrder === 'asc') {
+      newOrder = 'desc'
+    }
+    
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('sortBy', field)
+    params.set('sortOrder', newOrder)
+    router.push(`/admin/darcovia?${params.toString()}`)
+  }
+
+  const renderSortIcon = (field: string) => {
+    const sortBy = searchParams.get('sortBy') || 'last_name'
+    const sortOrder = searchParams.get('sortOrder') || 'asc'
+    
+    if (sortBy !== field) {
+      return <ArrowUpDown size={14} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+    }
+    
+    return sortOrder === 'asc' 
+      ? <ArrowUp size={14} className="text-blue-600" />
+      : <ArrowDown size={14} className="text-blue-600" />
+  }
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -88,17 +165,73 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50/50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">ID / VS</th>
-              <th className="px-6 py-4 font-semibold text-gray-900">Meno a priezvisko</th>
-              <th className="px-6 py-4 font-semibold text-gray-900">Kontakt</th>
-              <th className="px-6 py-4 font-semibold text-gray-900">Dary spolu</th>
-              <th className="px-6 py-4 font-semibold text-gray-900">Status</th>
+              <th className="px-6 py-4 w-12 text-center">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+              </th>
+              <th 
+                onClick={() => handleSort('variable_symbol')}
+                className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-100/50 transition-colors select-none group"
+              >
+                <div className="flex items-center gap-1.5">
+                  ID / VS
+                  {renderSortIcon('variable_symbol')}
+                </div>
+              </th>
+              <th 
+                onClick={() => handleSort('last_name')}
+                className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group"
+              >
+                <div className="flex items-center gap-1.5">
+                  Meno a priezvisko
+                  {renderSortIcon('last_name')}
+                </div>
+              </th>
+              <th 
+                onClick={() => handleSort('email')}
+                className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group"
+              >
+                <div className="flex items-center gap-1.5">
+                  Kontakt
+                  {renderSortIcon('email')}
+                </div>
+              </th>
+              <th 
+                onClick={() => handleSort('total_donated')}
+                className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group"
+              >
+                <div className="flex items-center gap-1.5">
+                  Dary spolu
+                  {renderSortIcon('total_donated')}
+                </div>
+              </th>
+              <th 
+                onClick={() => handleSort('status')}
+                className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group"
+              >
+                <div className="flex items-center gap-1.5">
+                  Status
+                  {renderSortIcon('status')}
+                </div>
+              </th>
               <th className="px-6 py-4 text-right">Akcie</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {donors.map((donor) => (
               <tr key={donor.id} className="hover:bg-gray-50/70 transition-colors group cursor-pointer relative">
+                <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(donor.id)}
+                    onChange={(e) => handleSelectRow(donor.id, e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                </td>
                 <td className="px-6 py-4">
                   <div className="space-y-0.5">
                     {donor.legacy_id && (

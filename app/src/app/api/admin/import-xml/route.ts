@@ -19,7 +19,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Nebol poskytnutý žiadny súbor.' }, { status: 400 })
     }
 
-    const xmlContent = await file.text()
+    let xmlContent = await file.text()
+    
+    // Odstránenie UTF-8 BOM (Byte Order Mark) a bielych znakov na začiatku/konci
+    xmlContent = xmlContent.trim().replace(/^\uFEFF/, '')
     
     // 0. Upload File to Supabase Storage Bucket 'banka'
     const storageFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
@@ -80,16 +83,33 @@ export async function POST(request: Request) {
       }, { status: 409 })
     }
 
-    // 4. Extract Statement Info
-    const stmt = statementRoot.Stmt
-    const accountIban = stmt?.Acct?.Id?.IBAN || 'Neznámy IBAN'
-    const Ntry = stmt?.Ntry
-    
-    // Arrays in fast-xml-parser: if single item, it is an object. Ensure array.
-    const entries = Array.isArray(Ntry) ? Ntry : (Ntry ? [Ntry] : [])
+    // 4. Extract Statement Info (handle single Stmt object or array of Stmt objects)
+    const statements = Array.isArray(statementRoot.Stmt)
+      ? statementRoot.Stmt
+      : (statementRoot.Stmt ? [statementRoot.Stmt] : [])
 
-    if (entries.length === 0) {
-      return NextResponse.json({ error: 'Tento výpis neobsahuje žiadne transakcie.' }, { status: 400 })
+    const accountIban = statements[0]?.Acct?.Id?.IBAN || 'Neznámy IBAN'
+
+    const entries: any[] = []
+    for (const stmt of statements) {
+      const Ntry = stmt?.Ntry
+      const stmtEntries = Array.isArray(Ntry) ? Ntry : (Ntry ? [Ntry] : [])
+      entries.push(...stmtEntries)
+    }
+
+    // Find min and max dates from entries for batch periods
+    let periodFrom: string | null = null
+    let periodTo: string | null = null
+
+    const parsedDates = entries.map((entry: any) => {
+      const dateRaw = entry.BookgDt?.Dt || entry.ValDt?.Dt
+      return dateRaw ? String(dateRaw).substring(0, 10) : null
+    }).filter(Boolean) as string[]
+
+    if (parsedDates.length > 0) {
+      parsedDates.sort()
+      periodFrom = parsedDates[0]
+      periodTo = parsedDates[parsedDates.length - 1]
     }
 
     // Prepare Batch
@@ -99,6 +119,8 @@ export async function POST(request: Request) {
         filename: storageFileName, // Ukladáme premenovaný súbor, pod ktorým je v buckete
         iban: accountIban,
         total_entries: entries.length,
+        period_from: periodFrom,
+        period_to: periodTo,
       })
       .select()
       .single()
@@ -201,20 +223,46 @@ export async function POST(request: Request) {
       if (isMatched) matchedCount++
     }
 
-    // Insert to DB and get back the records to extract IDs for donations
-    const { data: insertedTxs, error: insertError } = await supabase
-      .from('bank_transactions')
-      .insert(txToInsert)
-      .select()
+    // 6a. Deduplicate transactions by entry_ref to prevent duplicate key constraint violations
+    let newTxsToInsert = [...txToInsert]
+    let skippedCount = 0
 
-    if (insertError) {
-      console.error('Insert Error:', insertError)
-      // Some refs might be duplicates if file partially overlaps. We can refine this using UPSERT if needed.
-      return NextResponse.json({ 
-        error: 'Vyskytla sa chyba pri zápise transakcií do databázy.',
-        details: insertError.message 
-      }, { status: 500 })
+    if (txToInsert.length > 0) {
+      const entryRefs = txToInsert.map(tx => tx.entry_ref)
+      const { data: existingTxs, error: fetchTxsError } = await supabase
+        .from('bank_transactions')
+        .select('entry_ref')
+        .in('entry_ref', entryRefs)
+
+      if (fetchTxsError) {
+        console.warn('Nepodarilo sa overiť existujúce transakcie:', fetchTxsError)
+      } else if (existingTxs) {
+        const existingRefsSet = new Set(existingTxs.map(tx => tx.entry_ref))
+        newTxsToInsert = txToInsert.filter(tx => !existingRefsSet.has(tx.entry_ref))
+        skippedCount = txToInsert.length - newTxsToInsert.length
+      }
     }
+
+    // Insert only NEW to DB and get back the records to extract IDs for donations
+    let insertedTxs: any[] = []
+    if (newTxsToInsert.length > 0) {
+      const { data, error: insertError } = await supabase
+        .from('bank_transactions')
+        .insert(newTxsToInsert)
+        .select()
+
+      if (insertError) {
+        console.error('Insert Error:', insertError)
+        return NextResponse.json({ 
+          error: 'Vyskytla sa chyba pri zápise transakcií do databázy.',
+          details: insertError.message 
+        }, { status: 500 })
+      }
+      insertedTxs = data || []
+    }
+
+    // Recalculate matched count only for newly imported transactions
+    const newMatchedCount = newTxsToInsert.filter(tx => tx.donor_id !== null).length
 
     // 7. Auto-create donations for successfully auto-matched transactions
     if (insertedTxs && insertedTxs.length > 0) {
@@ -248,9 +296,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: 'Import bol úspešný',
-      imported: txToInsert.length,
-      skipped: 0,
-      matched: matchedCount,
+      imported: newTxsToInsert.length,
+      skipped: skippedCount,
+      matched: newMatchedCount,
       errors: 0
     })
 

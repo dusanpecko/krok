@@ -12,20 +12,37 @@ const supabaseAdmin = createSupabaseClient(
  * Získa zoznam unikátnych rokov z importovaných dávok.
  */
 export async function getBankYears() {
-  const { data, error } = await supabaseAdmin
+  const [{ data: oldest }, { data: newest }] = await Promise.all([
+    supabaseAdmin.from('bank_transactions').select('booking_date').order('booking_date', { ascending: true }).limit(1),
+    supabaseAdmin.from('bank_transactions').select('booking_date').order('booking_date', { ascending: false }).limit(1)
+  ])
+
+  const years = new Set<number>()
+  
+  if (oldest && oldest[0]?.booking_date && newest && newest[0]?.booking_date) {
+    const startYear = new Date(oldest[0].booking_date).getFullYear()
+    const endYear = new Date(newest[0].booking_date).getFullYear()
+    for (let y = startYear; y <= endYear; y++) {
+      years.add(y)
+    }
+  }
+
+  // Merging with batch periods as fallback/supplement
+  const { data: batches } = await supabaseAdmin
     .from('bank_import_batches')
     .select('period_from, period_to')
 
-  if (error || !data) return [new Date().getFullYear()]
+  if (batches) {
+    batches.forEach((batch) => {
+      if (batch.period_from) years.add(new Date(batch.period_from).getFullYear())
+      if (batch.period_to) years.add(new Date(batch.period_to).getFullYear())
+    })
+  }
 
-  const years = new Set<number>()
-  data.forEach((batch) => {
-    if (batch.period_from) years.add(new Date(batch.period_from).getFullYear())
-    if (batch.period_to) years.add(new Date(batch.period_to).getFullYear())
-  })
-
-  // Fallback ak nemáme zatiaľ importy
-  if (years.size === 0) years.add(new Date().getFullYear())
+  // Fallback if no data is found
+  if (years.size === 0) {
+    years.add(new Date().getFullYear())
+  }
 
   return Array.from(years).sort((a, b) => b - a) // Od najnovšieho po najstarší
 }

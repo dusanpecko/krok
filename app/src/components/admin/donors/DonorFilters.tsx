@@ -18,13 +18,39 @@ export default function DonorFilters({ parishes, projects }: DonorFiltersProps) 
   const [status, setStatus] = useState(searchParams.get('status') || 'all')
   const [parishId, setParishId] = useState(searchParams.get('parish') || 'all')
   const [projectId, setProjectId] = useState(searchParams.get('project') || 'all')
+  const [dateFrom, setDateFrom] = useState(searchParams.get('from') || '')
+  const [dateTo, setDateTo] = useState(searchParams.get('to') || '')
+  const [selectedFilter, setSelectedFilter] = useState(searchParams.get('selected') || 'all')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
+
+  useEffect(() => {
+    const loadSelected = () => {
+      const saved = localStorage.getItem('krok_selected_donors')
+      if (saved) {
+        try {
+          setSelectedIds(JSON.parse(saved))
+        } catch (e) {
+          console.error(e)
+        }
+      } else {
+        setSelectedIds([])
+      }
+    }
+    
+    loadSelected()
+    window.addEventListener('krok_selected_donors_changed', loadSelected)
+    return () => window.removeEventListener('krok_selected_donors_changed', loadSelected)
+  }, [])
 
   const hasActiveFilters = 
     search !== '' || 
     status !== 'all' || 
     parishId !== 'all' || 
-    projectId !== 'all'
+    projectId !== 'all' ||
+    dateFrom !== '' ||
+    dateTo !== '' ||
+    selectedFilter !== 'all'
 
   // Sync state with URL manually if needed, but here we'll trigger on submit or change
   const applyFilters = () => {
@@ -33,6 +59,18 @@ export default function DonorFilters({ parishes, projects }: DonorFiltersProps) 
     if (status !== 'all') params.set('status', status)
     if (parishId !== 'all') params.set('parish', parishId)
     if (projectId !== 'all') params.set('project', projectId)
+    if (dateFrom) params.set('from', dateFrom)
+    if (dateTo) params.set('to', dateTo)
+    if (selectedFilter !== 'all') {
+      params.set('selected', selectedFilter)
+      params.set('ids', selectedIds.join(','))
+    }
+
+    // Keep sort params if present
+    const sortBy = searchParams.get('sortBy')
+    const sortOrder = searchParams.get('sortOrder')
+    if (sortBy) params.set('sortBy', sortBy)
+    if (sortOrder) params.set('sortOrder', sortOrder)
     
     router.push(`/admin/darcovia?${params.toString()}`)
   }
@@ -42,6 +80,9 @@ export default function DonorFilters({ parishes, projects }: DonorFiltersProps) 
     setStatus('all')
     setParishId('all')
     setProjectId('all')
+    setDateFrom('')
+    setDateTo('')
+    setSelectedFilter('all')
     router.push('/admin/darcovia')
   }
 
@@ -148,10 +189,43 @@ export default function DonorFilters({ parishes, projects }: DonorFiltersProps) 
             </select>
           </div>
 
-          <div className="flex items-end gap-2 mt-4 sm:mt-0 sm:col-span-1">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Dary od</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Dary do</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Označení (výber)</label>
+            <select 
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(e.target.value)}
+              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+            >
+              <option value="all">Všetci darcovia</option>
+              <option value="marked">Iba označení ({selectedIds.length})</option>
+              <option value="unmarked">Iba neoznačení</option>
+            </select>
+          </div>
+
+          <div className="flex items-end gap-2 mt-4 sm:mt-0 sm:col-span-3 justify-end">
             <button 
               onClick={applyFilters}
-              className="w-full px-4 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all"
+              className="px-8 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all"
             >
               Použiť filtre
             </button>

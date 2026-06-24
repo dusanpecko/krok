@@ -8,18 +8,20 @@ import { getImportHistory } from './actions'
 
 export default function ImportPage() {
   const router = useRouter()
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [currentImportIndex, setCurrentImportIndex] = useState<number | null>(null)
   
-  const [result, setResult] = useState<{
+  const [fileResults, setFileResults] = useState<{
+    filename: string
     success: boolean
     message?: string
     imported?: number
-    skipped?: number
     matched?: number
-    errors?: string[]
-  } | null>(null)
+    skipped?: number
+    error?: string
+  }[]>([])
 
   const [history, setHistory] = useState<any[]>([])
 
@@ -46,69 +48,90 @@ export default function ImportPage() {
     e.preventDefault()
     setIsDragging(false)
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0])
-      setResult(null)
+      const xmlFiles = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.xml'))
+      if (xmlFiles.length > 0) {
+        setFiles(prev => [...prev, ...xmlFiles])
+        setFileResults([])
+      }
     }
   }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0])
-      setResult(null)
+      const xmlFiles = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.xml'))
+      if (xmlFiles.length > 0) {
+        setFiles(prev => [...prev, ...xmlFiles])
+        setFileResults([])
+      }
     }
   }
 
+  const removeFile = (idx: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== idx))
+  }
+
   const handleImport = async () => {
-    if (!file) return
+    if (files.length === 0) return
 
     setImporting(true)
-    setResult(null)
+    setFileResults([])
 
-    const formData = new FormData()
-    formData.append('file', file)
+    const results = []
 
-    try {
-      const response = await fetch('/api/admin/import-xml', {
-        method: 'POST',
-        body: formData,
-      })
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      setCurrentImportIndex(i)
 
-      const data = await response.json()
+      const formData = new FormData()
+      formData.append('file', file)
 
-      if (!response.ok) {
-        if (response.status === 409) {
-           // Duplicate import
-           setResult({
-             success: false,
-             message: data.message || 'Tento výpis už bol importovaný.',
-             errors: [data.details ? `Súbor bol už nahratý: ${data.details.original_file || ''}` : 'Ide o duplikát'],
-           })
-        } else {
-           setResult({
-             success: false,
-             errors: data.error ? [data.error] : data.errors || ['Neznáma chyba na serveri.'],
-           })
-        }
-      } else {
-        setResult({
-          success: true,
-          message: data.message,
-          imported: data.imported,
-          skipped: data.skipped,
-          matched: data.matched,
-          errors: data.errors > 0 ? [`Pri importe nastalo ${data.errors} chýb u čiastkových transakcií`] : [],
+      try {
+        const response = await fetch('/api/admin/import-xml', {
+          method: 'POST',
+          body: formData,
         })
-        fetchHistory() // Refresh the history list after a successful import
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          if (response.status === 409) {
+            results.push({
+              filename: file.name,
+              success: false,
+              error: data.message || 'Duplikátny import (súbor už bol nahratý).'
+            })
+          } else {
+            results.push({
+              filename: file.name,
+              success: false,
+              error: data.error || 'Neznáma chyba na serveri.'
+            })
+          }
+        } else {
+          results.push({
+            filename: file.name,
+            success: true,
+            message: data.message,
+            imported: data.imported || 0,
+            matched: data.matched || 0,
+            skipped: data.skipped || 0
+          })
+        }
+      } catch (error) {
+        console.error(`Error importing ${file.name}:`, error)
+        results.push({
+          filename: file.name,
+          success: false,
+          error: error instanceof Error ? error.message : 'Nastala neočakávaná chyba.'
+        })
       }
-    } catch (error) {
-      console.error('Error importing:', error)
-      setResult({
-        success: false,
-        errors: [error instanceof Error ? error.message : 'Nastala neočakávaná chyba'],
-      })
-    } finally {
-      setImporting(false)
     }
+
+    setFileResults(results)
+    setCurrentImportIndex(null)
+    setFiles([]) // Clear selected files after import
+    setImporting(false)
+    fetchHistory() // Refresh the history list
   }
 
   return (
@@ -132,9 +155,9 @@ export default function ImportPage() {
         
         {/* Left Column: Form & Result */}
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Upload size={24} className="text-blue-500" /> Vložiť súbor
+              <Upload size={24} className="text-blue-500" /> Vložiť súbory
             </h2>
 
             <label
@@ -142,28 +165,40 @@ export default function ImportPage() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={`
-                flex flex-col items-center justify-center w-full h-72 
+                flex flex-col items-center justify-center w-full min-h-72 py-6
                 border-2 border-dashed rounded-2xl cursor-pointer
                 transition-all duration-200
                 ${
                   isDragging
                     ? 'border-blue-500 bg-blue-50/50 scale-[1.02]'
-                    : file
-                    ? 'border-blue-500 bg-blue-50'
+                    : files.length > 0
+                    ? 'border-blue-500 bg-blue-50/10'
                     : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-300'
                 }
               `}
             >
-              {file ? (
-                <div className="flex flex-col items-center text-center px-4">
-                  <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                    <FileText size={32} />
+              {files.length > 0 ? (
+                <div className="w-full max-w-xl flex flex-col gap-3 px-6" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest text-left mb-1">Vybraté súbory ({files.length}):</p>
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {files.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm group">
+                        <div className="flex items-center gap-2.5 truncate">
+                          <FileText size={18} className="text-blue-500 flex-shrink-0" />
+                          <span className="text-sm font-bold text-gray-900 truncate" title={file.name}>{file.name}</span>
+                          <span className="text-xs text-gray-400 font-mono flex-shrink-0">({(file.size / 1024).toFixed(1)} KB)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(idx)}
+                          className="p-1 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-lg font-bold text-gray-900 mb-1">{file.name}</p>
-                  <p className="text-sm font-mono text-gray-500">
-                    {(file.size / 1024).toFixed(1)} KB
-                  </p>
-                  <p className="text-xs text-blue-600 font-bold mt-6">Kliknite alebo presuňte iný súbor</p>
+                  <p className="text-xs text-blue-600 font-bold text-center mt-4">Presuňte sem ďalšie súbory alebo kliknite pre pridanie</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center text-center px-4">
@@ -171,7 +206,7 @@ export default function ImportPage() {
                     <Upload size={32} />
                   </div>
                   <p className="text-lg font-bold text-gray-900 mb-1">
-                    Pretiahnite sem .xml súbor
+                    Pretiahnite sem .xml súbory
                   </p>
                   <p className="text-sm text-gray-500">alebo kliknite pre výber z počítača</p>
                 </div>
@@ -179,13 +214,14 @@ export default function ImportPage() {
               <input
                 type="file"
                 accept=".xml"
+                multiple
                 onChange={handleFileChange}
                 className="hidden"
               />
             </label>
 
             {/* Import Button */}
-            {file && (
+            {files.length > 0 && (
               <div className="mt-8">
                 <button
                   onClick={handleImport}
@@ -195,12 +231,12 @@ export default function ImportPage() {
                   {importing ? (
                     <>
                       <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-                      Spracovávam údaje...
+                      Spracovávam {currentImportIndex !== null ? `${currentImportIndex + 1}/${files.length}` : ''} ({files[currentImportIndex || 0]?.name})...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 size={24} />
-                      Spustiť import výpisu
+                      Spustiť import ({files.length} {files.length === 1 ? 'súbor' : files.length < 5 ? 'súbory' : 'súborov'})
                     </>
                   )}
                 </button>
@@ -209,62 +245,44 @@ export default function ImportPage() {
           </div>
 
           {/* Results Block */}
-          {result && (
-            <div
-              className={`rounded-3xl p-8 border animate-in slide-in-from-bottom-4 duration-500 ${
-                result.success
-                  ? 'bg-gradient-to-br from-green-50 to-white border-green-100 shadow-lg shadow-green-900/5'
-                  : 'bg-gradient-to-br from-red-50 to-white border-red-100 shadow-lg shadow-red-900/5'
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 ${
-                  result.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                }`}>
-                  {result.success ? <CheckCircle2 size={28} /> : <AlertCircle size={28} />}
-                </div>
-                
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <h3 className={`text-xl font-black ${result.success ? 'text-green-950' : 'text-red-950'}`}>
-                      {result.success ? 'Výpis bol spracovaný' : 'Import zlyhal'}
-                    </h3>
-                    {result.message && <p className="text-gray-600 mt-1">{result.message}</p>}
+          {fileResults.length > 0 && (
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-blue-900/5 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+              <div>
+                <h3 className="text-xl font-black text-gray-900">Spracovanie hromadného importu</h3>
+                <p className="text-sm text-gray-500 mt-1">Celkovo spracovaných: <span className="font-bold text-gray-900">{fileResults.length} súborov</span></p>
+              </div>
+
+              <div className="divide-y divide-gray-100 max-h-[350px] overflow-y-auto pr-1">
+                {fileResults.map((res, idx) => (
+                  <div key={idx} className="py-4 first:pt-0 last:pb-0 flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 truncate">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        res.success ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                      }`}>
+                        {res.success ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                      </div>
+                      <div className="truncate">
+                        <p className="text-sm font-bold text-gray-900 truncate" title={res.filename}>{res.filename}</p>
+                        {res.success ? (
+                          <p className="text-xs text-green-600 font-medium">
+                            Úspešne naimportované: <span className="font-bold">{res.imported}</span> platieb (spárované: <span className="font-bold">{res.matched}</span>{res.skipped ? <>, preskočené: <span className="font-bold">{res.skipped}</span></> : null})
+                          </p>
+                        ) : (
+                          <p className="text-xs text-red-600 font-medium">{res.error}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                ))}
+              </div>
 
-                  {result.success && (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                       <div className="bg-white p-4 rounded-xl border border-green-100/50 shadow-sm flex flex-col items-center justify-center">
-                          <span className="text-green-600/60 text-[10px] font-black uppercase tracking-wider">Nové transakcie</span>
-                          <span className="text-3xl font-black text-green-700">{result.imported || 0}</span>
-                       </div>
-                       <div className="bg-white p-4 rounded-xl border border-green-100/50 shadow-sm flex flex-col items-center justify-center">
-                          <span className="text-blue-600/60 text-[10px] font-black uppercase tracking-wider">Z toho spárované</span>
-                          <span className="text-3xl font-black text-blue-700">{result.matched || 0}</span>
-                       </div>
-                    </div>
-                  )}
-
-                  {result.errors && result.errors.length > 0 && (
-                    <div className="bg-red-50/50 p-4 rounded-xl border border-red-100">
-                      <p className="text-[10px] font-black text-red-600 uppercase tracking-wider mb-2">Hlásenia a chyby:</p>
-                      <ul className="list-disc list-inside text-sm text-red-800 space-y-1">
-                        {result.errors.map((error: string, idx: number) => (
-                          <li key={idx}>{error}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {result.success && (
-                    <button
-                      onClick={() => router.push('/admin/banka')}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl text-sm font-bold shadow-lg hover:bg-black transition-all"
-                    >
-                      Prejsť na Banku <ArrowLeft size={16} className="rotate-180" />
-                    </button>
-                  )}
-                </div>
+              <div className="pt-4 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => router.push('/admin/banka')}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl text-sm font-bold shadow-lg hover:bg-black transition-all"
+                >
+                  Prejsť na Banku <ArrowLeft size={16} className="rotate-180" />
+                </button>
               </div>
             </div>
           )}

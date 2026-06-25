@@ -2,14 +2,27 @@
 
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useUserRole } from '@/hooks/useUserRole'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
+const routePermissionsMap: Record<string, string> = {
+  '/admin/darcovia': 'view_donors',
+  '/admin/banka': 'view_bank',
+  '/admin/import': 'import_bank',
+  '/admin/granty': 'view_grants',
+  '/admin/roly': 'manage_roles',
+  '/admin/projekty': 'manage_config',
+  '/admin/nastavenia/farnosti': 'manage_config',
+  '/admin/nastavenia/dekanaty': 'manage_config',
+  '/admin/exporty': 'view_donors',
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { session, sessionChecked } = useSupabase()
-  const { isAdmin, loading: roleLoading } = useUserRole()
+  const { isAdmin, roles, hasPermission, loading: roleLoading } = useUserRole()
   const router = useRouter()
+  const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -30,8 +43,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Zistiť, či je pre aktuálnu cestu potrebné oprávnenie
+  const matchedRoute = Object.keys(routePermissionsMap).find(
+    route => pathname === route || pathname.startsWith(route + '/')
+  )
+  const requiredPermission = matchedRoute ? routePermissionsMap[matchedRoute] : null
+
+  // Prístup do administrácie vyžaduje buď rolu administrator, alebo aspoň jednu priradenú rolu
+  const hasAccess = isAdmin || roles.length > 0
+  const isAuthorized = hasAccess && (!requiredPermission || hasPermission(requiredPermission))
+
   // Prístup zamietnutý
-  if (sessionChecked && session && !roleLoading && !isAdmin) {
+  if (sessionChecked && session && !roleLoading && !isAuthorized) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl p-12 text-center max-w-md">
@@ -41,9 +64,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </svg>
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Prístup zamietnutý</h2>
-          <p className="text-gray-500 mb-6">Nemáte oprávnenie na prístup do administrácie KROK.</p>
-          <button onClick={() => router.replace('/')} className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors">
-            Späť na hlavnú stránku
+          <p className="text-gray-500 mb-6">
+            {hasAccess 
+              ? 'Nemáte dostatočné oprávnenia na zobrazenie tejto sekcie.' 
+              : 'Nemáte oprávnenie na prístup do administrácie KROK.'}
+          </p>
+          <button 
+            onClick={() => router.replace(hasAccess ? '/admin' : '/')} 
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors cursor-pointer"
+          >
+            {hasAccess ? 'Späť na Dashboard' : 'Späť na hlavnú stránku'}
           </button>
         </div>
       </div>

@@ -98,11 +98,27 @@ export async function getUsersWithRoles() {
 }
 
 /**
+ * Získa zoznam všetkých dostupných rolí z public.roles
+ */
+export async function getAvailableRoles() {
+  const { data, error } = await supabaseAdmin
+    .from('roles')
+    .select('*')
+    .order('name')
+
+  if (error) {
+    console.error('[Actions] getAvailableRoles error:', error)
+    return []
+  }
+  return data || []
+}
+
+/**
  * Zmena/nastavenie role pre vybraného používateľa
  */
 export async function toggleUserRole(payload: {
   userId: string
-  role: 'administrator' | 'kontrolor'
+  role: string
   active: boolean
   userName: string
 }) {

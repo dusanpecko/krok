@@ -1,42 +1,39 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getUsersWithRoles, toggleUserRole } from './actions'
+import { getUsersWithRoles, toggleUserRole, getAvailableRoles } from './actions'
 import { 
   Users, 
-  ShieldAlert, 
-  ShieldCheck, 
-  UserCheck, 
   Search, 
   Loader2, 
   CheckCircle2, 
   AlertCircle, 
   Info,
-  Undo
+  X,
+  Shield
 } from 'lucide-react'
 import Link from 'next/link'
 
-const KROK = {
-  blue: '#003DA5',
-  lightBlue: '#0072CE',
-  red: '#E4002B',
-  yellow: '#FFD100',
-  darkBlue: '#002D72',
-}
-
 export default function AdminRolesPage() {
   const [users, setUsers] = useState<any[]>([])
+  const [availableRoles, setAvailableRoles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  const selectedUser = selectedUserId ? users.find(u => u.userId === selectedUserId) : null
 
   const loadUsers = async () => {
     setLoading(true)
     try {
       const data = await getUsersWithRoles()
       setUsers(data)
+      
+      const rolesData = await getAvailableRoles()
+      setAvailableRoles(rolesData)
     } catch (err) {
       console.error('Failed to load users:', err)
       setError('Nepodarilo sa načítať zoznam používateľov.')
@@ -49,7 +46,7 @@ export default function AdminRolesPage() {
     loadUsers()
   }, [])
 
-  const handleRoleToggle = async (userId: string, role: 'administrator' | 'kontrolor', currentActive: boolean, userName: string) => {
+  const handleRoleToggle = async (userId: string, role: string, currentActive: boolean, userName: string) => {
     setUpdatingUserId(`${userId}-${role}`)
     setError(null)
     setSuccess(null)
@@ -108,6 +105,24 @@ export default function AdminRolesPage() {
         <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-semibold">
           Administrácia Pastoračného Fondu KROK – Prístupové práva
         </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200">
+        <Link 
+          href="/admin/roly" 
+          className="px-6 py-3 text-xs font-bold text-blue-600 border-b-2 border-blue-600 flex items-center gap-2"
+        >
+          <Users size={14} />
+          Používatelia
+        </Link>
+        <Link 
+          href="/admin/roly/opravnenia" 
+          className="px-6 py-3 text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-2"
+        >
+          <Shield size={14} />
+          Matica oprávnení
+        </Link>
       </div>
 
       {/* Info Banner o dedení práv */}
@@ -171,15 +186,12 @@ export default function AdminRolesPage() {
                   <th className="px-5 py-3">Používateľ (Meno / VS)</th>
                   <th className="px-5 py-3">E-mail</th>
                   <th className="px-5 py-3">Aktívne roly</th>
-                  <th className="px-5 py-3 text-center">Udelenie role: KONTROLÓR</th>
-                  <th className="px-5 py-3 text-center">Udelenie role: ADMINISTRÁTOR</th>
+                  <th className="px-5 py-3 text-center">Priradenie oprávnení</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-150">
                 {filteredUsers.map(user => {
                   const isAdminRole = user.roles.includes('administrator')
-                  const isEvaluatorRole = user.roles.includes('kontrolor')
-                  const isSubmitterRole = user.roles.includes('zadavatel')
 
                   return (
                     <tr key={user.userId} className="hover:bg-gray-50/50 transition-colors">
@@ -202,17 +214,22 @@ export default function AdminRolesPage() {
                             </span>
                           ) : (
                             user.roles.map((r: string) => {
-                              let label = r
-                              let color = 'bg-gray-100 text-gray-700'
+                              const matchedRole = availableRoles.find((role: any) => role.id === r)
+                              const label = matchedRole ? matchedRole.name : r
+                              
+                              let color = 'bg-gray-50 text-gray-600 border border-gray-200'
                               if (r === 'administrator') {
-                                label = 'Administrátor'
                                 color = 'bg-red-50 text-red-700 border border-red-200'
                               } else if (r === 'kontrolor') {
-                                label = 'Kontrolór'
                                 color = 'bg-purple-50 text-purple-700 border border-purple-200'
                               } else if (r === 'zadavatel') {
-                                label = 'Žiadateľ'
                                 color = 'bg-blue-50 text-blue-700 border border-blue-200'
+                              } else if (r === 'farnost') {
+                                color = 'bg-green-50 text-green-700 border border-green-200'
+                              } else if (r === 'zamestnanec') {
+                                color = 'bg-amber-50 text-amber-700 border border-amber-200'
+                              } else if (r === 'kuria') {
+                                color = 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                               }
 
                               return (
@@ -225,52 +242,103 @@ export default function AdminRolesPage() {
                         </div>
                       </td>
                       
-                      {/* Kontrolór Toggle */}
+                      {/* Spravovať roly button */}
                       <td className="px-5 py-4 text-center">
-                        {updatingUserId === `${user.userId}-kontrolor` ? (
-                          <Loader2 size={16} className="animate-spin text-blue-600 mx-auto" />
-                        ) : (
-                          <button
-                            onClick={() => handleRoleToggle(user.userId, 'kontrolor', isEvaluatorRole, user.name)}
-                            disabled={isAdminRole} // Ak je admin, rola kontrolora je irelevantná
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer ${
-                              isAdminRole 
-                                ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed opacity-50'
-                                : isEvaluatorRole
-                                  ? 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'
-                                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                            }`}
-                            title={isAdminRole ? 'Administrátor má rolu kontrolóra automaticky' : undefined}
-                          >
-                            <UserCheck size={12} />
-                            {isAdminRole ? 'Dedená (Admin)' : isEvaluatorRole ? 'Odobrať rolu' : 'Udeliť rolu'}
-                          </button>
-                        )}
-                      </td>
-
-                      {/* Administrátor Toggle */}
-                      <td className="px-5 py-4 text-center">
-                        {updatingUserId === `${user.userId}-administrator` ? (
-                          <Loader2 size={16} className="animate-spin text-blue-600 mx-auto" />
-                        ) : (
-                          <button
-                            onClick={() => handleRoleToggle(user.userId, 'administrator', isAdminRole, user.name)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer ${
-                              isAdminRole
-                                ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
-                                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                            }`}
-                          >
-                            {isAdminRole ? <ShieldAlert size={12} /> : <ShieldCheck size={12} />}
-                            {isAdminRole ? 'Odobrať prístup' : 'Udeliť prístup'}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setSelectedUserId(user.userId)}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 text-[10px] font-bold shadow-sm transition-all cursor-pointer"
+                        >
+                          <Users size={12} className="text-gray-400" />
+                          Spravovať roly
+                        </button>
                       </td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal na priradenie oprávnení */}
+      {selectedUser && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div>
+                <h3 className="text-lg font-black text-gray-900 tracking-tight">
+                  Priradenie oprávnení
+                </h3>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+                  {selectedUser.name} ({selectedUser.vs})
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedUserId(null)} 
+                className="p-2 hover:bg-white rounded-xl transition-colors border border-transparent hover:border-gray-100 shadow-sm cursor-pointer"
+              >
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-8 space-y-4 max-h-[60vh] overflow-y-auto">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">
+                Zvoľte roly pre tohto používateľa
+              </p>
+              
+              <div className="space-y-2">
+                {availableRoles.map((role: any) => {
+                  const isActive = selectedUser.roles.includes(role.id)
+                  const isUpdating = updatingUserId === `${selectedUser.userId}-${role.id}`
+                  
+                  return (
+                    <button
+                      key={role.id}
+                      onClick={() => handleRoleToggle(selectedUser.userId, role.id, isActive, selectedUser.name)}
+                      disabled={isUpdating}
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-xs font-bold text-left transition-all cursor-pointer ${
+                        isActive 
+                          ? 'bg-blue-50/55 border-blue-200 text-blue-800' 
+                          : 'bg-white hover:bg-gray-50 border-gray-100 text-gray-700'
+                      }`}
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-extrabold">{role.name}</span>
+                        <span className="text-[10px] text-gray-400 font-medium font-sans leading-normal">
+                          {role.description || 'Bez popisu'}
+                        </span>
+                      </div>
+                      
+                      <div className="shrink-0 ml-3">
+                        {isUpdating ? (
+                          <Loader2 size={16} className="animate-spin text-blue-600" />
+                        ) : isActive ? (
+                          <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 border border-gray-300 rounded-full" />
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedUserId(null)}
+                className="py-2.5 px-6 bg-gray-200 text-gray-700 rounded-2xl font-bold text-xs hover:bg-gray-300 transition-all cursor-pointer"
+              >
+                Hotovo / Zatvoriť
+              </button>
+            </div>
           </div>
         </div>
       )}

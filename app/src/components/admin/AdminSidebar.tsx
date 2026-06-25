@@ -16,11 +16,13 @@ import {
   LogOut,
   Map,
   Database,
+  Globe,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
+import { useUserRole } from '@/hooks/useUserRole'
 import Image from 'next/image'
 
 // KROK brand farby z logomanuálu
@@ -36,19 +38,20 @@ const KROK = {
 
 const mainLinks = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/darcovia', label: 'Darcovia', icon: Users },
-  { href: '/admin/banka', label: 'Banka', icon: Landmark },
-  { href: '/admin/granty', label: 'Granty', icon: FolderHeart },
+  { href: '/', label: 'Zobraziť web', icon: Globe, external: true },
+  { href: '/admin/darcovia', label: 'Darcovia', icon: Users, permission: 'view_donors' },
+  { href: '/admin/banka', label: 'Banka', icon: Landmark, permission: 'view_bank' },
+  { href: '/admin/granty', label: 'Granty', icon: FolderHeart, permission: 'view_grants' },
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
 ]
 
 const settingsLinks = [
-  { href: '/admin/projekty', label: 'Projekty', icon: Database },
-  { href: '/admin/nastavenia/farnosti', label: 'Farnosti', icon: Church },
-  { href: '/admin/nastavenia/dekanaty', label: 'Dekanáty', icon: Map },
-  { href: '/admin/import', label: 'Import výpisu', icon: FileUp },
-  { href: '/admin/roly', label: 'Správa rolí', icon: Users },
-  { href: '/admin/exporty', label: 'Exporty', icon: FileText },
+  { href: '/admin/projekty', label: 'Projekty', icon: Database, permission: 'manage_config' },
+  { href: '/admin/nastavenia/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_config' },
+  { href: '/admin/nastavenia/dekanaty', label: 'Dekanáty', icon: Map, permission: 'manage_config' },
+  { href: '/admin/import', label: 'Import výpisu', icon: FileUp, permission: 'import_bank' },
+  { href: '/admin/roly', label: 'Správa rolí', icon: Users, permission: 'manage_roles' },
+  { href: '/admin/exporty', label: 'Exporty', icon: FileText, permission: 'view_donors' },
 ]
 
 interface AdminSidebarProps {
@@ -60,13 +63,18 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile = false }: AdminSidebarProps) {
   const pathname = usePathname()
   const { supabase } = useSupabase()
+  const { hasPermission } = useUserRole()
   const [settingsExpanded, setSettingsExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
 
+  const visibleMainLinks = mainLinks.filter(link => !link.permission || hasPermission(link.permission))
+  const visibleSettingsLinks = settingsLinks.filter(link => !link.permission || hasPermission(link.permission))
+  const hasSettingsAccess = visibleSettingsLinks.length > 0
+
   useEffect(() => { setMounted(true) }, [])
 
-  const isActive = (href: string) => {
-    if (!mounted || !pathname) return false
+  const isActive = (href: string, external?: boolean) => {
+    if (!mounted || !pathname || external) return false
     if (href === '/admin') return pathname === '/admin'
     return pathname === href || pathname.startsWith(href + '/')
   }
@@ -129,13 +137,15 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
               </p>
             )}
 
-            {mainLinks.map(link => {
+            {visibleMainLinks.map(link => {
               const Icon = link.icon
-              const active = isActive(link.href)
+              const active = isActive(link.href, link.external)
               return (
                 <Link
                   key={link.href}
                   href={link.href}
+                  target={link.external ? "_blank" : undefined}
+                  rel={link.external ? "noopener noreferrer" : undefined}
                   className={`group relative flex items-center gap-2.5 rounded-lg transition-all duration-200 ${
                     isCollapsed ? 'px-3 py-2 justify-center' : 'px-3 py-2'
                   } ${
@@ -178,40 +188,44 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
                 Nastavenia & Nástroje
               </p>
             )}
-            <button
-              onClick={() => setSettingsExpanded(!settingsExpanded)}
-              className={`w-full group flex items-center gap-2.5 rounded-lg border border-transparent transition-all duration-200 ${
-                isCollapsed ? 'px-3 py-2 justify-center' : 'px-3 py-2'
-              } hover:bg-white/8`}
-            >
-              <Settings size={16} className="text-blue-200/70" />
-              {!isCollapsed && (
-                <>
-                  <span className="flex-1 text-sm font-medium text-blue-100/80 text-left">Nastavenia</span>
-                  {settingsExpanded ? <ChevronUp size={12} className="text-blue-200/50" /> : <ChevronDown size={12} className="text-blue-200/50" />}
-                </>
-              )}
-            </button>
+            {hasSettingsAccess && (
+              <>
+                <button
+                  onClick={() => setSettingsExpanded(!settingsExpanded)}
+                  className={`w-full group flex items-center gap-2.5 rounded-lg border border-transparent transition-all duration-200 ${
+                    isCollapsed ? 'px-3 py-2 justify-center' : 'px-3 py-2'
+                  } hover:bg-white/8`}
+                >
+                  <Settings size={16} className="text-blue-200/70" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1 text-sm font-medium text-blue-100/80 text-left">Nastavenia</span>
+                      {settingsExpanded ? <ChevronUp size={12} className="text-blue-200/50" /> : <ChevronDown size={12} className="text-blue-200/50" />}
+                    </>
+                  )}
+                </button>
 
-            {settingsExpanded && !isCollapsed && (
-              <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-2">
-                {settingsLinks.map(subLink => {
-                  const SubIcon = subLink.icon
-                  const active = isActive(subLink.href)
-                  return (
-                    <Link
-                      key={subLink.href}
-                      href={subLink.href}
-                      className={`group flex items-center gap-2 rounded-lg px-3 py-1.5 transition-all duration-200 ${
-                        active ? 'bg-white/15 text-white' : 'text-blue-100/60 hover:bg-white/8 hover:text-white'
-                      }`}
-                    >
-                      <SubIcon size={14} />
-                      <span className="text-xs font-medium">{subLink.label}</span>
-                    </Link>
-                  )
-                })}
-              </div>
+                {settingsExpanded && !isCollapsed && (
+                  <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-2">
+                    {visibleSettingsLinks.map(subLink => {
+                      const SubIcon = subLink.icon
+                      const active = isActive(subLink.href)
+                      return (
+                        <Link
+                          key={subLink.href}
+                          href={subLink.href}
+                          className={`group flex items-center gap-2 rounded-lg px-3 py-1.5 transition-all duration-200 ${
+                            active ? 'bg-white/15 text-white' : 'text-blue-100/60 hover:bg-white/8 hover:text-white'
+                          }`}
+                        >
+                          <SubIcon size={14} />
+                          <span className="text-xs font-medium">{subLink.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </nav>

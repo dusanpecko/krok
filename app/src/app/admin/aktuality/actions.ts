@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { uploadBuffer, deleteImage, uploadImage } from '@/lib/storage'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { requireAdmin } from '@/lib/auth'
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,6 +31,7 @@ export interface PostPayload {
  * Získa zoznam všetkých článkov pre admin prostredie.
  */
 export async function getPosts() {
+  await requireAdmin()
   const { data, error } = await supabaseAdmin
     .from('posts')
     .select('*')
@@ -47,6 +49,7 @@ export async function getPosts() {
  * Získa konkrétny článok podľa ID.
  */
 export async function getPostById(id: string) {
+  await requireAdmin()
   const { data, error } = await supabaseAdmin
     .from('posts')
     .select('*')
@@ -94,6 +97,7 @@ function getB2KeyFromUrl(url?: string | null): string | null {
  * Vytvorí alebo aktualizuje príspevok v databáze.
  */
 export async function createOrUpdatePost(payload: PostPayload) {
+  await requireAdmin()
   try {
     const finalSlug = payload.slug.trim() || generateSlug(payload.title)
     
@@ -157,6 +161,7 @@ export async function createOrUpdatePost(payload: PostPayload) {
  * Vymaže článok z databázy vrátane priradených súborov na B2 (ilustrácia + audio).
  */
 export async function deletePost(id: string) {
+  await requireAdmin()
   try {
     // 1. Načítame príspevok pre získanie URL adries súborov
     const { data: post, error: fetchError } = await supabaseAdmin
@@ -269,6 +274,7 @@ function splitTextChunks(text: string, maxChunk: number = 5000): string[] {
  * Serverovo vygeneruje audiostopu pre článok pomocou ElevenLabs a uloží ju na B2.
  */
 export async function generateElevenLabsTTS(postId: string) {
+  await requireAdmin()
   try {
     if (!process.env.ELEVENLABS_API_KEY) {
       throw new Error('ElevenLabs API kľúč nie je nakonfigurovaný v .env.local')
@@ -380,6 +386,7 @@ export async function generateElevenLabsTTS(postId: string) {
  * Server Action na nahrávanie titulného obrázka článku na Backblaze B2.
  */
 export async function uploadPostImage(formData: FormData) {
+  await requireAdmin()
   try {
     const file = formData.get('file') as File
     const postId = formData.get('postId') as string
@@ -410,6 +417,7 @@ export async function generateAiContent(
   currentContent?: string,
   mode: 'generate' | 'refine' = 'generate'
 ) {
+  await requireAdmin()
   try {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('Google Gemini API kľúč nie je nakonfigurovaný v .env.local')
@@ -480,6 +488,7 @@ Upravený text vráť ako čisté HTML s dodržaním pôvodných štruktúr a fo
  * Server Action na automatické generovanie zhrnutia (excerpt) článku z HTML obsahu.
  */
 export async function generateAiExcerpt(content: string) {
+  await requireAdmin()
   try {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('Google Gemini API kľúč nie je nakonfigurovaný v .env.local')
@@ -525,6 +534,7 @@ ${content}
  * Server Action na kontrolu gramatiky, preklepov a štylistiky v slovenskom texte pomocou Google Gemini.
  */
 export async function checkGrammar(text: string) {
+  await requireAdmin()
   try {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('Google Gemini API kľúč nie je nakonfigurovaný v .env.local')
@@ -592,6 +602,7 @@ Vstupný text na opravu:
  * Server Action na generovanie titulného obrázka pomocou Google Imagen 3 a uloženie na B2.
  */
 export async function generateAiImage(prompt: string, postId?: string) {
+  await requireAdmin()
   try {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('Google Gemini API kľúč nie je nakonfigurovaný v .env.local')

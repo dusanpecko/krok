@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { uploadBuffer } from '@/lib/storage'
 import { revalidatePath } from 'next/cache'
+import { requirePermission } from '@/lib/auth'
 
 // Pomocná funkcia na premenu slovenskej diakritiky na slug
 function generateSlug(name: string): string {
@@ -289,6 +290,7 @@ export async function getSubmissionById(id: string) {
  * ADMIN: Získa všetky žiadosti pre správu
  */
 export async function getAllSubmissions(formId?: string) {
+  await requirePermission('view_grants')
   const supabase = await createClient()
   
   let query = supabase
@@ -380,6 +382,7 @@ export async function submitEvaluation(payload: {
  * ADMIN: Priradenie hodnotiteľa (kontrolóra)
  */
 export async function assignEvaluator(submissionId: string, evaluatorId: string | null) {
+  await requirePermission('view_grants')
   const supabase = await createClient()
   
   const { error } = await supabase
@@ -403,6 +406,7 @@ export async function assignEvaluator(submissionId: string, evaluatorId: string 
  * ADMIN: Zoznam všetkých kontrolórov v systéme
  */
 export async function getEvaluatorsList() {
+  await requirePermission('view_grants')
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('user_roles')
@@ -427,6 +431,7 @@ export async function updateWorkflowStatus(payload: {
   ss?: string | null
   adminNotes?: string | null
 }) {
+  await requirePermission('view_grants')
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -456,6 +461,7 @@ export async function updateWorkflowStatus(payload: {
  * ADMIN: Schválenie a automatické vytvorenie prepojeného projektu v KROK databáze!
  */
 export async function approveAndCreateProject(submissionId: string, approvedAmount: number, vs: string, ss: string) {
+  await requirePermission('view_grants')
   const supabase = await createClient()
 
   // 1. Získať dáta prihlášky
@@ -539,6 +545,7 @@ export async function createNewForm(payload: {
   description: string
   fields: any[]
 }) {
+  await requirePermission('view_grants')
   const supabase = await createClient()
 
   const { error } = await supabase

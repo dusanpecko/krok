@@ -2,12 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requirePermission } from '@/lib/auth'
 
 /**
  * Generates the next Variable Symbol based on the highest existing VS.
  * Format: Increment from 11771451
  */
 export async function generateNextVS() {
+  await requirePermission('view_donors')
   const supabase = await createClient()
   
   // Find the highest numeric VS
@@ -30,6 +32,7 @@ export async function generateNextVS() {
 }
 
 export async function updateDonor(id: string, data: any) {
+  await requirePermission('view_donors')
   const supabase = await createClient()
   
   // 1. Update basic fields
@@ -88,6 +91,7 @@ export async function updateDonor(id: string, data: any) {
 }
 
 export async function createDonor(data: any) {
+  await requirePermission('view_donors')
   const supabase = await createClient()
   
   // Generate VS if not provided
@@ -125,6 +129,7 @@ export async function createDonor(data: any) {
 }
 
 export async function toggleDonorStatus(id: string, currentStatus: string) {
+  await requirePermission('view_donors')
   const supabase = await createClient()
   const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
   

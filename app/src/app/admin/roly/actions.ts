@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { requirePermission } from '@/lib/auth'
 
 // Vytvoriť privilegovaného admin klienta na čítanie a správu rolí
 const supabaseAdmin = createSupabaseClient(
@@ -15,6 +16,7 @@ const supabaseAdmin = createSupabaseClient(
  * a dynamicky ich spáruje s darcami (public.donors) a rolami (public.user_roles)
  */
 export async function getUsersWithRoles() {
+  await requirePermission('manage_roles')
   // 1. Získať zoznam všetkých reálne registrovaných účtov zo Supabase Auth
   const { data: { users: authUsers }, error: authError } = await supabaseAdmin.auth.admin.listUsers()
 
@@ -101,6 +103,7 @@ export async function getUsersWithRoles() {
  * Získa zoznam všetkých dostupných rolí z public.roles
  */
 export async function getAvailableRoles() {
+  await requirePermission('manage_roles')
   const { data, error } = await supabaseAdmin
     .from('roles')
     .select('*')
@@ -122,6 +125,7 @@ export async function toggleUserRole(payload: {
   active: boolean
   userName: string
 }) {
+  await requirePermission('manage_roles')
   const { userId, role, active, userName } = payload
 
   if (active) {

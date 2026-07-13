@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requirePermission } from '@/lib/auth'
 
 function generateSlug(name: string): string {
   return name
@@ -26,6 +27,7 @@ export async function upsertProject(data: {
   specific_symbol?: string | null
   visible_on_web?: boolean
 }) {
+  await requirePermission('manage_config')
   const supabase = await createClient()
 
   const slug = generateSlug(data.name)
@@ -58,6 +60,7 @@ export async function upsertProject(data: {
 }
 
 export async function deleteProject(id: string) {
+  await requirePermission('manage_config')
   const supabase = await createClient()
 
   // Safety check: is it linked to any donors?

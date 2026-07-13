@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { requirePermission } from '@/lib/auth'
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,7 @@ const supabaseAdmin = createSupabaseClient(
  * Získa všetky definované oprávnenia
  */
 export async function getPermissions() {
+  await requirePermission('manage_roles')
   const { data, error } = await supabaseAdmin
     .from('permissions')
     .select('*')
@@ -28,6 +30,7 @@ export async function getPermissions() {
  * Získa mapovanie všetkých rolí k oprávneniam
  */
 export async function getRolePermissions() {
+  await requirePermission('manage_roles')
   const { data, error } = await supabaseAdmin
     .from('role_permissions')
     .select('role_id, permission_id')
@@ -43,6 +46,7 @@ export async function getRolePermissions() {
  * Získa zoznam všetkých rolí
  */
 export async function getRoles() {
+  await requirePermission('manage_roles')
   const { data, error } = await supabaseAdmin
     .from('roles')
     .select('*')
@@ -63,6 +67,7 @@ export async function toggleRolePermission(payload: {
   permissionId: string
   active: boolean
 }) {
+  await requirePermission('manage_roles')
   const { roleId, permissionId, active } = payload
 
   try {

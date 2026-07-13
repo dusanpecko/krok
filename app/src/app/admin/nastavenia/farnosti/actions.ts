@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requirePermission } from '@/lib/auth'
 
 export async function upsertParish(data: {
   id?: string
@@ -10,6 +11,7 @@ export async function upsertParish(data: {
   city?: string | null
   postal_code?: string | null
 }) {
+  await requirePermission('manage_config')
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -32,6 +34,7 @@ export async function upsertParish(data: {
 }
 
 export async function deleteParish(id: string) {
+  await requirePermission('manage_config')
   const supabase = await createClient()
 
   // Safety check: is it used by any donor?

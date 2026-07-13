@@ -2,6 +2,7 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { requirePermission } from '@/lib/auth'
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,7 @@ const supabaseAdmin = createSupabaseClient(
  * Získa zoznam unikátnych rokov z importovaných dávok.
  */
 export async function getBankYears() {
+  await requirePermission('view_bank')
   const [{ data: oldest }, { data: newest }] = await Promise.all([
     supabaseAdmin.from('bank_transactions').select('booking_date').order('booking_date', { ascending: true }).limit(1),
     supabaseAdmin.from('bank_transactions').select('booking_date').order('booking_date', { ascending: false }).limit(1)
@@ -57,6 +59,7 @@ export async function getTransactions(params: {
   search: string
   page: number
 }) {
+  await requirePermission('view_bank')
   const pageSize = 50
   const from = (params.page - 1) * pageSize
   const to = from + pageSize - 1
@@ -115,6 +118,7 @@ export async function getTransactions(params: {
  * Získa list darcov pre manuálne párovanie.
  */
 export async function searchDonors(query: string) {
+  await requirePermission('view_bank')
   if (!query || query.length < 2) return []
 
   // Najskôr skúsime vyhľadávanie bez diakritiky pomocou RPC funkcie v databáze
@@ -146,6 +150,7 @@ export async function searchDonors(query: string) {
  * Získa zoznam projektov.
  */
 export async function getProjects() {
+  await requirePermission('view_bank')
   const { data } = await supabaseAdmin.from('projects').select('id, name, specific_symbol')
   return data || []
 }
@@ -159,6 +164,7 @@ export async function matchTransaction(
   donorId: string, 
   projectId?: string | null
 ) {
+  await requirePermission('view_bank')
   // 1. Zisti informácie o transakcii
   const { data: tx, error: txError } = await supabaseAdmin
     .from('bank_transactions')
@@ -217,6 +223,7 @@ export async function matchTransaction(
  * Funkcia slúžiaca na hromadné / spätné zrušenie párovania
  */
 export async function unmatchTransaction(transactionId: string) {
+  await requirePermission('view_bank')
   // 1. Zisti IDcka z donations pre odstránenie analytického záznamu!
   const { error: dError } = await supabaseAdmin
     .from('donations')
@@ -249,6 +256,7 @@ export async function bulkMatchAnonymous(params: {
   year: number
   month: number | 'all'
 }) {
+  await requirePermission('view_bank')
   const donorId = '7aa76574-af94-45c8-b4ce-40b9995c8906'
   
   // 1. Zisti dátumové rozmedzie
@@ -325,6 +333,7 @@ export async function bulkMatchAnonymous(params: {
  * a analyzuje históriu príspevkov pre zobrazenie informácie o pravidelnosti darcu.
  */
 export async function getSuggestedMatches() {
+  await requirePermission('view_bank')
   const { data, error } = await supabaseAdmin
     .rpc('get_suggested_matches')
 
@@ -514,6 +523,7 @@ export async function bulkMatchSuggested(matches: {
   amount: number
   bookingDate: string
 }[]) {
+  await requirePermission('view_bank')
   if (!matches || matches.length === 0) {
     return { success: true, count: 0 }
   }
@@ -588,6 +598,7 @@ const parseNumberCol = (col: any): number | null => {
  * Synchronizuje transakcie z Fio banky cez REST API za posledných 30 dní.
  */
 export async function syncFioTransactions() {
+  await requirePermission('view_bank')
   const token = process.env.FIO_API_TOKEN
   if (!token) {
     return { 

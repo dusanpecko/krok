@@ -1,16 +1,28 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { XMLParser } from 'fast-xml-parser'
+import { requirePermission, UnauthorizedError, ForbiddenError } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
+    // Autorizácia: iba používateľ s oprávnením import_bank (middleware /api/* nechráni!)
+    try {
+      await requirePermission('import_bank')
+    } catch (authErr) {
+      if (authErr instanceof UnauthorizedError) {
+        return NextResponse.json({ error: 'Neprihlásený používateľ.' }, { status: 401 })
+      }
+      if (authErr instanceof ForbiddenError) {
+        return NextResponse.json({ error: 'Nemáte oprávnenie na import.' }, { status: 403 })
+      }
+      throw authErr
+    }
+
     // Používame admin klienta (Service Role), aby sme plynulo obišli RLS pre Storage bucket 'banka'
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-
-    // Authentication simple check (server side, assuming admin context based on middleware or cookies)
 
     const formData = await request.formData()
     const file = formData.get('file') as File

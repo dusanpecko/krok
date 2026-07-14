@@ -75,7 +75,8 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 - [ ] 🟢 N+1 v `getSuggestedMatches` – batchovať dopyty (`.in(...)`) alebo presunúť do RPC.
 - [ ] 🟢 Prvé testy okolo CAMT.053/Fio parsingu (vitest) – najprv extrahovať parsing do `lib/bank/`.
 - [ ] 🟢 **Zmazať/uzamknúť deštruktívne skripty** commitnuté v repe: `scripts/clear_bank_data.ts`, `scripts/clear_may_transactions.js` (spustiteľné proti produkcii).
-- [ ] 🟢 `is_admin()` a ostatné SECURITY DEFINER funkcie – pridať `SET search_path = public, pg_temp` (hardening).
+- [x] 🟢 `is_admin()` a ostatné SECURITY DEFINER funkcie – `SET search_path = public, pg_temp` (hardening). HOTOVO v migrácii 012.
+- [x] 🔴 **Rekurzia RLS na user_roles (`42P17`)** – opravená migráciou 012 (`is_app_admin()` obchádza RLS). Zamknuté aj RBAC tabuľky (`user_roles`/`permissions`/`role_permissions`/`roles`) proti anon čítaniu. Bonus: rozbehol sa dynamický systém rolí (`useUserRole`), predtým fungoval len legacy `admin_users`. Overené naživo.
 - [ ] 🟢 Centralizovať Gemini model ID do env (`gemini-1.5-*` je hardcoded a zastaraný rad).
 - [ ] 🟢 Znížiť logovanie PII (mená/e-maily/IDs) v produkcii (`kontakt/actions.ts`, role akcie).
 - [ ] 🟢 Accessibility: `htmlFor` na labeloch, `aria-label` na icon-only tlačidlách.

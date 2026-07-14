@@ -31,7 +31,8 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
     - Overené: `tsc` aj `next build` prechádzajú, permission ID sedia s DB.
 - [ ] 🟠 **Middleware kontroluje len prihlásenie, nie rolu.** (Už nie kritické – reálnu ochranu robia guardy v akciách.) Doplniť do `src/middleware.ts` overenie role pre `/admin/*` ako defense-in-depth + lepší UX (redirect namiesto chyby).
 - [x] 🟠 **Rate limiting + anti-enumeration na registrácii** – HOTOVO. Pridaný `src/lib/rate-limit.ts` (Upstash Redis, fail-open ak nenakonfigurovaný) + limit 5 registrácií/hod/IP v `registerDonor`. Odexportovaný `generateNextVSAdmin` (bol verejne volateľný, unikal ďalší VS). `EMAIL_EXISTS` hláška ponechaná (užitočná UX), enumerácia zmiernená rate-limitom.
-  - [ ] ⚙️ **TREBA:** vytvoriť Upstash Redis DB a pridať env `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (lokálne aj vo Vercel), inak je limit vypnutý (fail-open).
+  - [x] ⚙️ Upstash Redis DB vytvorená, env `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` pridané lokálne. Overené (PING → PONG, SET/GET/DEL OK).
+  - [ ] ⚙️ **TREBA pri deployi:** pridať tie isté dva env kľúče aj do Vercel (Production).
 - [ ] 🟠 Grantové prílohy idú do **verejného** B2 bucketu (`src/lib/storage.ts`). Pre launch buď skryť grantový modul, alebo prepnúť na privátny bucket + podpísané URL.
 
 ### Prihlásenie / registrácia darcov (kľúčová funkcia launchu)

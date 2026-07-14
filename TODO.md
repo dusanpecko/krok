@@ -30,7 +30,8 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
     - [x] `src/app/api/admin/import-xml/route.ts` (`import_bank`, vracia 401/403)
     - Overené: `tsc` aj `next build` prechádzajú, permission ID sedia s DB.
 - [ ] 🟠 **Middleware kontroluje len prihlásenie, nie rolu.** (Už nie kritické – reálnu ochranu robia guardy v akciách.) Doplniť do `src/middleware.ts` overenie role pre `/admin/*` ako defense-in-depth + lepší UX (redirect namiesto chyby).
-- [ ] 🟠 **Rate limiting + anti-enumeration na registrácii** (`(public)/registracia/actions.ts`): `EMAIL_EXISTS` umožňuje zistiť, kto je darca. Pridať aspoň základný rate limit; zvážiť CAPTCHA.
+- [x] 🟠 **Rate limiting + anti-enumeration na registrácii** – HOTOVO. Pridaný `src/lib/rate-limit.ts` (Upstash Redis, fail-open ak nenakonfigurovaný) + limit 5 registrácií/hod/IP v `registerDonor`. Odexportovaný `generateNextVSAdmin` (bol verejne volateľný, unikal ďalší VS). `EMAIL_EXISTS` hláška ponechaná (užitočná UX), enumerácia zmiernená rate-limitom.
+  - [ ] ⚙️ **TREBA:** vytvoriť Upstash Redis DB a pridať env `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (lokálne aj vo Vercel), inak je limit vypnutý (fail-open).
 - [ ] 🟠 Grantové prílohy idú do **verejného** B2 bucketu (`src/lib/storage.ts`). Pre launch buď skryť grantový modul, alebo prepnúť na privátny bucket + podpísané URL.
 
 ### Prihlásenie / registrácia darcov (kľúčová funkcia launchu)
@@ -48,7 +49,7 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 - [ ] 🟠 GDPR: zásady spracovania osobných údajov + cookie/consent (zbierate e-maily, IBAN, adresy darcov).
 
 ### Nasadenie (deploy)
-- [ ] 🔴 Nastaviť **všetky env premenné vo Vercel** (Production): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FIO_API_TOKEN`, `B2_*`, `ELEVENLABS_API_KEY`, `GEMINI_API_KEY`, `CRON_SECRET`.
+- [ ] 🔴 Nastaviť **všetky env premenné vo Vercel** (Production): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FIO_API_TOKEN`, `B2_*`, `ELEVENLABS_API_KEY`, `GEMINI_API_KEY`, `CRON_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
 - [ ] 🔴 Nastaviť produkčnú doménu + Supabase **Redirect URLs** (Auth) pre produkčnú doménu (inak Google/email login nepôjde).
 - [ ] 🟠 Overiť cron `vercel.json` (`/api/cron/sync-bank` o 02:00) beží na produkcii a `CRON_SECRET` sedí.
 - [ ] 🟢 Skontrolovať/vyčistiť leftover Next scaffolding v roote repa (`/package.json`, `node_modules` v roote) – appka je v `app/`.

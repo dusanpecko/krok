@@ -26,6 +26,8 @@
     "@tiptap/extension-youtube": "^3.23.6",
     "@tiptap/react": "^3.23.6",
     "@tiptap/starter-kit": "^3.23.6",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "dotenv": "^17.4.2",
     "fast-xml-parser": "^5.5.12",
     "framer-motion": "^12.38.0",

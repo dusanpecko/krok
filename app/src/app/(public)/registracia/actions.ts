@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 // Privileged admin client to bypass INSERT RLS restriction for anonymous visitor
 const supabaseAdmin = createSupabaseClient(
@@ -54,9 +54,10 @@ export async function getRegistrationFormOptions() {
 }
 
 /**
- * Generates the next unique Variable Symbol using admin client
+ * Generates the next unique Variable Symbol using admin client.
+ * INTERNÉ – nie je exportované (predtým verejne volateľná akcia unikala ďalší VS).
  */
-export async function generateNextVSAdmin() {
+async function generateNextVSAdmin() {
   // Find the highest numeric VS
   const { data, error } = await supabaseAdmin
     .from('donors')
@@ -81,6 +82,19 @@ export async function generateNextVSAdmin() {
  */
 export async function registerDonor(data: any) {
   try {
+    // 0. Rate-limit podľa IP (ochrana proti hromadnej registrácii a enumerácii e-mailov)
+    const { success: withinLimit } = await checkRateLimit('register', {
+      limit: 5,
+      window: '1 h',
+    })
+    if (!withinLimit) {
+      return {
+        success: false,
+        error: 'Priveľa pokusov o registráciu. Skúste to prosím neskôr (o hodinu).',
+        code: 'RATE_LIMITED',
+      }
+    }
+
     // 1. Check if donor with this email already exists
     const emailToUse = data.email?.trim().toLowerCase()
     if (emailToUse) {

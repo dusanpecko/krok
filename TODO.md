@@ -29,7 +29,7 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
     - [x] `src/app/admin/darcovia/actions.ts` (`view_donors`), `projekty` + `nastavenia/**` (`manage_config`), `granty` (`view_grants` – admin funkcie)
     - [x] `src/app/api/admin/import-xml/route.ts` (`import_bank`, vracia 401/403)
     - Overené: `tsc` aj `next build` prechádzajú, permission ID sedia s DB.
-- [ ] 🟠 **Middleware kontroluje len prihlásenie, nie rolu.** (Už nie kritické – reálnu ochranu robia guardy v akciách.) Doplniť do `src/middleware.ts` overenie role pre `/admin/*` ako defense-in-depth + lepší UX (redirect namiesto chyby).
+- [x] 🟠 **Middleware kontrola role pre `/admin/*`** – HOTOVO. `src/middleware.ts` teraz okrem prihlásenia overuje aj prístup (admin_users alebo aspoň jedna rola v user_roles); neoprávnený prihlásený používateľ je presmerovaný na `/`. Defense-in-depth navyše k guardom v akciách. tsc + build OK.
 - [x] 🟠 **Rate limiting + anti-enumeration na registrácii** – HOTOVO. Pridaný `src/lib/rate-limit.ts` (Upstash Redis, fail-open ak nenakonfigurovaný) + limit 5 registrácií/hod/IP v `registerDonor`. Odexportovaný `generateNextVSAdmin` (bol verejne volateľný, unikal ďalší VS). `EMAIL_EXISTS` hláška ponechaná (užitočná UX), enumerácia zmiernená rate-limitom.
   - [x] ⚙️ Upstash Redis DB vytvorená, env `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` pridané lokálne. Overené (PING → PONG, SET/GET/DEL OK).
   - [ ] ⚙️ **TREBA pri deployi:** pridať tie isté dva env kľúče aj do Vercel (Production).

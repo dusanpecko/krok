@@ -35,10 +35,30 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Ochrana admin routov
-  if (request.nextUrl.pathname.startsWith('/admin') && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/prihlasenie'
-    return NextResponse.redirect(url)
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // 1. Musí byť prihlásený
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/prihlasenie'
+      url.searchParams.set('redirect', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+
+    // 2. Musí mať prístup do administrácie: admin_users (legacy) alebo aspoň
+    //    jedna priradená rola v user_roles. Zrkadlí hasAccess z admin/layout.tsx,
+    //    ale vynútené na serveri (defense-in-depth). Po migrácii 012 vie
+    //    prihlásený používateľ čítať vlastné riadky user_roles bez rekurzie.
+    const [{ data: roleRows }, { data: adminRows }] = await Promise.all([
+      supabase.from('user_roles').select('id').eq('id', user.id).limit(1),
+      supabase.from('admin_users').select('id').eq('id', user.id).limit(1),
+    ])
+    const hasAccess = (roleRows?.length ?? 0) > 0 || (adminRows?.length ?? 0) > 0
+
+    if (!hasAccess) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
   }
 
   // Ochrana používateľskej zóny

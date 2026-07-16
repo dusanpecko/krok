@@ -51,7 +51,7 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 
 ### Nasadenie (deploy)
 - [x] 🔴 Nastaviť **všetky env premenné vo Vercel** (Production) – HOTOVO (vrátane Upstash).
-- [ ] 🔴 **Doména `mojkrok.sk`** + Supabase **Redirect URLs** (Auth) pre produkciu (inak Google/email login nepôjde):
+- [ ] 🔴 **Doména `mojkrok.sk`** + Supabase **Redirect URLs** (Auth) pre produkciu (inak Google/email login nepôjde). ⏳ *Naplánované na budúci týždeň.*
   - Supabase → Authentication → URL Configuration → **Site URL:** `https://mojkrok.sk`
   - **Redirect URLs** (Add URL): `https://mojkrok.sk/**` a `http://localhost:3000/**` (dev)
   - Google provider: v Google Cloud OAuth klientovi musí byť authorized redirect `https://jobfunwpvzxsffofzhwm.supabase.co/auth/v1/callback` (zvyčajne už je).

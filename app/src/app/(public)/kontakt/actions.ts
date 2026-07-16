@@ -1,5 +1,8 @@
 'use server'
 
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { checkRateLimit } from '@/lib/rate-limit'
+
 interface ContactMessagePayload {
   name: string
   email: string
@@ -7,11 +10,29 @@ interface ContactMessagePayload {
   message?: string
 }
 
+// Service-role klient na zápis správy (obíde RLS pre anonymného návštevníka)
+const supabaseAdmin = createSupabaseClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
 /**
  * Server action to process public contact form submissions
  */
 export async function sendContactMessage(payload: ContactMessagePayload) {
   try {
+    // Rate-limit podľa IP (ochrana proti spamu)
+    const { success: withinLimit } = await checkRateLimit('contact', {
+      limit: 5,
+      window: '1 h',
+    })
+    if (!withinLimit) {
+      return {
+        success: false,
+        error: 'Priveľa odoslaných správ. Skúste to prosím neskôr (o hodinu).',
+      }
+    }
+
     const name = payload.name?.trim()
     const email = payload.email?.trim().toLowerCase()
     const subject = payload.subject?.trim()
@@ -35,18 +56,18 @@ export async function sendContactMessage(payload: ContactMessagePayload) {
       return { success: false, error: 'Prosím, zadajte predmet správy.' }
     }
 
-    // 2. Logging submission (Extensible: can easily wire up to Supabase 'messages' table or email sender)
-    console.log('================================================')
-    console.log('NEW CONTACT MESSAGE SUBMISSION:')
-    console.log('Meno:', name)
-    console.log('Email:', email)
-    console.log('Predmet:', subject)
-    console.log('Správa:', message || '(bez textu správy)')
-    console.log('Čas prijatia:', new Date().toLocaleString('sk-SK'))
-    console.log('================================================')
+    // 2. Uloženie správy do DB (žiadne PII logovanie do konzoly)
+    const { error: insertError } = await supabaseAdmin
+      .from('contact_messages')
+      .insert({ name, email, subject, message: message || null })
 
-    // Simulate database / network delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    if (insertError) {
+      console.error('Error saving contact message:', insertError.message)
+      return {
+        success: false,
+        error: 'Správu sa nepodarilo odoslať. Skúste to prosím neskôr.',
+      }
+    }
 
     return {
       success: true,

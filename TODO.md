@@ -36,8 +36,9 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 - [ ] 🟠 Grantové prílohy idú do **verejného** B2 bucketu (`src/lib/storage.ts`). Pre launch buď skryť grantový modul, alebo prepnúť na privátny bucket + podpísané URL.
 
 ### Prihlásenie / registrácia darcov (kľúčová funkcia launchu)
-- [ ] 🔴 **Otestovať celý flow end-to-end na produkcii:** registrácia → e-mail → prihlásenie (email + Google Auth) → `/profil`. Overiť `auth/callback/route.ts`.
-- [ ] 🔴 **Nezrovnalosť darcovskej zóny:** middleware chráni `/moj-krok`, ale route neexistuje – profil je na `(public)/profil` (mimo ochrany middleware). Zjednotiť: buď presunúť profil pod chránenú cestu, alebo do middleware pridať `/profil`.
+- [x] 🔴 **Rolovo-podmienené smerovanie po prihlásení** – HOTOVO. Nový route `/auth/post-login` rozhodne cieľ podľa role (admin/pracovník → `/admin`, darca → `/profil`). Email aj Google login ním prechádzajú. Predtým default `/admin` vyhadzoval darcov na `/`.
+- [x] 🔴 **Nezrovnalosť darcovskej zóny** – HOTOVO. Middleware teraz chráni `/profil` (nie neexistujúce `/moj-krok`); neprihlásený je presmerovaný na login s `redirect`. Login copy zjemnené („svoja zóna" namiesto „admin zóna"). Overené lokálne (307 redirecty sedia).
+- [ ] 🔴 **Otestovať flow E2E s reálnym účtom** (po nasadení domény): registrácia → e-mail → prihlásenie (email + Google) → `/profil`. Rolová vetva post-login sa dá plne overiť až s prihláseným účtom.
 - [ ] 🟠 Overiť, že darca po prihlásení vidí len **svoje** dáta (RLS `auth_user_id = auth.uid()` je nastavené – otestovať s reálnym testovacím účtom).
 - [ ] 🟠 Reset hesla / zabudnuté heslo – funguje? Ak nie, doplniť.
 
@@ -45,7 +46,7 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 - [x] 🔴 **Nahradiť fake dáta reálnymi:** HOTOVO (kód).
   - `(public)/page.tsx` – placeholdery na 0, štatistiky sa vždy berú z `getPublicStats()` (žiadne vymyslené čísla, ani pri nulách).
   - `admin/darcovia/page.tsx` – odstránený fake „+12 tento mesiac" (reálny mesačný počet sa dá doplniť ako query neskôr).
-- [ ] 🟠 Skontrolovať/doplniť obsah stránok: domov, o projekte Krok, aktuality, kontakt. Texty, logá, kontaktné údaje OZ.
+a- [ ] 🟠 Skontrolovať/doplniť obsah stránok: domov, o projekte Krok, aktuality, kontakt. Texty, logá, kontaktné údaje OZ.
 - [ ] 🟠 SEO základ: `title`/`description`, OG obrázok, favicon, `sitemap`/`robots`.
 - [ ] 🟠 GDPR: zásady spracovania osobných údajov + cookie/consent (zbierate e-maily, IBAN, adresy darcov).
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useSupabase } from '@/components/providers/SupabaseProvider'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
@@ -16,9 +16,13 @@ const KROK = {
 
 function LoginForm() {
   const { supabase, session, sessionChecked } = useSupabase()
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/admin'
+  // Explicitná cieľová cesta (napr. keď middleware presmeruje z /admin).
+  // Ak nie je, o cieli rozhodne /auth/post-login podľa role.
+  const explicitRedirect = searchParams.get('redirect')
+  const postLoginUrl = `/auth/post-login${
+    explicitRedirect ? `?to=${encodeURIComponent(explicitRedirect)}` : ''
+  }`
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,12 +30,12 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Ak je už prihlásený, presmeruj
+  // Ak je už prihlásený, presmeruj cez post-login (rozhodne podľa role)
   useEffect(() => {
     if (sessionChecked && session) {
-      router.replace(redirect)
+      window.location.assign(postLoginUrl)
     }
-  }, [session, sessionChecked, router, redirect])
+  }, [session, sessionChecked, postLoginUrl])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +55,9 @@ function LoginForm() {
           setError(authError.message)
         }
       } else {
-        router.replace(redirect)
+        // Plná navigácia na server route, ktorý rozhodne cieľ podľa role
+        window.location.assign(postLoginUrl)
+        return
       }
     } catch {
       setError('Nastala neočakávaná chyba. Skúste to znova.')
@@ -67,7 +73,9 @@ function LoginForm() {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`
+          redirectTo: `${window.location.origin}/auth/callback${
+            explicitRedirect ? `?redirect=${encodeURIComponent(explicitRedirect)}` : ''
+          }`
         }
       })
       if (oauthError) {
@@ -137,7 +145,7 @@ function LoginForm() {
               className="mx-auto"
               priority
             />
-            <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest">Administrácia</p>
+            <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest">Prihlásenie</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
@@ -148,7 +156,7 @@ function LoginForm() {
                 <Lock size={20} className="text-white" />
               </div>
               <h2 className="text-xl font-bold text-gray-900">Prihlásenie</h2>
-              <p className="text-sm text-gray-400 mt-1">Vstúpte do admin zóny KROK</p>
+              <p className="text-sm text-gray-400 mt-1">Vstúpte do svojej zóny KROK</p>
             </div>
 
             {/* Error */}

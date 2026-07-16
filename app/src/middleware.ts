@@ -61,10 +61,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Ochrana používateľskej zóny
-  if (request.nextUrl.pathname.startsWith('/moj-krok') && !user) {
+  // Ochrana darcovskej zóny (/profil)
+  if (request.nextUrl.pathname.startsWith('/profil') && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/prihlasenie'
+    url.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
 

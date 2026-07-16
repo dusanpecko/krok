@@ -42,16 +42,20 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 - [ ] 🟠 Reset hesla / zabudnuté heslo – funguje? Ak nie, doplniť.
 
 ### Verejný obsah (informovanosť)
-- [ ] 🔴 **Nahradiť fake dáta reálnymi:**
-  - `(public)/page.tsx` – `PLACEHOLDER_DONORS_COUNT = 384` → napojiť na `getPublicStats()`.
-  - `admin/darcovia/page.tsx:216` – hardcoded „+12 tento mesiac".
+- [x] 🔴 **Nahradiť fake dáta reálnymi:** HOTOVO (kód).
+  - `(public)/page.tsx` – placeholdery na 0, štatistiky sa vždy berú z `getPublicStats()` (žiadne vymyslené čísla, ani pri nulách).
+  - `admin/darcovia/page.tsx` – odstránený fake „+12 tento mesiac" (reálny mesačný počet sa dá doplniť ako query neskôr).
 - [ ] 🟠 Skontrolovať/doplniť obsah stránok: domov, o projekte Krok, aktuality, kontakt. Texty, logá, kontaktné údaje OZ.
 - [ ] 🟠 SEO základ: `title`/`description`, OG obrázok, favicon, `sitemap`/`robots`.
 - [ ] 🟠 GDPR: zásady spracovania osobných údajov + cookie/consent (zbierate e-maily, IBAN, adresy darcov).
 
 ### Nasadenie (deploy)
-- [ ] 🔴 Nastaviť **všetky env premenné vo Vercel** (Production): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FIO_API_TOKEN`, `B2_*`, `ELEVENLABS_API_KEY`, `GEMINI_API_KEY`, `CRON_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
-- [ ] 🔴 Nastaviť produkčnú doménu + Supabase **Redirect URLs** (Auth) pre produkčnú doménu (inak Google/email login nepôjde).
+- [x] 🔴 Nastaviť **všetky env premenné vo Vercel** (Production) – HOTOVO (vrátane Upstash).
+- [ ] 🔴 **Doména `mojkrok.sk`** + Supabase **Redirect URLs** (Auth) pre produkciu (inak Google/email login nepôjde):
+  - Supabase → Authentication → URL Configuration → **Site URL:** `https://mojkrok.sk`
+  - **Redirect URLs** (Add URL): `https://mojkrok.sk/**` a `http://localhost:3000/**` (dev)
+  - Google provider: v Google Cloud OAuth klientovi musí byť authorized redirect `https://jobfunwpvzxsffofzhwm.supabase.co/auth/v1/callback` (zvyčajne už je).
+  - Vo Verceli priradiť doménu `mojkrok.sk` k projektu (Domains) + DNS.
 - [ ] 🟠 Overiť cron `vercel.json` (`/api/cron/sync-bank` o 02:00) beží na produkcii a `CRON_SECRET` sedí.
 - [ ] 🟢 Skontrolovať/vyčistiť leftover Next scaffolding v roote repa (`/package.json`, `node_modules` v roote) – appka je v `app/`.
 - [ ] 🟠 Commitnúť migráciu `supabase/011_fix_function_grants.sql` do gitu (je untracked).

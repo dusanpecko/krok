@@ -31,10 +31,11 @@ import { getPublicStats } from './actions';
 // 1. DYNAMICKÉ PLACEHOLDERY A NASTAVENIE DÁT
 // ==========================================
 
-// Zástupné čísla (placeholders) pre pastoračný fond KROK
-const PLACEHOLDER_DONORS_COUNT = 384;      // {{POCET_DARCOV}}
-const PLACEHOLDER_TOTAL_AMOUNT = 19450;    // {{CELKOVA_SUMA}}
-const PLACEHOLDER_PROJECTS_COUNT = 14;     // {{POCET_PODPORENYCH_PROJEKTOV}}
+// Počiatočné hodnoty štatistík (0 = kým sa načítajú reálne dáta z DB).
+// NIKDY nedávať vymyslené čísla – zobrazujeme len skutočné údaje z getPublicStats().
+const PLACEHOLDER_DONORS_COUNT = 0;      // {{POCET_DARCOV}}
+const PLACEHOLDER_TOTAL_AMOUNT = 0;      // {{CELKOVA_SUMA}}
+const PLACEHOLDER_PROJECTS_COUNT = 0;    // {{POCET_PODPORENYCH_PROJEKTOV}}
 
 // Projekt: Lectio Divina (reálne dáta)
 const LECTIO_DIVINA_TARGET = 7000;
@@ -215,11 +216,10 @@ export default function KrokLandingPage() {
     async function loadStats() {
       try {
         const stats = await getPublicStats();
-        if (stats.donorsCount > 0 || stats.totalAmount > 0 || stats.projectsCount > 0) {
-          setDonorsCount(stats.donorsCount);
-          setTotalAmount(stats.totalAmount);
-          setProjectsCount(stats.projectsCount);
-        }
+        // Vždy zobraz reálne dáta z DB (aj nuly) – žiadne vymyslené čísla.
+        setDonorsCount(stats.donorsCount);
+        setTotalAmount(stats.totalAmount);
+        setProjectsCount(stats.projectsCount);
       } catch (err) {
         console.error('Error loading public stats:', err);
       }

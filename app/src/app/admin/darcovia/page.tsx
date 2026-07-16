@@ -213,13 +213,6 @@ export default async function DarcoviaPage({ searchParams }: DarcoviaPageProps) 
             <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Aktívni</span>
             <span className="text-2xl font-black text-green-600">{activeCount || 0}</span>
           </div>
-          <div className="bg-gray-900 text-white p-4 rounded-2xl shadow-lg hidden sm:flex flex-col justify-center min-w-[140px]">
-             <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Tento mesiac</span>
-             <div className="flex items-center gap-1.5 mt-0.5">
-                <TrendingUp size={14} className="text-green-400" />
-                <span className="text-xl font-bold">+12</span>
-             </div>
-          </div>
         </div>
       </div>
 

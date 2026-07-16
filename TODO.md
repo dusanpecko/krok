@@ -87,7 +87,7 @@ a- [ ] 🟠 Skontrolovať/doplniť obsah stránok: domov, o projekte Krok, aktua
 - [ ] 🟢 Centralizovať Gemini model ID do env (`gemini-1.5-*` je hardcoded a zastaraný rad).
 - [x] 🟢 **Sanitizácia `.or()` / `.ilike` filtrov** – HOTOVO. `src/lib/search.ts` (`sanitizeSearchTerm`/`sanitizeFilterValue`) aplikované v `banka/actions.ts` (3×) a `darcovia/page.tsx`. Odstraňuje PostgREST rezervované znaky + wildcardy zo vstupu.
 - [x] 🟢 Znížiť logovanie PII – čiastočne HOTOVO. `profil/actions.ts` už neloguje e-maily/ID (len chybové `.message`). `kontakt/actions.ts` ponechané zámerne – je to jediný záznam správy (viď nižšie).
-- [x] 🟠 **Kontaktný formulár ukladá správy do DB** – HOTOVO. Migrácia 013 (`contact_messages`, admin-only RLS), akcia ukladá cez service_role + rate-limit 5/hod/IP, PII logovanie odstránené. ⚙️ **TREBA spustiť migráciu 013** v Supabase (projekt `jobfunwpvzxsffofzhwm`).
+- [x] 🟠 **Kontaktný formulár ukladá správy do DB** – HOTOVO a overené naživo. Migrácia 013 (`contact_messages`, admin-only RLS) spustená; anon nemá prístup, service-role zápis funguje. Akcia ukladá cez service_role + rate-limit 5/hod/IP, PII logovanie odstránené.
   - [ ] 🟢 Follow-up: admin stránka na čítanie správ (zatiaľ viditeľné cez Supabase dashboard) + neskôr e-mail notifikácia (Brevo).
 - [ ] 🟢 Accessibility: `htmlFor` na labeloch, `aria-label` na icon-only tlačidlách.
 

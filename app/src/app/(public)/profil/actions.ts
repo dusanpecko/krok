@@ -35,9 +35,7 @@ export async function getCurrentDonor() {
         .eq('id', existingDonor.id)
 
       if (updateError) {
-        console.error('[getCurrentDonor] Zlyhalo priradenie auth_user_id:', updateError)
-      } else {
-        console.log(`[getCurrentDonor] Úspešne prepojený darca ${existingDonor.id} s auth_user_id ${user.id}`)
+        console.error('[getCurrentDonor] Zlyhalo priradenie auth_user_id:', updateError.message)
       }
     }
   } else {
@@ -73,9 +71,7 @@ export async function getCurrentDonor() {
       })
 
     if (createError) {
-      console.error('[getCurrentDonor] Zlyhalo vytvorenie nového profilu pre darcu:', createError)
-    } else {
-      console.log(`[getCurrentDonor] Úspešne vytvorený nový profil darcu pre ${userEmail}`)
+      console.error('[getCurrentDonor] Zlyhalo vytvorenie nového profilu pre darcu:', createError.message)
     }
   }
 

@@ -32,7 +32,7 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 - [x] 🟠 **Middleware kontrola role pre `/admin/*`** – HOTOVO. `src/middleware.ts` teraz okrem prihlásenia overuje aj prístup (admin_users alebo aspoň jedna rola v user_roles); neoprávnený prihlásený používateľ je presmerovaný na `/`. Defense-in-depth navyše k guardom v akciách. tsc + build OK.
 - [x] 🟠 **Rate limiting + anti-enumeration na registrácii** – HOTOVO. Pridaný `src/lib/rate-limit.ts` (Upstash Redis, fail-open ak nenakonfigurovaný) + limit 5 registrácií/hod/IP v `registerDonor`. Odexportovaný `generateNextVSAdmin` (bol verejne volateľný, unikal ďalší VS). `EMAIL_EXISTS` hláška ponechaná (užitočná UX), enumerácia zmiernená rate-limitom.
   - [x] ⚙️ Upstash Redis DB vytvorená, env `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` pridané lokálne. Overené (PING → PONG, SET/GET/DEL OK).
-  - [ ] ⚙️ **TREBA pri deployi:** pridať tie isté dva env kľúče aj do Vercel (Production).
+  - [x] ⚙️ Upstash env kľúče pridané aj do Vercel (Production).
 - [ ] 🟠 Grantové prílohy idú do **verejného** B2 bucketu (`src/lib/storage.ts`). Pre launch buď skryť grantový modul, alebo prepnúť na privátny bucket + podpísané URL.
 
 ### Prihlásenie / registrácia darcov (kľúčová funkcia launchu)
@@ -80,7 +80,9 @@ Legenda: `[ ]` treba · `[x]` hotové · 🔴 blocker · 🟠 dôležité · �
 - [x] 🟢 `is_admin()` a ostatné SECURITY DEFINER funkcie – `SET search_path = public, pg_temp` (hardening). HOTOVO v migrácii 012.
 - [x] 🔴 **Rekurzia RLS na user_roles (`42P17`)** – opravená migráciou 012 (`is_app_admin()` obchádza RLS). Zamknuté aj RBAC tabuľky (`user_roles`/`permissions`/`role_permissions`/`roles`) proti anon čítaniu. Bonus: rozbehol sa dynamický systém rolí (`useUserRole`), predtým fungoval len legacy `admin_users`. Overené naživo.
 - [ ] 🟢 Centralizovať Gemini model ID do env (`gemini-1.5-*` je hardcoded a zastaraný rad).
-- [ ] 🟢 Znížiť logovanie PII (mená/e-maily/IDs) v produkcii (`kontakt/actions.ts`, role akcie).
+- [x] 🟢 **Sanitizácia `.or()` / `.ilike` filtrov** – HOTOVO. `src/lib/search.ts` (`sanitizeSearchTerm`/`sanitizeFilterValue`) aplikované v `banka/actions.ts` (3×) a `darcovia/page.tsx`. Odstraňuje PostgREST rezervované znaky + wildcardy zo vstupu.
+- [x] 🟢 Znížiť logovanie PII – čiastočne HOTOVO. `profil/actions.ts` už neloguje e-maily/ID (len chybové `.message`). `kontakt/actions.ts` ponechané zámerne – je to jediný záznam správy (viď nižšie).
+- [ ] 🟠 **Kontaktný formulár neukladá správy** (`(public)/kontakt/actions.ts`) – správa sa len loguje do konzoly (PII vo Vercel logoch + riziko straty). Pred launchom napojiť na DB tabuľku `messages` alebo e-mail (Brevo), potom odstrániť PII logovanie.
 - [ ] 🟢 Accessibility: `htmlFor` na labeloch, `aria-label` na icon-only tlačidlách.
 
 ---

@@ -3,6 +3,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth'
+import { sanitizeSearchTerm, sanitizeFilterValue } from '@/lib/search'
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,7 +95,10 @@ export async function getTransactions(params: {
 
   // 3. Search
   if (params.search && params.search.length > 2) {
-    query = query.or(`counterparty_name.ilike.%${params.search}%,counterparty_iban.ilike.%${params.search}%,variable_symbol.ilike.%${params.search}%,remittance_info.ilike.%${params.search}%`)
+    const s = sanitizeSearchTerm(params.search)
+    if (s) {
+      query = query.or(`counterparty_name.ilike.%${s}%,counterparty_iban.ilike.%${s}%,variable_symbol.ilike.%${s}%,remittance_info.ilike.%${s}%`)
+    }
   }
 
   // 4. Zoradenie a stránkovanie
@@ -132,7 +136,7 @@ export async function searchDonors(query: string) {
     const { data: fallbackData, error: fallbackError } = await supabaseAdmin
       .from('donors')
       .select('id, first_name, last_name, email, variable_symbol, city')
-      .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,variable_symbol.ilike.%${query}%`)
+      .or(`first_name.ilike.%${sanitizeSearchTerm(query)}%,last_name.ilike.%${sanitizeSearchTerm(query)}%,variable_symbol.ilike.%${sanitizeSearchTerm(query)}%`)
       .limit(20)
 
     if (fallbackError) {
@@ -362,11 +366,12 @@ export async function getSuggestedMatches() {
     
     // b. Hľadanie podľa variabilného symbolu
     if (row.variable_symbol && row.variable_symbol !== 'NOTPROVIDED' && row.variable_symbol !== '') {
-      const cleanVs = row.variable_symbol.replace(/^0+/, '')
+      const rawVs = sanitizeFilterValue(row.variable_symbol)
+      const cleanVs = rawVs.replace(/^0+/, '')
       const { data: vsMatches } = await supabaseAdmin
         .from('donors')
         .select('id, first_name, last_name, variable_symbol, city')
-        .or(`variable_symbol.eq.${row.variable_symbol},variable_symbol.eq.${cleanVs}`)
+        .or(`variable_symbol.eq.${rawVs},variable_symbol.eq.${cleanVs}`)
         
       if (vsMatches && vsMatches.length > 0) {
         alternativeDonors = [...alternativeDonors, ...vsMatches]

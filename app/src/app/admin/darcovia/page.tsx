@@ -3,6 +3,7 @@ import DonorTable from '@/components/admin/donors/DonorTable'
 import DonorFilters from '@/components/admin/donors/DonorFilters'
 import { Users, UserCheck, UserPlus, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
+import { sanitizeSearchTerm } from '@/lib/search'
 
 interface DarcoviaPageProps {
   searchParams: Promise<{
@@ -58,7 +59,10 @@ export default async function DarcoviaPage({ searchParams }: DarcoviaPageProps) 
 
   // Filters
   if (query) {
-    donorsQuery = donorsQuery.or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,email.ilike.%${query}%,variable_symbol.ilike.%${query}%`)
+    const s = sanitizeSearchTerm(query)
+    if (s) {
+      donorsQuery = donorsQuery.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,email.ilike.%${s}%,variable_symbol.ilike.%${s}%`)
+    }
   }
   
   if (statusFilter !== 'all') {

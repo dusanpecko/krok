@@ -1,5 +1,4 @@
 import { Metadata } from 'next'
-import { getRegistrationFormOptions } from './actions'
 import RegistrationForm from './RegistrationForm'
 
 // Set page metadata for SEO best practices
@@ -13,13 +12,6 @@ export const metadata: Metadata = {
   }
 }
 
-export default async function RegistraciaPage() {
-  // Fetch active parishes and projects at the server-level for SSR
-  const { parishes, projects } = await getRegistrationFormOptions()
-
-  return (
-    <div className="bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30 min-h-screen">
-      <RegistrationForm parishes={parishes} projects={projects} />
-    </div>
-  )
+export default function RegistraciaPage() {
+  return <RegistrationForm />
 }

@@ -1,6 +1,7 @@
 import { getCurrentDonor, getDonorDonations } from './actions'
+import { getRegistrationFormOptions } from '../registracia/actions'
 import ProfileContent from '@/components/public/ProfileContent'
-import { redirect } from 'next/navigation'
+import ProfileCompletionModal from '@/components/public/ProfileCompletionModal'
 
 export default async function ProfilePage() {
   const donor = await getCurrentDonor()
@@ -18,11 +19,19 @@ export default async function ProfilePage() {
     )
   }
 
-  const donations = await getDonorDonations(donor.id)
+  const [donations, options] = await Promise.all([
+    getDonorDonations(donor.id),
+    getRegistrationFormOptions(),
+  ])
 
   return (
     <div className="bg-blue-deep min-h-screen">
       <ProfileContent donor={donor} donations={donations} />
+      <ProfileCompletionModal
+        donor={donor}
+        parishes={options.parishes}
+        projects={options.projects}
+      />
     </div>
   )
 }

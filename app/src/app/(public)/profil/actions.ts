@@ -39,11 +39,14 @@ export async function getCurrentDonor() {
       }
     }
   } else {
-    // Ak darca vôbec neexistuje v tabuľke public.donors, automaticky ho vytvoríme (napr. pre novoprihlásených cez Google)
-    const name = user.user_metadata?.full_name || userEmail.split('@')[0]
-    const parts = name.split(' ')
-    const firstName = parts[0] || 'Žiadateľ'
-    const lastName = parts.slice(1).join(' ') || 'KROK'
+    // Ak darca vôbec neexistuje v tabuľke public.donors, automaticky ho vytvoríme
+    // (novoregistrovaní cez e-mail aj cez Google). Meno berieme prednostne z
+    // metadát z registrácie (first_name/last_name), inak z full_name / e-mailu.
+    const meta = user.user_metadata || {}
+    const fallbackName = meta.full_name || meta.name || userEmail.split('@')[0]
+    const parts = String(fallbackName).split(' ')
+    const firstName = meta.first_name || parts[0] || 'Darca'
+    const lastName = meta.last_name || parts.slice(1).join(' ') || 'KROK'
 
     // Získať ďalšie VS pre tohto darcu
     const { data: vsData } = await supabaseAdmin
@@ -118,6 +121,82 @@ export async function updateProfile(data: any) {
   if (error) {
     console.error('Update profile error:', error)
     return { success: false, error: 'Nepodarilo sa uložiť zmeny.' }
+  }
+
+  revalidatePath('/profil')
+  return { success: true }
+}
+
+/**
+ * Doplnenie profilu z popupu po registrácii (voliteľné údaje).
+ * Overí identitu cez cookie session, potom zapíše cez service_role
+ * (RLS na donor_projects je len pre admina).
+ */
+export async function completeProfile(data: {
+  phone?: string
+  street?: string
+  city?: string
+  postal_code?: string
+  parish_id?: string | null
+  donation_program?: string
+  custom_amount?: number | null
+  project_id?: string | null
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Neprihlásený používateľ' }
+
+  const { createClient: createServiceClient } = await import('@supabase/supabase-js')
+  const admin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data: donor } = await admin
+    .from('donors')
+    .select('id, notes')
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
+
+  if (!donor) return { success: false, error: 'Profil darcu sa nenašiel.' }
+
+  // Darcovský program uložíme do poznámok (donors nemá stĺpec na sumu)
+  let notes = donor.notes || ''
+  if (data.donation_program) {
+    const amt = data.custom_amount ? ` (${data.custom_amount} € mesačne)` : ''
+    const line = `Zvolený darcovský program: ${data.donation_program}${amt}`
+    notes = notes ? `${notes}\n${line}` : line
+  }
+
+  const { error: upErr } = await admin
+    .from('donors')
+    .update({
+      phone: data.phone?.trim() || null,
+      street: data.street?.trim() || null,
+      city: data.city?.trim() || null,
+      postal_code: data.postal_code?.trim() || null,
+      parish_id: data.parish_id || null,
+      notes,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', donor.id)
+
+  if (upErr) {
+    console.error('completeProfile update error:', upErr.message)
+    return { success: false, error: 'Nepodarilo sa uložiť údaje.' }
+  }
+
+  // Prepojenie s podporeným projektom (ak zvolený a ešte neexistuje)
+  if (data.project_id) {
+    const { data: existing } = await admin
+      .from('donor_projects')
+      .select('id')
+      .eq('donor_id', donor.id)
+      .eq('project_id', data.project_id)
+      .maybeSingle()
+    if (!existing) {
+      await admin.from('donor_projects').insert({ donor_id: donor.id, project_id: data.project_id })
+    }
   }
 
   revalidatePath('/profil')

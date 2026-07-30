@@ -23,8 +23,8 @@ export default function NavBar() {
   const [scrolled, setScrolled] = useState(false)
   const { session, supabase } = useSupabase()
   const [isAdmin, setIsAdmin] = useState(false)
-  // Prihlásený darca ide rovno na svoju darcovskú kartu (/profil), inak na registráciu
-  const supportHref = session ? '/profil' : '/registracia'
+  // Prihlásený darca ide rovno na kartu Podporiť vo svojom profile, inak na registráciu
+  const supportHref = session ? '/profil#podporit' : '/registracia'
 
   useEffect(() => {
     const handleScroll = () => {

@@ -73,6 +73,18 @@ export default function ProfileContent({ donor, donations }: ProfileContentProps
 
   const prefersReducedMotion = useReducedMotion()
 
+  // Otvorenie konkrétnej karty podľa URL hashu (napr. /profil#podporit)
+  useEffect(() => {
+    const map: Record<string, Tab> = { podporit: 'support', dary: 'donations', udaje: 'data' }
+    const apply = () => {
+      const key = window.location.hash.replace('#', '')
+      if (map[key]) setActiveTab(map[key])
+    }
+    apply()
+    window.addEventListener('hashchange', apply)
+    return () => window.removeEventListener('hashchange', apply)
+  }, [])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/prihlasenie')

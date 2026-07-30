@@ -69,8 +69,8 @@ const logoSets: LogoSet[] = [
 
 export default function NaStiahnutiePage() {
   return (
-    <div className="bg-blue-deep min-h-screen text-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep min-h-screen text-white pb-24 overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-36 sm:pt-44">
         {/* Hlavička */}
         <header className="text-center max-w-2xl mx-auto mb-16">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-gold-bright mb-4">

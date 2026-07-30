@@ -18,7 +18,7 @@ const navLinks = [
 export default function NavBar() {
   const pathname = usePathname()
   const isHome = pathname === '/'
-  const isDarkHeroPage = pathname === '/' || pathname === '/kontakt' || pathname === '/profil'
+  const isDarkHeroPage = pathname === '/' || pathname === '/kontakt' || pathname === '/profil' || pathname === '/na-stiahnutie'
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { session, supabase } = useSupabase()

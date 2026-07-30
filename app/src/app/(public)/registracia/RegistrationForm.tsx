@@ -110,7 +110,7 @@ export default function RegistrationForm() {
   // Stav po odoslaní – čaká sa na potvrdenie e-mailu
   if (emailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center px-6 pt-28 pb-12 bg-gray-50 -mt-24 lg:-mt-32">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
           <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4"
                style={{ background: `linear-gradient(135deg, ${KROK.blue}, ${KROK.lightBlue})` }}>
@@ -133,7 +133,7 @@ export default function RegistrationForm() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex -mt-24 lg:-mt-32">
       {/* Ľavá strana – branding */}
       <div className="hidden lg:flex lg:flex-1 flex-col justify-center items-center relative overflow-hidden"
            style={{ background: `linear-gradient(135deg, ${KROK.sidebar} 0%, ${KROK.blue} 50%, ${KROK.lightBlue} 100%)` }}>
@@ -153,7 +153,7 @@ export default function RegistrationForm() {
       </div>
 
       {/* Pravá strana – formulár */}
-      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 bg-gray-50">
+      <div className="flex-1 flex flex-col justify-center items-center px-6 pt-32 pb-12 bg-gray-50">
         <div className="w-full max-w-sm">
           <div className="lg:hidden text-center mb-8">
             <Image src="/logo/logo_c.webp" alt="KROK" width={69} height={40} className="mx-auto" priority />

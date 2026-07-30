@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Landmark, Users, HandHeart, MessageCircle } from 'lucide-react'
+import { Menu, X, Landmark, Users, HandHeart, MessageCircle, Download } from 'lucide-react'
 import KrokLogo from '@/components/KrokLogo'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 
 const navLinks = [
   { href: '/projekty', label: 'Projekty', icon: Landmark },
   { href: '/aktuality', label: 'Aktuality', icon: MessageCircle },
+  { href: '/na-stiahnutie', label: 'Na stiahnutie', icon: Download },
   { href: '/o-nas', label: 'O nás', icon: Users },
   { href: '/kontakt', label: 'Kontakt', icon: MessageCircle },
 ]

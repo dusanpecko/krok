@@ -23,6 +23,8 @@ export default function NavBar() {
   const [scrolled, setScrolled] = useState(false)
   const { session, supabase } = useSupabase()
   const [isAdmin, setIsAdmin] = useState(false)
+  // Prihlásený darca ide rovno na svoju darcovskú kartu (/profil), inak na registráciu
+  const supportHref = session ? '/profil' : '/registracia'
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,8 +103,8 @@ export default function NavBar() {
               </Link>
             ))}
             
-            <Link 
-              href="/registracia"
+            <Link
+              href={supportHref}
               className="px-5 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2"
             >
               <HandHeart size={18} />
@@ -161,8 +163,8 @@ export default function NavBar() {
               {link.label}
             </Link>
           ))}
-          <Link 
-            href="/registracia"
+          <Link
+            href={supportHref}
             className="block w-full py-4 bg-blue-600 text-white text-center rounded-xl font-bold"
             onClick={() => setIsOpen(false)}
           >

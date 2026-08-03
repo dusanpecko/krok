@@ -19,54 +19,20 @@ export interface PublicStats {
  */
 export async function getPublicStats(): Promise<PublicStats> {
   try {
-    const currentYear = new Date().getFullYear()
-    const startOfYear = `${currentYear}-01-01`
-    const endOfYear = `${currentYear}-12-31`
+    // Agregácia prebieha v DB (RPC), aby nebola obmedzená 1000-riadkovým
+    // limitom PostgREST. Vracia iba súhrnné čísla za aktuálny rok.
+    const { data, error } = await supabaseAdmin.rpc('get_public_stats').single()
 
-    // 1. Darcovia v rodine – count of distinct donor_id in matched credit transactions this year
-    const { data: matchedTx, error: donorsError } = await supabaseAdmin
-      .from('bank_transactions')
-      .select('donor_id')
-      .eq('direction', 'credit')
-      .eq('matched', true)
-      .gte('booking_date', startOfYear)
-      .lte('booking_date', endOfYear)
-
-    if (donorsError) {
-      console.error('Error fetching donors count for stats:', donorsError)
+    if (error) {
+      console.error('Error fetching public stats:', error.message)
+      return { donorsCount: 0, totalAmount: 0, projectsCount: 0 }
     }
 
-    const uniqueDonors = new Set(matchedTx?.map(tx => tx.donor_id).filter(Boolean) || [])
-    const donorsCount = uniqueDonors.size
-
-    // 2. Vyzbieraná suma – sum of amount in credit transactions this year
-    const { data: creditTx, error: amountError } = await supabaseAdmin
-      .from('bank_transactions')
-      .select('amount')
-      .eq('direction', 'credit')
-      .gte('booking_date', startOfYear)
-      .lte('booking_date', endOfYear)
-
-    if (amountError) {
-      console.error('Error fetching collected amount for stats:', amountError)
-    }
-
-    const totalAmount = creditTx?.reduce((sum, tx) => sum + Number(tx.amount || 0), 0) || 0
-
-    // 3. Podporené projekty – count of all non-draft projects
-    const { count: projectsCount, error: projectsError } = await supabaseAdmin
-      .from('projects')
-      .select('*', { count: 'exact', head: true })
-      .neq('status', 'draft')
-
-    if (projectsError) {
-      console.error('Error counting projects for stats:', projectsError)
-    }
-
+    const stats = data as { donors_count: number; total_amount: number; projects_count: number }
     return {
-      donorsCount: donorsCount || 0,
-      totalAmount: Math.round(totalAmount), // Round to nearest euro for premium clean visual representation
-      projectsCount: projectsCount || 0
+      donorsCount: stats.donors_count || 0,
+      totalAmount: Math.round(Number(stats.total_amount || 0)),
+      projectsCount: stats.projects_count || 0,
     }
   } catch (error) {
     console.error('Unexpected error fetching public stats:', error)

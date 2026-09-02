@@ -27,7 +27,7 @@ export default function Footer() {
             <h4 className="font-bold text-lg mb-6">Navigácia</h4>
             <ul className="space-y-4 text-gray-400">
               <li><Link href="/o-nas" className="hover:text-white transition-colors">O nás</Link></li>
-              <li><Link href="/projekty" className="hover:text-white transition-colors">Projekty</Link></li>
+              <li><Link href="/podporene-projekty" className="hover:text-white transition-colors">Podporené projekty</Link></li>
               <li><Link href="/registracia" className="hover:text-white transition-colors">Chcem podporiť</Link></li>
               <li><Link href="/kontakt" className="hover:text-white transition-colors">Kontakt</Link></li>
             </ul>

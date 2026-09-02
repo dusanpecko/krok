@@ -43,6 +43,7 @@ const mainLinks = [
   { href: '/admin/banka', label: 'Banka', icon: Landmark, permission: 'view_bank' },
   { href: '/admin/granty', label: 'Granty', icon: FolderHeart, permission: 'view_grants' },
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
+  { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
 ]
 
 const settingsLinks = [

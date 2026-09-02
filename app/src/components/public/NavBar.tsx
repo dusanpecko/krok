@@ -18,8 +18,12 @@ const navLinks = [
 
 export default function NavBar() {
   const pathname = usePathname()
-  const isHome = pathname === '/'
-  const isDarkHeroPage = pathname === '/' || pathname === '/kontakt' || pathname === '/profil' || pathname === '/na-stiahnutie'
+  // Stránky so svetlým pozadím hore – navbar na nich musí byť vždy biely.
+  // Všetky ostatné majú tmavý hero: navbar je hore priehľadný s bielym textom.
+  const lightPages = ['/registracia', '/granty', '/kontrolor']
+  const isDarkHeroPage = !lightPages.some(
+    (p) => pathname === p || pathname?.startsWith(p + '/')
+  )
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { session, supabase } = useSupabase()

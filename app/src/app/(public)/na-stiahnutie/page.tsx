@@ -131,7 +131,7 @@ export default async function NaStiahnutiePage() {
                     className="group flex flex-col bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-gold/40 rounded-2xl overflow-hidden transition-all"
                   >
                     {/* Titulka správy */}
-                    <div className="relative overflow-hidden aspect-[4/3] border-b border-white/5 bg-white/[0.03]">
+                    <div className="relative overflow-hidden aspect-video border-b border-white/5 bg-white/[0.03]">
                       {report.image_url ? (
                         <img
                           src={report.image_url}

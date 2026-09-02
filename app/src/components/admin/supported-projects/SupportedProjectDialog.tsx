@@ -22,6 +22,7 @@ export interface SupportedProject {
   sort_order: number
   visible: boolean
   image_url?: string | null
+  link_url?: string | null
 }
 
 interface SupportedProjectDialogProps {
@@ -46,6 +47,7 @@ export default function SupportedProjectDialog({
     support_type: project?.support_type || 'grant',
     sort_order: project?.sort_order?.toString() || '0',
     visible: project?.visible ?? true,
+    link_url: project?.link_url || '',
   })
   const [imageUrl, setImageUrl] = useState(project?.image_url || '')
   const [imageLoading, setImageLoading] = useState(false)
@@ -109,6 +111,7 @@ export default function SupportedProjectDialog({
         sort_order: formData.sort_order ? parseInt(formData.sort_order, 10) : 0,
         visible: formData.visible,
         image_url: imageUrl || null,
+        link_url: formData.link_url || null,
       })
       if (result.success) {
         onClose()
@@ -220,6 +223,23 @@ export default function SupportedProjectDialog({
                 className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">
+              Odkaz na stránku projektu
+            </label>
+            <input
+              name="link_url"
+              type="url"
+              value={formData.link_url}
+              onChange={handleChange}
+              placeholder="https://..."
+              className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
+            />
+            <p className="text-[10px] text-gray-400 px-1">
+              Web, Facebook, Instagram či YouTube projektu – zobrazí sa ako odkaz na verejnej stránke.
+            </p>
           </div>
 
           <div className="space-y-2">

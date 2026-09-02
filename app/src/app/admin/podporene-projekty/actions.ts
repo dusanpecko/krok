@@ -23,6 +23,7 @@ export interface SupportedProjectPayload {
   sort_order?: number
   visible?: boolean
   image_url?: string | null
+  link_url?: string | null
 }
 
 /**
@@ -75,6 +76,7 @@ export async function upsertSupportedProject(payload: SupportedProjectPayload) {
     sort_order: payload.sort_order ?? 0,
     visible: payload.visible ?? true,
     image_url: payload.image_url || null,
+    link_url: payload.link_url?.trim() || null,
     updated_at: new Date().toISOString(),
   }
 

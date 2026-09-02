@@ -9,6 +9,7 @@ import {
   CalendarRange,
   Users,
   ArrowRight,
+  ExternalLink,
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -42,6 +43,7 @@ interface SupportedProject {
   support_type: 'grant' | 'non_grant'
   sort_order: number
   image_url: string | null
+  link_url: string | null
 }
 
 // Formátovanie sumy v slovenskom formáte: 16 400 €
@@ -281,6 +283,20 @@ export default async function PodporeneProjektyPage() {
                       <p className="text-sm text-blue-100/60 leading-relaxed">
                         {p.description}
                       </p>
+                    )}
+
+                    {p.link_url && (
+                      <div className="mt-auto pt-4">
+                        <a
+                          href={p.link_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-gold-bright/90 hover:text-gold-bright transition-colors"
+                        >
+                          Stránka projektu
+                          <ExternalLink size={13} className="shrink-0" />
+                        </a>
+                      </div>
                     )}
                     </div>
                   </article>

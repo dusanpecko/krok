@@ -37,6 +37,9 @@ interface DownloadDialogProps {
   onClose: () => void
 }
 
+// Vercel limituje telo requestu na ~4,5 MB, preto max 4 MB na súbor
+const MAX_FILE_SIZE = 4 * 1024 * 1024
+
 export default function DownloadDialog({ item, onSave, onClose }: DownloadDialogProps) {
   const [formData, setFormData] = useState({
     category: item?.category || 'document',
@@ -69,6 +72,12 @@ export default function DownloadDialog({ item, onSave, onClose }: DownloadDialog
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`Obrázok je príliš veľký (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximálna veľkosť je 4 MB.`)
+      e.target.value = ''
+      return
+    }
+
     setImageLoading(true)
     setError(null)
 
@@ -94,6 +103,12 @@ export default function DownloadDialog({ item, onSave, onClose }: DownloadDialog
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`Súbor je príliš veľký (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximálna veľkosť je 4 MB.`)
+      e.target.value = ''
+      return
+    }
 
     setFileLoading(true)
     setError(null)
@@ -286,7 +301,7 @@ export default function DownloadDialog({ item, onSave, onClose }: DownloadDialog
                     <ImageIcon className="w-8 h-8 text-gray-300" />
                   )}
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                    {imageLoading ? 'Nahrávam obrázok...' : 'Kliknutím nahrajte B2 obrázok'}
+                    {imageLoading ? 'Nahrávam obrázok...' : 'Kliknutím nahrajte B2 obrázok (max 4 MB)'}
                   </span>
                   <input
                     type="file"
@@ -333,7 +348,7 @@ export default function DownloadDialog({ item, onSave, onClose }: DownloadDialog
                   <FilePlus2 className="w-5 h-5 text-gray-400" />
                 )}
                 <span className="text-xs font-black text-gray-400 uppercase tracking-wider">
-                  {fileLoading ? 'Nahrávam súbor...' : 'Pridať súbor (PDF, DOCX…)'}
+                  {fileLoading ? 'Nahrávam súbor...' : 'Pridať súbor (PDF, DOCX… max 4 MB)'}
                 </span>
                 <input
                   type="file"

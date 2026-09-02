@@ -59,6 +59,13 @@ export default function SupportedProjectDialog({
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Vercel limituje telo requestu na ~4,5 MB
+    if (file.size > 4 * 1024 * 1024) {
+      setError(`Obrázok je príliš veľký (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximálna veľkosť je 4 MB.`)
+      e.target.value = ''
+      return
+    }
+
     setImageLoading(true)
     setError(null)
 
@@ -267,7 +274,7 @@ export default function SupportedProjectDialog({
                   <ImageIcon className="w-8 h-8 text-gray-300" />
                 )}
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                  {imageLoading ? 'Nahrávam obrázok...' : 'Kliknutím nahrajte B2 obrázok'}
+                  {imageLoading ? 'Nahrávam obrázok...' : 'Kliknutím nahrajte B2 obrázok (max 4 MB)'}
                 </span>
                 <input
                   type="file"

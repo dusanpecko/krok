@@ -44,6 +44,7 @@ const mainLinks = [
   { href: '/admin/granty', label: 'Granty', icon: FolderHeart, permission: 'view_grants' },
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
   { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
+  { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },
 ]
 
 const settingsLinks = [

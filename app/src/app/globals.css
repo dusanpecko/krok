@@ -587,3 +587,31 @@ body {
   float: right;
   margin: 0 0 1.5rem 1.5rem;
 }
+
+/* Tmavý variant obsahu článkov (na tmavých verejných stránkach) */
+.theme-dark .simple-rich-editor h1,
+.theme-dark .simple-rich-editor h2,
+.theme-dark .simple-rich-editor h3 {
+  color: var(--color-white);
+}
+
+.theme-dark .simple-rich-editor blockquote {
+  border-left-color: var(--color-gold);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #b0c9e2;
+}
+
+.theme-dark .simple-rich-editor table,
+.theme-dark .simple-rich-editor th,
+.theme-dark .simple-rich-editor td {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.theme-dark .simple-rich-editor th {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.theme-dark .simple-rich-editor a {
+  color: var(--color-gold-bright);
+  text-decoration: underline;
+}

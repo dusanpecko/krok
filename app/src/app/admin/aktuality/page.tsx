@@ -1,6 +1,6 @@
 import { getPosts } from './actions'
 import Link from 'next/link'
-import { Plus, Newspaper, Calendar, FileText, Volume2, Edit, Trash2 } from 'lucide-react'
+import { Plus, Newspaper, Calendar, FileText, Volume2, Edit, Pin } from 'lucide-react'
 import DeletePostButton from '@/components/admin/aktuality/DeletePostButton'
 
 export const dynamic = 'force-dynamic'
@@ -52,6 +52,15 @@ export default async function AdminAktualityPage() {
                   {post.status === 'published' ? 'Zverejnené' : post.status === 'archived' ? 'Archivované' : 'Koncept'}
                 </span>
                 
+                <div className="flex items-center gap-2">
+                {/* Pripnutie */}
+                {post.pinned && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-wider rounded-md shadow-sm" title={`Pripnutý článok – poradie ${post.pin_order}`}>
+                    <Pin size={12} className="shrink-0" />
+                    {post.pin_order}
+                  </div>
+                )}
+
                 {/* Audio Status */}
                 {post.audio_url && (
                   <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-wider rounded-md shadow-sm animate-pulse" title="ElevenLabs audio nahrávka je pripravená">
@@ -59,6 +68,7 @@ export default async function AdminAktualityPage() {
                     TTS Hlas
                   </div>
                 )}
+                </div>
               </div>
 
               {/* Obsah karty */}

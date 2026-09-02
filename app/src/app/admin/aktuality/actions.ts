@@ -25,6 +25,8 @@ export interface PostPayload {
   audio_url?: string | null
   status: 'draft' | 'published' | 'archived'
   published_at?: string | null
+  pinned?: boolean
+  pin_order?: number
 }
 
 /**
@@ -35,6 +37,8 @@ export async function getPosts() {
   const { data, error } = await supabaseAdmin
     .from('posts')
     .select('*')
+    .order('pinned', { ascending: false })
+    .order('pin_order', { ascending: true })
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -109,9 +113,11 @@ export async function createOrUpdatePost(payload: PostPayload) {
       featured_image: payload.featured_image || null,
       audio_url: payload.audio_url || null,
       status: payload.status,
-      published_at: payload.status === 'published' 
-        ? (payload.published_at || new Date().toISOString()) 
+      published_at: payload.status === 'published'
+        ? (payload.published_at || new Date().toISOString())
         : null,
+      pinned: payload.pinned ?? false,
+      pin_order: payload.pin_order ?? 0,
       updated_at: new Date().toISOString()
     }
 

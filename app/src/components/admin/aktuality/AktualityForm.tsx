@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-  ArrowLeft, Save, Loader2, Sparkles, Volume2, Image as ImageIcon, 
-  Trash2, AlertTriangle, Link as LinkIcon
+  ArrowLeft, Save, Loader2, Sparkles, Volume2, Image as ImageIcon,
+  Trash2, AlertTriangle, Link as LinkIcon, Pin
 } from 'lucide-react'
 import Link from 'next/link'
 import { createOrUpdatePost, generateElevenLabsTTS, uploadPostImage, generateAiContent, generateAiExcerpt, checkGrammar, generateAiImage } from '@/app/admin/aktuality/actions'
@@ -21,6 +21,8 @@ interface PostData {
   audio_url?: string | null
   status: 'draft' | 'published' | 'archived'
   published_at?: string | null
+  pinned?: boolean
+  pin_order?: number
 }
 
 interface AktualityFormProps {
@@ -40,6 +42,8 @@ export default function AktualityForm({ initialData }: AktualityFormProps) {
   const [status, setStatus] = useState<'draft' | 'published' | 'archived'>(initialData?.status || 'draft')
   const [featuredImage, setFeaturedImage] = useState(initialData?.featured_image || '')
   const [audioUrl, setAudioUrl] = useState(initialData?.audio_url || '')
+  const [pinned, setPinned] = useState(initialData?.pinned ?? false)
+  const [pinOrder, setPinOrder] = useState(initialData?.pin_order?.toString() || '0')
 
   // Operation states
   const [imageLoading, setImageLoading] = useState(false)
@@ -269,7 +273,9 @@ export default function AktualityForm({ initialData }: AktualityFormProps) {
         featured_image: featuredImage,
         audio_url: audioUrl || null,
         status,
-        published_at: initialData?.published_at
+        published_at: initialData?.published_at,
+        pinned,
+        pin_order: pinned ? (parseInt(pinOrder, 10) || 0) : 0
       }
 
       const res = await createOrUpdatePost(payload)
@@ -348,6 +354,39 @@ export default function AktualityForm({ initialData }: AktualityFormProps) {
                 <option value="published">Zverejnené (Live)</option>
                 <option value="archived">Archivované (Archived)</option>
               </select>
+            </div>
+
+            {/* Pripnutie článku */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 border border-gray-200 rounded-xl hover:border-blue-300 transition-all">
+                <input
+                  type="checkbox"
+                  checked={pinned}
+                  onChange={(e) => setPinned(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20"
+                />
+                <div>
+                  <p className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                    <Pin size={14} className="text-blue-600" /> Pripnúť článok
+                  </p>
+                  <p className="text-[10px] text-gray-400">
+                    Pripnuté články sa zobrazujú pred ostatnými bez ohľadu na dátum
+                  </p>
+                </div>
+              </label>
+              {pinned && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-400">
+                    Poradie pripnutia (nižšie číslo = vyššie)
+                  </label>
+                  <input
+                    type="number"
+                    value={pinOrder}
+                    onChange={(e) => setPinOrder(e.target.value)}
+                    className="w-full text-sm font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Slug URL */}

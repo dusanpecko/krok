@@ -1,6 +1,6 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import Link from 'next/link'
-import { Calendar, Volume2, ArrowRight, Newspaper } from 'lucide-react'
+import { Calendar, Volume2, ArrowRight, Newspaper, Pin } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +15,8 @@ export default async function PublicAktualityPage() {
     .from('posts')
     .select('*')
     .eq('status', 'published')
+    .order('pinned', { ascending: false })
+    .order('pin_order', { ascending: true })
     .order('published_at', { ascending: false })
     .order('created_at', { ascending: false })
 
@@ -89,6 +91,12 @@ export default async function PublicAktualityPage() {
                         post.published_at || post.created_at
                       ).toLocaleDateString('sk-SK')}
                     </span>
+                    {post.pinned && (
+                      <span className="ml-auto flex items-center gap-1 px-2 py-0.5 bg-gold/10 border border-gold/30 text-gold-bright text-[10px] font-black uppercase tracking-wider rounded-md">
+                        <Pin size={11} className="shrink-0" />
+                        Pripnuté
+                      </span>
+                    )}
                   </div>
 
                   <Link href={`/aktuality/${post.slug}`} className="block">

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { syncFioTransactions } from '@/app/admin/banka/actions'
+import { runFioSync } from '@/lib/bank/fio-sync'
 
 // Hasiť statický build: zabezpečiť, že táto API cesta je plne dynamická a nebude sa cachovať pri next build
 export const dynamic = 'force-dynamic'
@@ -16,7 +16,8 @@ export async function GET(request: Request) {
 
   try {
     console.log('Cron triggered: Starting automated Fio Bank synchronization...')
-    const result = await syncFioTransactions()
+    // Interná implementácia bez session – server action by tu spadla na requirePermission.
+    const result = await runFioSync()
 
     if (result.success) {
       console.log(`Cron sync success: Total fetched: ${result.total}, Mapped: ${result.matched}`)

@@ -86,7 +86,17 @@ export default function TransactionList({ transactions, onPairClick, onQuickMatc
                 </td>
                 
                 <td className="px-6 py-4 text-right">
-                  {tx.matched ? (
+                  {tx.category === 'mollie_payout' ? (
+                     <div className="flex flex-col items-end">
+                       <span
+                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-bold"
+                         title="Hromadná výplata online darov z Mollie – dary sú už zaznamenané cez online platby, nepáruje sa."
+                       >
+                         Výplata Mollie
+                       </span>
+                       <span className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-wide">Nepáruje sa</span>
+                     </div>
+                  ) : tx.matched ? (
                      <div className="flex flex-col items-end">
                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-bold">
                          <CheckCircle2 size={14} /> Spárované

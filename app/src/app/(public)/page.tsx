@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { 
   Heart, 
   Sparkles, 
@@ -8,12 +8,14 @@ import {
   Users, 
   TrendingUp, 
   Compass, 
-  Check, 
   ArrowRight, 
   Gift, 
-  QrCode, 
-  Copy, 
-  FileText
+  QrCode,
+  Copy,
+  FileText,
+  CreditCard,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { 
   motion, 
@@ -23,9 +25,12 @@ import {
   useReducedMotion,
   AnimatePresence 
 } from 'framer-motion';
-import KrokLogo from '@/components/KrokLogo';
 import Image from 'next/image';
-import { getPublicStats } from './actions';
+import { getPublicStats, getPaymentQrCode } from './actions';
+import { startOnlineDonation, getMyOnlineSubscriptions, type MyOnlineSubscription } from './platby/actions';
+import { useSupabase } from '@/components/providers/SupabaseProvider';
+import RecurringChoice, { type RecurringChoiceValue } from '@/components/public/RecurringChoice';
+import FeaturedProjects from '@/components/public/FeaturedProjects';
 
 // ==========================================
 // 1. DYNAMICKÉ PLACEHOLDERY A NASTAVENIE DÁT
@@ -36,6 +41,10 @@ import { getPublicStats } from './actions';
 const PLACEHOLDER_DONORS_COUNT = 0;      // {{POCET_DARCOV}}
 const PLACEHOLDER_TOTAL_AMOUNT = 0;      // {{CELKOVA_SUMA}}
 const PLACEHOLDER_PROJECTS_COUNT = 0;    // {{POCET_PODPORENYCH_PROJEKTOV}}
+
+// Bankový účet fondu KROK (Fio banka)
+const KROK_IBAN = 'SK0483300000002901688673';
+const KROK_IBAN_FORMATTED = KROK_IBAN.replace(/(.{4})/g, '$1 ').trim();
 
 // Projekt: Lectio Divina (reálne dáta)
 const LECTIO_DIVINA_TARGET = 7000;
@@ -150,35 +159,52 @@ function CountUpNumber({ value, suffix = "", duration = 1.5 }: { value: number; 
 }
 
 // Sparkle časticový efekt pre prémiový dojem
+// Deterministický pseudo-náhodný generátor (0–1) – render ostáva čistý (react-hooks/purity)
+// a hodnoty sú rovnaké na serveri aj klientovi
+function seeded(index: number, salt: number): number {
+  const x = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+const SPARKLES = Array.from({ length: 15 }, (_, i) => ({
+  top: seeded(i, 1) * 100,
+  left: seeded(i, 2) * 100,
+  y: -50 - seeded(i, 3) * 50,
+  duration: 4 + seeded(i, 4) * 4,
+  delay: seeded(i, 5) * 5,
+}));
+
+// Hydratačne bezpečná detekcia klienta bez setState v efekte (react-hooks/set-state-in-effect)
+const subscribeNoop = () => () => {};
+function useIsClient(): boolean {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false);
+}
+
 function BackgroundSparkles() {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
   const prefersReducedMotion = useReducedMotion();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || prefersReducedMotion) return null;
+  if (!isClient || prefersReducedMotion) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[...Array(15)].map((_, i) => (
+      {SPARKLES.map((p, i) => (
         <motion.div
           key={i}
           className="absolute w-1.5 h-1.5 bg-gold-bright rounded-full opacity-30"
           style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
+            top: `${p.top}%`,
+            left: `${p.left}%`,
           }}
           animate={{
             scale: [0, 1.2, 0],
             opacity: [0, 0.6, 0],
-            y: [0, -50 - Math.random() * 50]
+            y: [0, p.y]
           }}
           transition={{
-            duration: 4 + Math.random() * 4,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 5,
+            delay: p.delay,
             ease: "easeOut"
           }}
         />
@@ -200,6 +226,49 @@ export default function KrokLandingPage() {
   const [donorName, setDonorName] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedIBAN, setCopiedIBAN] = useState(false);
+
+  // Online platba kartou (Mollie)
+  const { session } = useSupabase();
+  const [donorEmail, setDonorEmail] = useState('');
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session?.user?.email && !donorEmail) setDonorEmail(session.user.email);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.email]);
+
+  // Prihlásený darca: existujúce pravidelné dary (upozornenie) + jeho variabilný symbol
+  const [mySubs, setMySubs] = useState<MyOnlineSubscription[]>([]);
+  const [recurringChoice, setRecurringChoice] = useState<RecurringChoiceValue>({ mode: 'replace', replaceId: null });
+  useEffect(() => {
+    if (!isModalOpen || !session?.user) return;
+    let cancelled = false;
+    getMyOnlineSubscriptions().then((subs) => {
+      if (cancelled) return;
+      // Modál na domovskej je všeobecná podpora fondu – predplatné na výzvy sa nenahrádzajú
+      const general = subs.filter((s) => !s.project_id);
+      setMySubs(general);
+      setRecurringChoice({ mode: 'replace', replaceId: general[0]?.id ?? null });
+    });
+    return () => { cancelled = true; };
+  }, [isModalOpen, session?.user]);
+
+  // PAY by square QR pre prevod (jednorazový príkaz / mesačný trvalý príkaz) + VS darcu
+  const [myVS, setMyVS] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isModalOpen) return;
+    let cancelled = false;
+    // currentAmount je deklarované až nižšie – suma sa tu odvodí priamo zo stavu
+    const amount = selectedTier === 'custom' ? (Number(customAmount) || 0) : selectedTier;
+    getPaymentQrCode({ amount, recurring: isMonthly }).then((qr) => {
+      if (cancelled || !qr) return;
+      setQrDataUrl(qr.dataUrl);
+      setMyVS(qr.variableSymbol);
+    });
+    return () => { cancelled = true; };
+  }, [isModalOpen, selectedTier, customAmount, isMonthly, session?.user]);
 
   // Stav pre rotujúci hero text (Variant 0 je predvolený pre SSR/SEO)
   const [heroIndex, setHeroIndex] = useState(0);
@@ -233,7 +302,7 @@ export default function KrokLandingPage() {
       if (stored !== null) {
         lastIndex = parseInt(stored, 10);
       }
-    } catch (e) {
+    } catch {
       // Ignorovanie prípadných chýb prístupu k storage
     }
 
@@ -256,7 +325,7 @@ export default function KrokLandingPage() {
     // Uloženie nového indexu pre budúci refresh
     try {
       sessionStorage.setItem('krok_hero_last_index', String(nextIndex));
-    } catch (e) {
+    } catch {
       // Tiché zlyhanie pri blokovanom storage
     }
 
@@ -323,6 +392,31 @@ export default function KrokLandingPage() {
     navigator.clipboard.writeText(text);
     setCopiedIBAN(true);
     setTimeout(() => setCopiedIBAN(false), 2000);
+  };
+
+  // Založí platbu u Mollie a presmeruje na platobnú bránu
+  const handleCardPayment = async () => {
+    setPayError(null);
+    if (currentAmount < 1) {
+      setPayError('Minimálna suma daru je 1 €.');
+      return;
+    }
+    setPayLoading(true);
+    const replacing = isMonthly && mySubs.length > 0 && recurringChoice.mode === 'replace' && !!recurringChoice.replaceId;
+    const res = await startOnlineDonation({
+      amount: currentAmount,
+      recurring: isMonthly,
+      interval: 'month',
+      email: donorEmail,
+      name: donorName,
+      replaceSubscriptionId: replacing ? recurringChoice.replaceId : null,
+    });
+    if (res.success) {
+      window.location.href = res.url;
+      return;
+    }
+    setPayError(res.error);
+    setPayLoading(false);
   };
 
   return (
@@ -903,6 +997,9 @@ export default function KrokLandingPage() {
         </div>
       </section>
 
+      {/* Aktuálne výzvy na podporu (featured) */}
+      <FeaturedProjects />
+
       {/* =========================================================================
           SEKCIA 5: POZVANIE (CTA a interaktívna platobná donorská karta)
           ========================================================================= */}
@@ -1216,7 +1313,7 @@ export default function KrokLandingPage() {
               <div className="p-6 space-y-6">
                 
                 <p className="text-zinc-300 text-sm leading-relaxed font-light">
-                  Ste krôčik od vstupu do našej rodiny darcov. Akceptujeme bezpečné platby kartou (placeholder v ostrej prevádzke), alebo môžete platbu zrealizovať priamo cez Váš internet banking pomocou platobných údajov nižšie:
+                  Ste krôčik od vstupu do našej rodiny darcov. Zaplaťte bezpečne kartou online, alebo pošlite dar priamo cez Váš internet banking pomocou platobných údajov nižšie.
                 </p>
 
                 {/* Zobrazenie platobnej sumy */}
@@ -1227,6 +1324,50 @@ export default function KrokLandingPage() {
                   </div>
                 </div>
 
+                {/* Platba kartou online (Mollie) */}
+                <div className="space-y-3 p-4 rounded-2xl bg-gold/5 border border-gold/20">
+                  <label htmlFor="donor-email" className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold block">
+                    Váš e-mail (pre potvrdenie platby)
+                  </label>
+                  <input
+                    id="donor-email"
+                    type="email"
+                    value={donorEmail}
+                    onChange={(e) => setDonorEmail(e.target.value)}
+                    placeholder="meno@priklad.sk"
+                    autoComplete="email"
+                    className="w-full bg-blue-deep border border-white/10 focus:border-gold-bright rounded-xl py-3 px-4 text-white text-sm outline-none transition-colors"
+                  />
+                  {isMonthly && (
+                    <RecurringChoice
+                      subscriptions={mySubs}
+                      newAmount={currentAmount}
+                      value={recurringChoice}
+                      onChange={setRecurringChoice}
+                    />
+                  )}
+                  {payError && (
+                    <div className="flex items-start gap-2 text-xs text-red-200">
+                      <AlertCircle size={14} className="shrink-0 mt-0.5" /> {payError}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleCardPayment}
+                    disabled={payLoading || currentAmount < 1 || !donorEmail}
+                    className="w-full py-3.5 bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep font-extrabold text-sm rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {payLoading ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
+                    {payLoading ? 'Presmerúvame na platobnú bránu…' : `Zaplatiť kartou ${cardAmountDisplay}${isMonthly ? ' mesačne' : ''}`}
+                  </button>
+                  <p className="text-[10px] text-zinc-500 text-center">
+                    Karta, Apple Pay, Google Pay – cez Mollie. {isMonthly && 'Pravidelný dar môžete kedykoľvek zrušiť vo svojom profile.'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-zinc-500 font-extrabold">
+                  <div className="flex-1 h-px bg-white/10" /> alebo prevodom <div className="flex-1 h-px bg-white/10" />
+                </div>
+
                 {/* Prevodné údaje */}
                 <div className="space-y-4">
                   
@@ -1235,7 +1376,7 @@ export default function KrokLandingPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-zinc-500 font-mono">Číslo účtu (IBAN)</span>
                       <button 
-                        onClick={() => copyToClipboard("SK1209000000003456789012")}
+                        onClick={() => copyToClipboard(KROK_IBAN)}
                         className="text-xs text-gold-bright hover:text-gold flex items-center gap-1.5 font-medium"
                       >
                         <Copy size={12} />
@@ -1243,19 +1384,30 @@ export default function KrokLandingPage() {
                       </button>
                     </div>
                     <div className="p-3.5 bg-white/5 border border-white/10 rounded-xl text-sm font-mono text-white select-all">
-                      SK12 0900 0000 0034 5678 9012
+                      {KROK_IBAN_FORMATTED}
                     </div>
                   </div>
 
                   {/* Ostatné údaje */}
                   <div className="grid grid-cols-2 gap-4">
                     
-                    {/* Variabilný symbol */}
+                    {/* Variabilný symbol – vlastný VS darcu z jeho profilu */}
                     <div>
                       <span className="text-xs text-zinc-500 font-mono block mb-1">Variabilný symbol</span>
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-sm font-mono text-zinc-300">
-                        {isMonthly ? '20190801' : '19082019'}
-                      </div>
+                      {myVS ? (
+                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-sm font-mono text-white select-all">
+                          {myVS}
+                        </div>
+                      ) : (
+                        <a
+                          href={session ? '/profil' : '/registracia'}
+                          className="block p-3 bg-white/5 border border-white/10 rounded-xl text-xs text-zinc-300 hover:text-white hover:border-gold/40 transition-colors leading-snug"
+                        >
+                          {session
+                            ? 'Váš VS nájdete v profile →'
+                            : 'Váš vlastný VS získate registráciou →'}
+                        </a>
+                      )}
                     </div>
 
                     {/* Konštantný symbol */}
@@ -1270,11 +1422,15 @@ export default function KrokLandingPage() {
 
                 </div>
 
-                {/* QR kód (Placeholder) */}
+                {/* PAY by square QR kód – reálne platobné údaje (IBAN, suma, VS, KS) */}
                 <div className="pt-2 flex flex-col items-center justify-center space-y-3">
-                  <div className="relative w-36 h-36 bg-white p-2 rounded-2xl border border-zinc-800 flex items-center justify-center">
-                    {/* QR code mock icon */}
-                    <QrCode size={110} className="text-zinc-900" />
+                  <div className="relative w-40 h-40 bg-white p-1.5 rounded-2xl border border-zinc-800 flex items-center justify-center">
+                    {qrDataUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={qrDataUrl} alt="PAY by square QR kód na úhradu daru" className="w-full h-full object-contain" />
+                    ) : (
+                      <QrCode size={110} className="text-zinc-300 animate-pulse" />
+                    )}
                     {/* Tiny watermark logotypu v strede QR kódu */}
                     <div className="absolute w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-zinc-200 overflow-hidden p-1">
                       <Image
@@ -1287,8 +1443,12 @@ export default function KrokLandingPage() {
                     </div>
                   </div>
                   <div className="text-center">
-                    <span className="text-xs text-white font-bold block">Naskenujte v bankovej aplikácii</span>
-                    <span className="text-[10px] text-zinc-500">QR kód automaticky nastaví platbu a sumu</span>
+                    <span className="text-xs text-white font-bold block">Naskenujte v bankovej aplikácii (PAY by square)</span>
+                    <span className="text-[10px] text-zinc-500">
+                      {isMonthly
+                        ? 'QR nastaví príjemcu, sumu a váš VS – v banke ho uložte ako trvalý príkaz (mesačne)'
+                        : 'QR nastaví príjemcu, sumu a váš variabilný symbol'}
+                    </span>
                   </div>
                 </div>
 

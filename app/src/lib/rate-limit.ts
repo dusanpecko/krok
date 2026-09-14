@@ -74,6 +74,16 @@ export async function checkRateLimit(
     return { success: true }
   }
   const identifier = opts.identifier ?? (await getClientIp())
-  const { success } = await limiter.limit(identifier)
-  return { success }
+  try {
+    const { success } = await limiter.limit(identifier)
+    return { success }
+  } catch (err) {
+    // Výpadok Redisu (DNS, sieť, zmazaná DB) nesmie zastaviť registráciu ani
+    // platbu – radšej chvíľu bez brzdy než bez darov. Fail-open + varovanie.
+    console.warn(
+      `[rate-limit] Upstash nedostupný (${name}), požiadavka prechádza bez limitu:`,
+      err instanceof Error ? err.message : err
+    )
+    return { success: true }
+  }
 }

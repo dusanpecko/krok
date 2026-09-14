@@ -9,6 +9,7 @@ import {
   Globe, ShieldCheck, Heart, Lock, Unlock
 } from 'lucide-react'
 import Link from 'next/link'
+import { paymentMethodLabel } from '@/lib/donations'
 
 interface Parish {
   id: string
@@ -302,23 +303,40 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
                       <p className="text-xs text-gray-400">Prehľad príspevkov darcu</p>
                    </div>
                 </div>
-                <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-3 py-1 rounded-lg uppercase tracking-widest">
-                   {donations.length} platieb
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-3 py-1 rounded-lg uppercase tracking-widest">
+                     {donations.length} platieb
+                  </span>
+                  <span className="text-[10px] font-black bg-green-50 text-green-700 px-3 py-1 rounded-lg uppercase tracking-widest">
+                     Spolu {donations.reduce((acc, d) => acc + Number(d.amount), 0).toLocaleString('sk-SK', { style: 'currency', currency: 'EUR' })}
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-4">
                 {(() => {
                   const years = [...new Set(donations.map(d => d.year))].sort((a,b) => b-a);
-                  return years.map(year => (
+                  return years.map(year => {
+                    const yearDonations = donations.filter(d => d.year === year)
+                    const yearTotal = yearDonations.reduce((acc, d) => acc + Number(d.amount), 0)
+                    return (
                     <div key={year} className="space-y-3">
-                      <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
-                        <div className="h-[1px] flex-1 bg-gray-50"></div>
-                        Rok {year}
-                        <div className="h-[1px] flex-1 bg-gray-50"></div>
+                      {/* Hlavička roka so sumárom: počet platieb a súčet za kalendárny rok */}
+                      <div className="flex items-center gap-3">
+                        <div className="h-px flex-1 bg-gray-100"></div>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                          <span className="text-gray-400">Rok {year}</span>
+                          <span className="text-gray-300">·</span>
+                          <span className="text-gray-400">{yearDonations.length} {yearDonations.length === 1 ? 'platba' : yearDonations.length < 5 ? 'platby' : 'platieb'}</span>
+                          <span className="text-gray-300">·</span>
+                          <span className="text-green-700 bg-green-50 px-2 py-0.5 rounded-md">
+                            {yearTotal.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR' })}
+                          </span>
+                        </div>
+                        <div className="h-px flex-1 bg-gray-100"></div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                         {donations.filter(d => d.year === year).map(donation => (
+                         {yearDonations.map(donation => (
                            <div key={donation.id} className="p-4 bg-gray-50/50 rounded-xl border border-gray-50 flex justify-between items-center group hover:bg-white hover:border-blue-100 hover:shadow-sm transition-all">
                               <div className="space-y-0.5">
                                  <div className="text-xs font-bold text-gray-900">
@@ -335,14 +353,15 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
                                     +{donation.amount.toFixed(2)} €
                                  </div>
                                  <div className="text-[9px] text-gray-400 font-mono uppercase">
-                                    {donation.payment_method === 'bank_transfer' ? 'Prevod' : 'Hotovosť'}
+                                    {paymentMethodLabel(donation.payment_method)}
                                  </div>
                               </div>
                            </div>
                          ))}
                       </div>
                     </div>
-                  ));
+                    )
+                  });
                 })()}
               </div>
             </div>

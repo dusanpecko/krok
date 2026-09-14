@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { XMLParser } from 'fast-xml-parser'
 import { requirePermission, UnauthorizedError, ForbiddenError } from '@/lib/auth'
+import { isMolliePayout, MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
+import { getAnonymousDonorId, loadProjectLegacyVsMap, normalizeVs } from '@/lib/bank/legacy-project-vs'
 
 export async function POST(request: Request) {
   try {
@@ -159,6 +161,10 @@ export async function POST(request: Request) {
       })
     }
 
+    // VS výziev zo starého webu (bežiace trvalé príkazy) → dar k výzve cez systémového anonymného darcu
+    const projectLegacyVsMap = await loadProjectLegacyVsMap(supabase)
+    const anonymousDonorId = projectLegacyVsMap.size > 0 ? await getAnonymousDonorId(supabase) : null
+
     // 6. Process Transactions
     const txToInsert = []
     let matchedCount = 0
@@ -206,9 +212,18 @@ export async function POST(request: Request) {
       let isMatched = false
       let category = direction === 'credit' ? 'unmatched' : 'expense_other'
 
-      if (direction === 'credit' && vs) {
+      // Výplata z Mollie = hromadný prevod online darov, ktoré už máme v donations
+      // → nikdy nepárovať na darcu (dvojité započítanie).
+      if (direction === 'credit' && isMolliePayout({ direction, counterparty_name: counterName, counterparty_iban: counterIban, remittance_info: `${ustrd} ${addtlInf}` })) {
+         category = MOLLIE_PAYOUT_CATEGORY
+      } else if (direction === 'credit' && vs) {
          if (donorVsMap.has(vs)) {
             matchedDonorId = donorVsMap.get(vs)
+            isMatched = true
+            category = 'donation'
+         } else if (anonymousDonorId && projectLegacyVsMap.has(normalizeVs(vs))) {
+            // VS patrí výzve zo starého webu, nie darcovi → anonymný dar k výzve
+            matchedDonorId = anonymousDonorId
             isMatched = true
             category = 'donation'
          }
@@ -283,7 +298,10 @@ export async function POST(request: Request) {
        if (matchedTxs.length > 0) {
           const donationsToInsert = matchedTxs.map(tx => {
              // Find matching specific symbol to donor project mapping if applicable
-             const pId = tx.specific_symbol && projectSsMap.has(tx.specific_symbol) ? projectSsMap.get(tx.specific_symbol) : null
+             const pId =
+               (tx.specific_symbol && projectSsMap.has(tx.specific_symbol) ? projectSsMap.get(tx.specific_symbol) : null) ??
+               projectLegacyVsMap.get(normalizeVs(tx.variable_symbol)) ??
+               null
              
              return {
                 donor_id: tx.donor_id,

@@ -4,6 +4,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth'
 import { sanitizeSearchTerm, sanitizeFilterValue } from '@/lib/search'
+import { runFioSync } from '@/lib/bank/fio-sync'
+import { MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,7 +92,8 @@ export async function getTransactions(params: {
   if (params.status === 'matched') {
     query = query.eq('matched', true)
   } else if (params.status === 'unmatched') {
-    query = query.eq('matched', false)
+    // Výplaty z Mollie nie sú „na spárovanie" – dary sú už zaznamenané online
+    query = query.eq('matched', false).neq('category', MOLLIE_PAYOUT_CATEGORY)
   }
 
   // 3. Search
@@ -182,6 +185,13 @@ export async function matchTransaction(
 
   if (tx.direction !== 'credit') {
     return { success: false, error: 'Iba prichádzajúce platby môžu byť spárované.' }
+  }
+
+  if (tx.category === MOLLIE_PAYOUT_CATEGORY) {
+    return {
+      success: false,
+      error: 'Toto je výplata z Mollie (hromadný prevod online darov). Dary sú už zaznamenané cez online platby – párovanie by ich započítalo dvakrát.',
+    }
   }
 
   // 2. Prepíš transakciu
@@ -280,6 +290,7 @@ export async function bulkMatchAnonymous(params: {
     .select('id, amount, booking_date')
     .eq('matched', false)
     .eq('direction', 'credit')
+    .neq('category', MOLLIE_PAYOUT_CATEGORY) // výplaty z Mollie sa nepárujú
     .gte('booking_date', startDate)
     .lte('booking_date', endDate)
 
@@ -348,7 +359,20 @@ export async function getSuggestedMatches() {
 
   const results = []
 
+  // Výplaty z Mollie sa nenavrhujú na párovanie (dary sú už v donations)
+  const rowIds = (data || []).map((r: { transaction_id: string }) => r.transaction_id)
+  const payoutIds = new Set<string>()
+  if (rowIds.length > 0) {
+    const { data: payoutRows } = await supabaseAdmin
+      .from('bank_transactions')
+      .select('id')
+      .in('id', rowIds)
+      .eq('category', MOLLIE_PAYOUT_CATEGORY)
+    for (const r of payoutRows ?? []) payoutIds.add(r.id)
+  }
+
   for (const row of (data || [])) {
+    if (payoutIds.has(row.transaction_id)) continue
     let alternativeDonors: any[] = []
     
     // a. Hľadanie podľa presného mena a priezviska (case insensitive)
@@ -533,6 +557,18 @@ export async function bulkMatchSuggested(matches: {
     return { success: true, count: 0 }
   }
 
+  // Výplaty z Mollie sa nikdy nepárujú (dary sú už v donations cez online platby)
+  const { data: payoutRows } = await supabaseAdmin
+    .from('bank_transactions')
+    .select('id')
+    .in('id', matches.map((m) => m.transactionId))
+    .eq('category', MOLLIE_PAYOUT_CATEGORY)
+  const payoutIds = new Set((payoutRows ?? []).map((r) => r.id))
+  matches = matches.filter((m) => !payoutIds.has(m.transactionId))
+  if (matches.length === 0) {
+    return { success: true, count: 0 }
+  }
+
   try {
     // 1. Aktualizujeme statusy transakcií v bank_transactions
     const updatePromises = matches.map((m) =>
@@ -583,312 +619,13 @@ export async function bulkMatchSuggested(matches: {
  * Pomocné funkcie pre bezpečné parsovanie stiahnutých stĺpcov z Fio JSON API.
  * Ošetrujú prípad, kedy banka vráti polia ako objekt { value } alebo ako primitívnu hodnotu, prípadne null.
  */
-const parseStringCol = (col: any): string | null => {
-  if (!col) return null
-  if (typeof col === 'object') {
-    return col.value !== undefined && col.value !== null ? String(col.value) : null
-  }
-  return String(col)
-}
-
-const parseNumberCol = (col: any): number | null => {
-  if (!col) return null
-  if (typeof col === 'object') {
-    return col.value !== undefined && col.value !== null ? Number(col.value) : null
-  }
-  return Number(col)
-}
-
 /**
  * Synchronizuje transakcie z Fio banky cez REST API za posledných 30 dní.
+ * Implementácia je v `lib/bank/fio-sync.ts` (zdieľaná s cronom).
  */
 export async function syncFioTransactions() {
   await requirePermission('view_bank')
-  const token = process.env.FIO_API_TOKEN
-  if (!token) {
-    return { 
-      success: false, 
-      error: 'V konfigurácii servera (.env.local) chýba FIO_API_TOKEN. Prepojenie na banku nie je nastavené.' 
-    }
-  }
-
-  try {
-    // 1. Vypočítaj dátumové rozmedzie (posledných 30 dní)
-    const today = new Date()
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(today.getDate() - 30)
-
-    const formatDate = (date: Date) => date.toISOString().split('T')[0]
-    const dateFrom = formatDate(thirtyDaysAgo)
-    const dateTo = formatDate(today)
-
-    // 2. Volanie Fio REST API
-    const url = `https://fioapi.fio.cz/v1/rest/periods/${token}/${dateFrom}/${dateTo}/transactions.json`
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-      next: { revalidate: 0 } // vypnúť caching v Next.js
-    })
-
-    if (!response.ok) {
-      if (response.status === 409) {
-        return { 
-          success: false, 
-          error: 'Fio API vrátilo chybu 409 (Conflict). Banka povoľuje dopyty maximálne raz za 30 sekúnd. Prosím, chvíľu počkajte a skúste to znova.' 
-        }
-      }
-      return { 
-        success: false, 
-        error: `Chyba pri komunikácii s Fio API banky (Status: ${response.status}).` 
-      }
-    }
-
-    const contentType = response.headers.get('content-type') || ''
-    if (!contentType.includes('application/json')) {
-      const text = await response.text()
-      console.error('Fio API returned non-JSON response:', text.substring(0, 500))
-      return { 
-        success: false, 
-        error: 'Banka nevrátila očakávaný formát JSON. Skontrolujte prosím správnosť FIO_API_TOKEN v súbore .env.local.' 
-      }
-    }
-
-    let payload
-    try {
-      payload = await response.json()
-    } catch (parseErr) {
-      console.error('Failed to parse Fio JSON payload:', parseErr)
-      return {
-        success: false,
-        error: 'Chyba pri spracovaní odpovede z banky (neplatný formát JSON). Skontrolujte prosím správnosť FIO_API_TOKEN.'
-      }
-    }
-    const accountStatement = payload?.accountStatement
-    if (!accountStatement) {
-      return { success: false, error: 'Fio API vrátilo nekompletnú alebo neplatnú štruktúru dát.' }
-    }
-
-    const info = accountStatement.info
-    const accountIban = info?.iban || 'Neznámy IBAN'
-    const openingBalance = info?.openingBalance !== undefined ? parseFloat(info.openingBalance) : 0
-    const closingBalance = info?.closingBalance !== undefined ? parseFloat(info.closingBalance) : 0
-
-    const transactionList = accountStatement.transactionList?.transaction
-    const rawTransactions = Array.isArray(transactionList)
-      ? transactionList
-      : (transactionList ? [transactionList] : [])
-
-    if (rawTransactions.length === 0) {
-      return { success: true, total: 0, imported: 0, matched: 0, message: 'Nenašli sa žiadne nové platby za toto obdobie.' }
-    }
-
-    // 3. Ochrana pred duplicitami
-    // Vytiahneme unikátne IDčka (column22) zo všetkých stiahnutých transakcií
-    const entryRefs = rawTransactions
-      .map((tx: any) => parseStringCol(tx.column22))
-      .filter((ref: string | null): ref is string => ref !== null)
-
-    if (entryRefs.length === 0) {
-      return { success: true, total: rawTransactions.length, imported: 0, matched: 0, message: 'Transakcie neobsahovali unikátne ID pohybu.' }
-    }
-
-    // Zistíme, ktoré entry_ref už máme v databáze
-    const { data: existingTxs, error: existError } = await supabaseAdmin
-      .from('bank_transactions')
-      .select('entry_ref')
-      .in('entry_ref', entryRefs)
-
-    if (existError) {
-      console.error('Error checking existing transactions:', existError)
-      return { success: false, error: 'Chyba pri kontrole existujúcich transakcií v databáze.' }
-    }
-
-    const existingRefsSet = new Set(existingTxs?.map(tx => tx.entry_ref) || [])
-
-    // Odfiltrujeme len tie transakcie, ktoré EŠTE NEMÁME v databáze
-    const newTransactions = rawTransactions.filter((tx: any) => {
-      const entryRef = parseStringCol(tx.column22)
-      return entryRef && !existingRefsSet.has(entryRef)
-    })
-
-    if (newTransactions.length === 0) {
-      return {
-        success: true,
-        total: rawTransactions.length,
-        imported: 0,
-        matched: 0,
-        message: 'Všetky stiahnuté transakcie už boli importované v minulosti.'
-      }
-    }
-
-    // 4. Vytvoríme importnú dávku (batch)
-    const { data: batch, error: batchError } = await supabaseAdmin
-      .from('bank_import_batches')
-      .insert({
-        filename: `Fio API Sync – ${formatDate(new Date())} (${dateFrom} - ${dateTo})`,
-        iban: accountIban,
-        period_from: dateFrom,
-        period_to: dateTo,
-        opening_balance: openingBalance,
-        closing_balance: closingBalance,
-        total_entries: newTransactions.length
-      })
-      .select()
-      .single()
-
-    if (batchError || !batch) {
-      console.error('Batch creation error:', batchError)
-      return { success: false, error: 'Zlyhalo vytvorenie importnej dávky v databáze.' }
-    }
-
-    // 5. Načítame darcov a projekty pre in-memory párovanie (presne ako v XML importe)
-    const { data: donors } = await supabaseAdmin.from('donors').select('id, variable_symbol')
-    const donorVsMap = new Map<string, string>()
-    if (donors) {
-      donors.forEach(d => {
-        if (d.variable_symbol) donorVsMap.set(d.variable_symbol, d.id)
-      })
-    }
-
-    const { data: projects } = await supabaseAdmin.from('projects').select('id, specific_symbol')
-    const projectSsMap = new Map<string, string>()
-    if (projects) {
-      projects.forEach(p => {
-        if (p.specific_symbol) projectSsMap.set(p.specific_symbol, p.id)
-      })
-    }
-
-    // 6. Spracovanie a mapovanie transakcií
-    const txToInsert = []
-    let matchedCount = 0
-
-    for (const tx of newTransactions) {
-      const entryRef = parseStringCol(tx.column22)
-      if (!entryRef) continue
-
-      const amountVal = parseNumberCol(tx.column1) || 0
-      const amount = Math.abs(amountVal)
-      
-      const currency = parseStringCol(tx.column14) || 'EUR'
-      const direction = amountVal > 0 ? 'credit' : 'debit'
-      
-      const bookingDateRaw = parseStringCol(tx.column0) || new Date().toISOString()
-      const bookingDate = bookingDateRaw.substring(0, 10) // očakáva sa YYYY-MM-DD
-      
-      const counterIban = parseStringCol(tx.column17)
-      const counterBic = parseStringCol(tx.column18)
-      
-      // Meno protiúčtu – vyskúšame viacero stiahnutých polí pre maximálne pokrytie
-      const counterName = parseStringCol(tx.column10) || parseStringCol(tx.column7) || null
-
-      const constantSymbol = parseStringCol(tx.column4)
-      const remittanceInfo = parseStringCol(tx.column16)
-
-      // Extrakcia VS a SS
-      let vs = null
-      let ss = null
-
-      const vsRaw = parseStringCol(tx.column5)
-      if (vsRaw) {
-        vs = vsRaw.replace(/^0+/, '')
-        if (vs === '') vs = '0'
-      }
-
-      const ssRaw = parseStringCol(tx.column6)
-      if (ssRaw) {
-        ss = ssRaw
-      }
-
-      // Rozhodnutie o párovaní
-      let matchedDonorId = null
-      let isMatched = false
-      let category = direction === 'credit' ? 'unmatched' : 'expense_other'
-
-      if (direction === 'credit' && vs) {
-        if (donorVsMap.has(vs)) {
-          matchedDonorId = donorVsMap.get(vs)
-          isMatched = true
-          category = 'donation'
-        }
-      }
-
-      txToInsert.push({
-        entry_ref: entryRef,
-        message_id: 'FIO_API_SYNC',
-        amount: amount,
-        currency: currency,
-        direction: direction,
-        booking_date: bookingDate,
-        counterparty_iban: counterIban,
-        counterparty_bic: counterBic,
-        counterparty_name: counterName,
-        variable_symbol: vs,
-        specific_symbol: ss,
-        constant_symbol: constantSymbol,
-        remittance_info: remittanceInfo,
-        donor_id: matchedDonorId,
-        matched: isMatched,
-        category: category,
-        import_batch_id: batch.id
-      })
-
-      if (isMatched) matchedCount++
-    }
-
-    // Zápis do DB
-    const { data: insertedTxs, error: insertError } = await supabaseAdmin
-      .from('bank_transactions')
-      .insert(txToInsert)
-      .select()
-
-    if (insertError) {
-      console.error('Fio API sync insertion error:', insertError)
-      return { success: false, error: 'Zlyhalo uloženie transakcií do databázy.' }
-    }
-
-    // 7. Automatické priradenie k darom (donations) pre úspešne spárované
-    if (insertedTxs && insertedTxs.length > 0) {
-      const matchedTxs = insertedTxs.filter(tx => tx.matched === true)
-
-      if (matchedTxs.length > 0) {
-        const donationsToInsert = matchedTxs.map(tx => {
-          const pId = tx.specific_symbol && projectSsMap.has(tx.specific_symbol) ? projectSsMap.get(tx.specific_symbol) : null
-
-          return {
-            donor_id: tx.donor_id,
-            bank_transaction_id: tx.id,
-            project_id: pId,
-            amount: tx.amount,
-            donation_date: tx.booking_date,
-            payment_method: 'bank_transfer',
-            matched: true
-          }
-        })
-
-        const { error: donationsError } = await supabaseAdmin
-          .from('donations')
-          .insert(donationsToInsert)
-
-        if (donationsError) {
-          console.error('Error inserting donations during API sync:', donationsError)
-        }
-      }
-    }
-
-    revalidatePath('/admin/banka')
-    return {
-      success: true,
-      total: rawTransactions.length,
-      imported: newTransactions.length,
-      matched: matchedCount
-    }
-
-  } catch (err: any) {
-    console.error('Fio API sync exception:', err)
-    return { success: false, error: err.message || 'Neočakávaná chyba počas bankovej synchronizácie.' }
-  }
+  return runFioSync()
 }
 
 

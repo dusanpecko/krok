@@ -1,53 +1,75 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { 
-  User, History, Heart, Save, AlertCircle, 
-  CheckCircle2, CreditCard, Mail, Phone, MapPin, 
-  ChevronRight, Landmark, ArrowRight, LogOut
+  User, History, Heart, Save, AlertCircle,
+  CheckCircle2, Mail, MapPin,
+  Landmark, LogOut
 } from 'lucide-react'
 import { updateProfile } from '@/app/(public)/profil/actions'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import OnlineDonationForm from './OnlineDonationForm'
+import { paymentMethodLabel } from '@/lib/donations'
+import type { MyOnlineSubscription } from '@/app/(public)/platby/actions'
 
 interface ProfileContentProps {
   donor: any
   donations: any[]
+  subscriptions?: MyOnlineSubscription[]
 }
 
 type Tab = 'data' | 'donations' | 'support'
 
 // Sparkle časticový efekt pre prémiový sakrálny vzhľad
+// Deterministický pseudo-náhodný generátor (0–1) – render ostáva čistý (react-hooks/purity)
+// a hodnoty sú rovnaké na serveri aj klientovi
+function seeded(index: number, salt: number): number {
+  const x = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453
+  return x - Math.floor(x)
+}
+
+const SPARKLES = Array.from({ length: 15 }, (_, i) => ({
+  top: seeded(i, 1) * 100,
+  left: seeded(i, 2) * 100,
+  y: -60 - seeded(i, 3) * 60,
+  duration: 5 + seeded(i, 4) * 5,
+  delay: seeded(i, 5) * 5,
+}))
+
+// Hydratačne bezpečná detekcia klienta bez setState v efekte (react-hooks/set-state-in-effect)
+const subscribeNoop = () => () => {}
+function useIsClient(): boolean {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false)
+}
+
 function BackgroundSparkles() {
-  const [mounted, setMounted] = useState(false)
+  const isClient = useIsClient()
   const prefersReducedMotion = useReducedMotion()
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted || prefersReducedMotion) return null
+  if (!isClient || prefersReducedMotion) return null
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[...Array(15)].map((_, i) => (
+      {SPARKLES.map((p, i) => (
         <motion.div
           key={i}
           className="absolute w-1.5 h-1.5 bg-gold-bright rounded-full opacity-35"
           style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
+            top: `${p.top}%`,
+            left: `${p.left}%`,
           }}
           animate={{
             scale: [0, 1.2, 0],
             opacity: [0, 0.7, 0],
-            y: [0, -60 - Math.random() * 60]
+            y: [0, p.y]
           }}
           transition={{
-            duration: 5 + Math.random() * 5,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 5,
+            delay: p.delay,
             ease: "easeOut"
           }}
         />
@@ -56,7 +78,7 @@ function BackgroundSparkles() {
   )
 }
 
-export default function ProfileContent({ donor, donations }: ProfileContentProps) {
+export default function ProfileContent({ donor, donations, subscriptions = [] }: ProfileContentProps) {
   const { supabase } = useSupabase()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('data')
@@ -451,7 +473,7 @@ export default function ProfileContent({ donor, donations }: ProfileContentProps
                                +{donation.amount.toFixed(2)} €
                              </p>
                              <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mt-0.5">
-                               {donation.payment_method === 'bank_transfer' ? 'Prevod' : 'Hotovosť'}
+                               {paymentMethodLabel(donation.payment_method)}
                              </p>
                           </div>
                        </div>
@@ -472,39 +494,17 @@ export default function ProfileContent({ donor, donations }: ProfileContentProps
                        Chcem <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white">podporiť</span>
                     </h2>
                     <p className="text-zinc-300 text-sm max-w-lg mx-auto leading-relaxed font-light">
-                      Vaša pomoc nám umožňuje rásť a pomáhať tam, kde je to najviac potrebné. Vyberte si spôsob podpory.
+                      Vaša pomoc nám umožňuje rásť a pomáhať tam, kde je to najviac potrebné. Zaplaťte kartou
+                      online alebo pošlite dar prevodom s vaším variabilným symbolom.
                     </p>
                  </div>
 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-md hover:border-gold/30 hover:bg-white/8 transition-all duration-300 group flex flex-col justify-between shadow-2xl relative overflow-hidden">
-                       <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-xl pointer-events-none group-hover:bg-gold/10 transition-colors" />
-                       <div>
-                          <CreditCard size={32} className="text-gold-bright mb-6" />
-                          <h3 className="text-xl font-bold text-white mb-2">Jednorazový dar</h3>
-                          <p className="text-sm text-zinc-400 mb-8 leading-relaxed font-light">
-                             Podporte nás jednorazovým príspevkom cez platobnú bránu alebo prevodom.
-                          </p>
-                       </div>
-                       <button className="flex items-center gap-2 text-gold-bright font-extrabold group-hover:gap-3.5 transition-all text-sm cursor-pointer self-start">
-                          <span>Pokračovať k daru</span> <ArrowRight size={16} />
-                       </button>
-                    </div>
-
-                    <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-md hover:border-gold/30 hover:bg-white/8 transition-all duration-300 group flex flex-col justify-between shadow-2xl relative overflow-hidden">
-                       <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-xl pointer-events-none group-hover:bg-gold/10 transition-colors" />
-                       <div>
-                          <History size={32} className="text-gold-bright mb-6" />
-                          <h3 className="text-xl font-bold text-white mb-2">Pravidelný dar</h3>
-                          <p className="text-sm text-zinc-400 mb-8 leading-relaxed font-light">
-                             Nastavte si trvalý príkaz a pomáhajte nám dlhodobo a predvídateľne.
-                          </p>
-                       </div>
-                       <button className="flex items-center gap-2 text-gold-bright font-extrabold group-hover:gap-3.5 transition-all text-sm cursor-pointer self-start">
-                          <span>Zistiť viac</span> <ArrowRight size={16} />
-                       </button>
-                    </div>
-                 </div>
+                 <OnlineDonationForm
+                   defaultEmail={donor.email || ''}
+                   defaultName={`${donor.first_name || ''} ${donor.last_name || ''}`.trim()}
+                   variableSymbol={donor.variable_symbol}
+                   subscriptions={subscriptions}
+                 />
 
                  <div className="bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative shadow-2xl hover:border-white/15 transition-all">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
@@ -512,9 +512,9 @@ export default function ProfileContent({ donor, donations }: ProfileContentProps
                        <h4 className="text-xl font-bold text-white">Potrebujete pomoc?</h4>
                        <p className="text-zinc-400 text-sm font-light mt-1">Naši pracovníci sú tu pre vás, neváhajte nás kontaktovať.</p>
                     </div>
-                    <button className="relative z-10 px-8 py-3.5 bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep rounded-2xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-gold/15 cursor-pointer shrink-0">
+                    <Link href="/kontakt" className="relative z-10 px-8 py-3.5 bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep rounded-2xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-gold/15 cursor-pointer shrink-0">
                        Kontaktujte nás
-                    </button>
+                    </Link>
                  </div>
               </div>
             )}

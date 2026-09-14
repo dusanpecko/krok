@@ -1,5 +1,6 @@
 import { getCurrentDonor, getDonorDonations } from './actions'
 import { getRegistrationFormOptions } from '../registracia/actions'
+import { getMyOnlineSubscriptions } from '../platby/actions'
 import ProfileContent from '@/components/public/ProfileContent'
 import ProfileCompletionModal from '@/components/public/ProfileCompletionModal'
 
@@ -19,14 +20,15 @@ export default async function ProfilePage() {
     )
   }
 
-  const [donations, options] = await Promise.all([
+  const [donations, options, subscriptions] = await Promise.all([
     getDonorDonations(donor.id),
     getRegistrationFormOptions(),
+    getMyOnlineSubscriptions(),
   ])
 
   return (
     <div className="bg-blue-deep min-h-screen">
-      <ProfileContent donor={donor} donations={donations} />
+      <ProfileContent donor={donor} donations={donations} subscriptions={subscriptions} />
       <ProfileCompletionModal
         donor={donor}
         parishes={options.parishes}

@@ -1,6 +1,66 @@
 'use server'
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
+
+/**
+ * Variabilný symbol prihláseného darcu (pre platobné údaje v modáli na domovskej
+ * stránke). Číta sa cookie klientom – RLS pustí len vlastný riadok darcu.
+ * Vracia null pre neprihláseného alebo darcu bez prepojeného profilu.
+ */
+export async function getMyDonorVariableSymbol(): Promise<string | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('donors')
+    .select('variable_symbol')
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
+  return data?.variable_symbol ?? null
+}
+
+export interface PaymentQrResult {
+  /** PNG data URL s PAY by square QR kódom */
+  dataUrl: string
+  /** VS prihláseného darcu (null = neprihlásený / bez profilu) */
+  variableSymbol: string | null
+  iban: string
+  recurring: boolean
+  specificSymbol: string | null
+}
+
+/**
+ * PAY by square QR kód pre bankový prevod (jednorazový príkaz alebo mesačný
+ * trvalý príkaz). VS sa doplní z profilu prihláseného darcu.
+ */
+export async function getPaymentQrCode(input: {
+  amount: number
+  recurring?: boolean
+  /** ŠS výzvy – dar prevodom sa priradí k výzve */
+  specificSymbol?: string | null
+  note?: string
+}): Promise<PaymentQrResult | null> {
+  const amount = Number(input.amount)
+  if (!Number.isFinite(amount) || amount < 0 || amount > 100000) return null
+
+  const { buildPayBySquareQrDataUrl, KROK_IBAN } = await import('@/lib/bank/pay-by-square')
+  const variableSymbol = await getMyDonorVariableSymbol()
+  const recurring = !!input.recurring
+  const specificSymbol = input.specificSymbol?.replace(/\D/g, '').slice(0, 10) || null
+  const note = input.note ? input.note.normalize('NFD').replace(/[\u0300-\u036f]/g, '').slice(0, 60) : undefined
+
+  try {
+    const dataUrl = await buildPayBySquareQrDataUrl({ amount, recurring, variableSymbol, specificSymbol, note })
+    return { dataUrl, variableSymbol, iban: KROK_IBAN, recurring, specificSymbol }
+  } catch (err) {
+    console.error('[pay-by-square] Generovanie QR zlyhalo:', err instanceof Error ? err.message : err)
+    return null
+  }
+}
 
 // Privileged admin client to fetch statistics safely, bypassing public RLS restrictions
 const supabaseAdmin = createSupabaseClient(
@@ -42,4 +102,10 @@ export async function getPublicStats(): Promise<PublicStats> {
       projectsCount: 0
     }
   }
+}
+
+/** Zvýraznené výzvy na podporu pre domovskú stránku (featured, aktívne). */
+export async function getFeaturedProjects() {
+  const { getFeaturedPublicProjects } = await import('@/lib/projects/public')
+  return getFeaturedPublicProjects(3)
 }

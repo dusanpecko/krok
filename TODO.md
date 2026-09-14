@@ -101,12 +101,12 @@ Migrácia 011 zavrela priamy únik cez anon kľúč; server-action autorizácia 
 
 
 ## Online platby – Mollie (implementované 2026-09-04)
-Stav: kód hotový, `tsc` + `next build` OK, migrácia `supabase/021_online_payments.sql` spustená v DB, testovací kľúč overený (test platba vytvorená). Zatiaľ NECOMMITNUTÉ.
+Stav: kód hotový, commitnuté a pushnuté 2026-09-14 (e300fe3), migrácie 021/022 spustené v DB. Reálne Mollie API vo Verceli nastavené (2026-09-14). Testovacie platby z DB zmazané.
 - Kód: `src/lib/mollie/{client,process-payment}.ts`, `src/app/api/mollie/webhook/route.ts`, `src/app/(public)/platby/actions.ts`, `/dakujeme`, `/admin/platby`, `components/public/OnlineDonationForm.tsx`.
 - Env: `MOLLIE_MODE=test|live`, `MOLLIE_API_KEY_TEST`, `MOLLIE_API_KEY_LIVE`, `NEXT_PUBLIC_BASE_URL` (lokálne nastavené v `.env.local`).
 - [x] 🔴 E2E na localhoste – HOTOVO (2026-09-04): jednorazový dar 10 € kartou → `/dakujeme` → `donations` (`card_online`), viditeľné v `/admin/platby`.
 - [x] 🔴 Pravidelný dar – HOTOVO (2026-09-04): 15 € → Mollie subscription so startDate +1 mesiac; zmena výšky na 20 € (staré zrušené po úspešnej platbe nového); neúspešná prvá platba správne bez daru aj bez predplatného. Zrušenie z profilu tlačidlom ešte neodkliknuté, ide cez tú istú funkciu ako zmena výšky.
-- [ ] 🟠 Po nasadení na doménu: do Vercel pridať `MOLLIE_MODE`, `MOLLIE_API_KEY_TEST`/`MOLLIE_API_KEY_LIVE`, `NEXT_PUBLIC_BASE_URL=https://mojkrok.sk`; webhook sa posiela automaticky na `/api/mollie/webhook`. Prepnúť na `live` až po produkčnom teste.
+- [x] 🟠 Vercel env pre Mollie – nastavené 2026-09-14 (reálne API). ⏳ Overiť po prvom reálnom dare, že webhook `/api/mollie/webhook` dorazil a dar sa zapísal.
 - [x] 🟠 Mollie metódy – HOTOVO: karta, Apple Pay, Google Pay zapnuté a schválené.
 - [x] 🟠 Banka: payout z Mollie – HOTOVO (2026-09-04): migrácia 022 (`transaction_category` + `mollie_payout`), detekcia `src/lib/bank/mollie-payout.ts` (názov/správa obsahuje „Mollie“, voliteľne env `MOLLIE_PAYOUT_IBANS`). Fio sync aj XML import payout označia, ručné/hromadné/navrhované párovanie ho odmietne, v Banke má badge. ⏳ Po prvej reálnej výplate overiť, že sa rozpoznala (ak nie, doplniť IBAN do env).
 - [ ] 🟢 E-mail potvrdenie daru (Brevo) – teraz žiadny e-mail neposielame, darca vidí stav na `/dakujeme` a v profile.
@@ -118,12 +118,12 @@ Stav: kód hotový, `tsc` + `next build` OK, migrácia `supabase/021_online_paym
 - [x] https://mojkrok.dcza.sk/podporene-projekty/ Projekty
 
 ## Výzvy na podporu – admin + DB (implementované 2026-09-14)
-Návrh a rozhodnutia: `krok_navrh_vyzvy.md`. Stav: `tsc` + `next build` OK, migrácia `supabase/023_project_campaigns.sql` spustená v DB. NECOMMITNUTÉ.
+Návrh a rozhodnutia: `krok_navrh_vyzvy.md`. Stav: commitnuté a pushnuté 2026-09-14 (c1eb120), migrácie 023/024 spustené v DB.
 - DB: `projects` rozšírená (perex, TipTap obsah, video, príjemca, garant, farnosť, legacy VS + legacy suma/darcovia, Mollie nastavenia), nové `project_media`, `project_budget_items`, `project_milestones`, `posts.project_id`, pohľad `v_project_stats` + RPC `get_project_stats`, oprávnenie `manage_projects`. Údaje 4 výziev zo starého webu doplnené, `moj-krok` a `dve-percenta` skryté z webu.
 - Admin: `/admin/projekty` (zoznam s progress barom), `/admin/projekty/novy`, `/admin/projekty/[id]` so záložkami Základné · Obsah · Financie · Rozpočet · Galéria a dokumenty · Harmonogram · Správy · Dary. Kód: `src/app/admin/projekty/actions.ts`, `src/components/admin/projects/*`, typy `src/lib/projects/types.ts`. Články majú výber „Súvisiaca výzva“.
 - [x] 🔴 Admin otestovaný v prehliadači (2026-09-14, pridaná škola).
 - [x] 🔴 Mollie na stránke výzvy – HOTOVO (2026-09-14): `components/public/ProjectDonationWidget.tsx` (bez prihlásenia, jednorazovo/mesačne, sumy z `suggested_amounts`, bankový prevod so ŠS + QR ako doplnok). `startOnlineDonation` overí, že výzva je zverejnená, aktívna, pred termínom a povoľuje typ daru; `replaceSubscriptionId` len s rovnakým `project_id`. Popis platby „Dar – KROK – <výzva>“, predplatné „Pravidelný mesačný dar – Pastoračný fond KROK – <výzva>“. `MyOnlineSubscription` nesie `project_id/name/slug`; profil aj modál na domovskej nahrádzajú len všeobecné predplatné, výzvové ukazujú s odkazom. `/dakujeme` zobrazí názov výzvy a tlačidlo späť na ňu.
-  - [ ] ⏳ Otestovať v Mollie test režime: jednorazový + mesačný dar na výzvu bez prihlásenia aj s prihlásením (dar musí pribudnúť do záložky Dary výzvy a počítadlo sa zvýšiť); darca so všeobecným predplatným pridá výzvové (obe ostanú aktívne).
+  - [x] ⏳ Jednorazový testovací dar na výzvu prešiel (2026-09-14), dar aj počítadlo v poriadku; testovacie záznamy zmazané. Ešte neotestované: mesačný dar na výzvu a darca so všeobecným + výzvovým predplatným naraz.
 - [x] 🔴 Verejná stránka – HOTOVO (2026-09-14): `/vyzvy` (filtre podľa kategórie, sekcie Otvorené / Po termíne / Podarilo sa), `/vyzvy/[slug]` (hero video/obrázok, počítadlo, widget, popis, rozpočet, harmonogram, galéria pred/počas/po, videá, správy, dokumenty, garant/príjemca, zdieľanie, OG metadata). Dáta: `src/lib/projects/public.ts`. Domovská: sekcia „Aktuálne výzvy“ (`FeaturedProjects`, len výzvy s `featured = true`). NavBar + Footer odkaz „Výzvy“. Redirecty `/grantove-vyzvy/*` → `/vyzvy/*` v `next.config.ts` (platia, keď bude stará doména smerovať na nový web).
   - [ ] 🟠 Zapnúť `featured` aspoň jednej výzve v admine, inak sa sekcia na domovskej nezobrazí.
 - [x] 🟠 Bankový prevod – HOTOVO (2026-09-14): `pay-by-square.ts` + `getPaymentQrCode` majú `specificSymbol`; Fio sync a XML import: ak VS nesedí s darcom, ale sedí s `projects.legacy_variable_symbol`, dar sa zapíše k výzve cez systémového darcu „Anonymný darca“ (`donors.legacy_id = ANONYMOUS_DONOR`, migrácia 024 spustená; pohľad `v_project_stats` počíta anonymné dary po jednom). Kód `src/lib/bank/legacy-project-vs.ts`.

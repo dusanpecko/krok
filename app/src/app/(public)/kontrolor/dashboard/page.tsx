@@ -2,7 +2,7 @@
 
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   getLoggedUserRoles, 
   getEvaluatorSubmissions, 
@@ -15,15 +15,27 @@ import {
   CheckCircle, 
   Star, 
   FileText, 
-  MessageSquare, 
-  Calendar, 
   Send,
-  UserCheck,
-  ChevronRight,
-  TrendingUp,
-  Download
+  UserCheck
 } from 'lucide-react'
-import FormEngine from '@/components/admin/grants/FormEngine'
+import FormEngine, { type FormField } from '@/components/admin/grants/FormEngine'
+
+type JsonValue = string | number | boolean | null
+
+/** Prihláška pridelená kontrolórovi – riadok z form_submissions + join na forms */
+interface EvaluatorSubmission {
+  id: string
+  status: string
+  created_at: string
+  data: Record<string, JsonValue | undefined>
+  evaluation_rating: number | null
+  evaluation_notes: string | null
+  forms: {
+    title: string
+    slug: string
+    fields: FormField[]
+  } | null
+}
 
 const KROK = {
   blue: '#003DA5',
@@ -38,8 +50,8 @@ export default function KontrolorDashboard() {
   const router = useRouter()
 
   const [isEvaluator, setIsEvaluator] = useState(false)
-  const [submissions, setSubmissions] = useState<any[]>([])
-  const [selectedSub, setSelectedSub] = useState<any | null>(null)
+  const [submissions, setSubmissions] = useState<EvaluatorSubmission[]>([])
+  const [selectedSub, setSelectedSub] = useState<EvaluatorSubmission | null>(null)
   const [loading, setLoading] = useState(true)
   const [evaluating, setEvaluating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +69,7 @@ export default function KontrolorDashboard() {
   }, [session, sessionChecked, router])
 
   // 2. Načítanie rolí a pridelených prihlášok
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     if (!session?.user) return
     setLoading(true)
     setError(null)
@@ -80,13 +92,13 @@ export default function KontrolorDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [session])
 
   useEffect(() => {
     if (session) {
       loadDashboardData()
     }
-  }, [session])
+  }, [session, loadDashboardData])
 
   // 3. Odoslanie posudku a známky
   const handleEvaluationSubmit = async (e: React.FormEvent) => {
@@ -115,7 +127,7 @@ export default function KontrolorDashboard() {
       } else {
         setError(res.error || 'Nepodarilo sa odoslať posudok.')
       }
-    } catch (err) {
+    } catch {
       setError('Nastala chyba pri odosielaní.')
     } finally {
       setEvaluating(false)
@@ -171,14 +183,14 @@ export default function KontrolorDashboard() {
 
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-center gap-3">
-            <AlertCircle size={20} className="text-red-500 flex-shrink-0" />
+            <AlertCircle size={20} className="text-red-500 shrink-0" />
             <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
 
         {successMsg && (
           <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-100 flex items-center gap-3">
-            <CheckCircle size={20} className="text-green-500 flex-shrink-0" />
+            <CheckCircle size={20} className="text-green-500 shrink-0" />
             <p className="text-sm text-green-600">{successMsg}</p>
           </div>
         )}
@@ -215,7 +227,7 @@ export default function KontrolorDashboard() {
                     }`}
                   >
                     <div className="flex justify-between items-center w-full">
-                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider truncate max-w-[200px]">
+                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider truncate max-w-50">
                         {sub.forms?.title}
                       </span>
                       {sub.status === 'evaluated' ? (

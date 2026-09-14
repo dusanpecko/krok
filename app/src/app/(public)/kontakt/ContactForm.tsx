@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   MapPin, 
@@ -13,41 +13,57 @@ import {
   Copy, 
   MessageSquare,
   AlertCircle,
-  Loader2,
-  Sparkles
+  Loader2
 } from 'lucide-react'
 import { sendContactMessage } from './actions'
 
 // Sparkle časticový efekt pre prémiový sakrálny vzhľad
+// Deterministický pseudo-náhodný generátor (0–1) – render ostáva čistý (react-hooks/purity)
+// a hodnoty sú rovnaké na serveri aj klientovi
+function seeded(index: number, salt: number): number {
+  const x = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453
+  return x - Math.floor(x)
+}
+
+const SPARKLES = Array.from({ length: 15 }, (_, i) => ({
+  top: seeded(i, 1) * 100,
+  left: seeded(i, 2) * 100,
+  y: -60 - seeded(i, 3) * 60,
+  duration: 5 + seeded(i, 4) * 5,
+  delay: seeded(i, 5) * 5,
+}))
+
+// Hydratačne bezpečná detekcia klienta bez setState v efekte (react-hooks/set-state-in-effect)
+const subscribeNoop = () => () => {}
+function useIsClient(): boolean {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false)
+}
+
 function BackgroundSparkles() {
-  const [mounted, setMounted] = useState(false)
+  const isClient = useIsClient()
   const prefersReducedMotion = useReducedMotion()
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted || prefersReducedMotion) return null
+  if (!isClient || prefersReducedMotion) return null
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[...Array(15)].map((_, i) => (
+      {SPARKLES.map((p, i) => (
         <motion.div
           key={i}
           className="absolute w-1.5 h-1.5 bg-gold-bright rounded-full opacity-35"
           style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
+            top: `${p.top}%`,
+            left: `${p.left}%`,
           }}
           animate={{
             scale: [0, 1.2, 0],
             opacity: [0, 0.7, 0],
-            y: [0, -60 - Math.random() * 60]
+            y: [0, p.y]
           }}
           transition={{
-            duration: 5 + Math.random() * 5,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 5,
+            delay: p.delay,
             ease: "easeOut"
           }}
         />
@@ -334,6 +350,11 @@ export default function ContactForm() {
                     <h4 className="font-extrabold text-zinc-400 text-xs tracking-wider uppercase">Bankový účet (FIO banka)</h4>
                     <span className="text-xs text-zinc-400 font-light block mt-0.5">Pre priame milodary mimo portálu</span>
                   </div>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                  <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block">Názov účtu</span>
+                  <span className="font-bold text-xs text-zinc-200 block mt-0.5">Pastoračný fond Žilinskej diecézy</span>
                 </div>
 
                 <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between gap-3 group relative overflow-hidden">

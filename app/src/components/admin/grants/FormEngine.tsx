@@ -14,7 +14,7 @@ const KROK = {
   darkBlue: '#002D72',
 }
 
-interface FormField {
+export interface FormField {
   id: string
   type: 'section' | 'heading' | 'text' | 'number' | 'email' | 'date' | 'select' | 'textarea' | 'file' | 'signature' | 'checkbox' | 'parish_select' | 'calculated_total'
   label: string

@@ -321,7 +321,7 @@ export async function getEvaluatorSubmissions() {
 
   const { data, error } = await supabase
     .from('form_submissions')
-    .select('*, forms(title, slug)')
+    .select('*, forms(title, slug, fields)')
     .eq('assigned_evaluator_id', session.user.id)
     .order('created_at', { ascending: false })
 

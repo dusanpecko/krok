@@ -8,6 +8,7 @@ import KrokLogo from '@/components/KrokLogo'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 
 const navLinks = [
+  { href: '/vyzvy', label: 'Výzvy', icon: HandHeart },
   { href: '/podporene-projekty', label: 'Podporené projekty', icon: Landmark },
   { href: '/aktuality', label: 'Aktuality', icon: MessageCircle },
   { href: '/sutaz', label: 'Súťaž', icon: Gift },

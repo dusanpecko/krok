@@ -1,6 +1,7 @@
 import { getPostById } from '../actions'
 import { notFound } from 'next/navigation'
 import AktualityForm from '@/components/admin/aktuality/AktualityForm'
+import { getProjectOptions } from '@/app/admin/projekty/actions'
 
 interface EditPostPageProps {
   params: Promise<{
@@ -10,7 +11,7 @@ interface EditPostPageProps {
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
   const { postId } = await params
-  const post = await getPostById(postId)
+  const [post, projectOptions] = await Promise.all([getPostById(postId), getProjectOptions()])
 
   if (!post) {
     notFound()
@@ -23,7 +24,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         <p className="text-xs text-gray-400 font-bold mt-1">Upravte detaily článku, pregenerujte hlas alebo zmeňte stav publikovania.</p>
       </div>
       
-      <AktualityForm initialData={post} />
+      <AktualityForm initialData={post} projectOptions={projectOptions} />
     </div>
   )
 }

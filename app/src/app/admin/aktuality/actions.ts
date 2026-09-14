@@ -27,6 +27,7 @@ export interface PostPayload {
   published_at?: string | null
   pinned?: boolean
   pin_order?: number
+  project_id?: string | null
 }
 
 /**
@@ -118,6 +119,7 @@ export async function createOrUpdatePost(payload: PostPayload) {
         : null,
       pinned: payload.pinned ?? false,
       pin_order: payload.pin_order ?? 0,
+      project_id: payload.project_id || null,
       updated_at: new Date().toISOString()
     }
 

@@ -15,12 +15,13 @@ import {
   FileText,
   LogOut,
   Map,
-  Database,
   Globe,
+  CreditCard,
+  Megaphone,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useUserRole } from '@/hooks/useUserRole'
 import Image from 'next/image'
@@ -41,20 +42,27 @@ const mainLinks = [
   { href: '/', label: 'Zobraziť web', icon: Globe, external: true },
   { href: '/admin/darcovia', label: 'Darcovia', icon: Users, permission: 'view_donors' },
   { href: '/admin/banka', label: 'Banka', icon: Landmark, permission: 'view_bank' },
+  { href: '/admin/platby', label: 'Online platby', icon: CreditCard, permission: 'view_bank' },
   { href: '/admin/granty', label: 'Granty', icon: FolderHeart, permission: 'view_grants' },
+  { href: '/admin/projekty', label: 'Výzvy a projekty', icon: Megaphone, permission: 'manage_projects' },
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
   { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
   { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },
 ]
 
 const settingsLinks = [
-  { href: '/admin/projekty', label: 'Projekty', icon: Database, permission: 'manage_config' },
   { href: '/admin/nastavenia/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_config' },
   { href: '/admin/nastavenia/dekanaty', label: 'Dekanáty', icon: Map, permission: 'manage_config' },
   { href: '/admin/import', label: 'Import výpisu', icon: FileUp, permission: 'import_bank' },
   { href: '/admin/roly', label: 'Správa rolí', icon: Users, permission: 'manage_roles' },
   { href: '/admin/exporty', label: 'Exporty', icon: FileText, permission: 'view_donors' },
 ]
+
+// Hydratačne bezpečná detekcia klienta bez setState v efekte (react-hooks/set-state-in-effect)
+const subscribeNoop = () => () => {}
+function useIsClient(): boolean {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false)
+}
 
 interface AdminSidebarProps {
   isCollapsed?: boolean
@@ -67,13 +75,12 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
   const { supabase } = useSupabase()
   const { hasPermission } = useUserRole()
   const [settingsExpanded, setSettingsExpanded] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useIsClient()
 
   const visibleMainLinks = mainLinks.filter(link => !link.permission || hasPermission(link.permission))
   const visibleSettingsLinks = settingsLinks.filter(link => !link.permission || hasPermission(link.permission))
   const hasSettingsAccess = visibleSettingsLinks.length > 0
 
-  useEffect(() => { setMounted(true) }, [])
 
   const isActive = (href: string, external?: boolean) => {
     if (!mounted || !pathname || external) return false

@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { createOrUpdatePost, generateElevenLabsTTS, uploadPostImage, generateAiContent, generateAiExcerpt, checkGrammar, generateAiImage } from '@/app/admin/aktuality/actions'
 import SimpleRichTextEditor from '@/components/admin/SimpleRichTextEditor'
 import { Wrench } from 'lucide-react'
+import type { ProjectOption } from '@/lib/projects/types'
 
 interface PostData {
   id?: string
@@ -23,13 +24,17 @@ interface PostData {
   published_at?: string | null
   pinned?: boolean
   pin_order?: number
+  project_id?: string | null
 }
 
 interface AktualityFormProps {
   initialData?: PostData
+  /** Výzvy na podporu, ku ktorým sa dá článok priradiť ako správa o priebehu */
+  projectOptions?: ProjectOption[]
+  defaultProjectId?: string | null
 }
 
-export default function AktualityForm({ initialData }: AktualityFormProps) {
+export default function AktualityForm({ initialData, projectOptions = [], defaultProjectId = null }: AktualityFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -44,6 +49,7 @@ export default function AktualityForm({ initialData }: AktualityFormProps) {
   const [audioUrl, setAudioUrl] = useState(initialData?.audio_url || '')
   const [pinned, setPinned] = useState(initialData?.pinned ?? false)
   const [pinOrder, setPinOrder] = useState(initialData?.pin_order?.toString() || '0')
+  const [projectId, setProjectId] = useState(initialData?.project_id ?? defaultProjectId ?? '')
 
   // Operation states
   const [imageLoading, setImageLoading] = useState(false)
@@ -275,7 +281,8 @@ export default function AktualityForm({ initialData }: AktualityFormProps) {
         status,
         published_at: initialData?.published_at,
         pinned,
-        pin_order: pinned ? (parseInt(pinOrder, 10) || 0) : 0
+        pin_order: pinned ? (parseInt(pinOrder, 10) || 0) : 0,
+        project_id: projectId || null
       }
 
       const res = await createOrUpdatePost(payload)
@@ -355,6 +362,24 @@ export default function AktualityForm({ initialData }: AktualityFormProps) {
                 <option value="archived">Archivované (Archived)</option>
               </select>
             </div>
+
+            {/* Väzba na výzvu na podporu */}
+            {projectOptions.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400">Súvisiaca výzva</label>
+                <select
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                  className="w-full text-sm font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  <option value="">– žiadna –</option>
+                  {projectOptions.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-gray-400">Článok sa zobrazí aj na stránke výzvy ako správa o priebehu.</p>
+              </div>
+            )}
 
             {/* Pripnutie článku */}
             <div className="space-y-2">

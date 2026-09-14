@@ -36,6 +36,8 @@ interface SimpleRichTextEditorProps {
   minHeight?: string;
   className?: string;
   postId?: string;
+  /** Vlastná upload akcia (napr. modul výziev); predvolene uploadPostImage z aktualít. */
+  uploader?: (formData: FormData) => Promise<{ url?: string; error?: string }>;
 }
 
 export default function SimpleRichTextEditor({
@@ -45,7 +47,8 @@ export default function SimpleRichTextEditor({
   disabled = false,
   minHeight = '200px',
   className = '',
-  postId
+  postId,
+  uploader
 }: SimpleRichTextEditorProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
@@ -535,7 +538,7 @@ export default function SimpleRichTextEditor({
                           formData.append('postId', postId);
                         }
  
-                        const result = await uploadPostImage(formData);
+                        const result = uploader ? await uploader(formData) : await uploadPostImage(formData);
  
                         if (result.error) {
                           setUploadError(result.error);

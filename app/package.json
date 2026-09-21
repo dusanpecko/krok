@@ -31,6 +31,7 @@
     "@upstash/redis": "^1.38.0",
     "bysquare": "^4.0.0",
     "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.5.12",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",

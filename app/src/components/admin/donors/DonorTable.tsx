@@ -22,6 +22,9 @@ interface Donor {
   city: string | null
   status: 'active' | 'inactive' | 'suspended'
   total_donated?: number
+  donations_count?: number
+  last_donation_date?: string | null
+  last_donation_amount?: number | null
   parishes?: {
     name: string
   } | null
@@ -210,11 +213,20 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
                 </div>
               </th>
               <th 
+                onClick={() => handleSort('last_donation')}
+                className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group whitespace-nowrap"
+              >
+                <div className="flex items-center gap-1.5">
+                  Posledný dar
+                  {renderSortIcon('last_donation')}
+                </div>
+              </th>
+              <th 
                 onClick={() => handleSort('status')}
                 className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group"
               >
                 <div className="flex items-center gap-1.5">
-                  Status
+                  Stav
                   {renderSortIcon('status')}
                 </div>
               </th>
@@ -280,18 +292,36 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
                     )}
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {donor.last_donation_date ? (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-gray-900">
+                        {new Date(donor.last_donation_date).toLocaleDateString('sk-SK')}
+                      </span>
+                      <span className="text-xs font-bold text-green-600">
+                        {(donor.last_donation_amount ?? 0).toLocaleString('sk-SK', { style: 'currency', currency: 'EUR' })}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-300 italic">bez daru</span>
+                  )}
+                </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8">
                     {isUpdating === donor.id ? (
                       <Loader2 size={14} className="animate-spin text-blue-500" />
-                    ) : donor.status === 'active' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-700 border border-green-100">
-                        Aktívny
-                      </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-50 text-gray-600 border border-gray-200">
-                        Neaktívny
-                      </span>
+                      <span
+                        title={donor.status === 'active' ? 'Aktívny' : donor.status === 'suspended' ? 'Pozastavený' : 'Neaktívny'}
+                        aria-label={donor.status === 'active' ? 'Aktívny' : donor.status === 'suspended' ? 'Pozastavený' : 'Neaktívny'}
+                        className={`inline-block w-3 h-3 rounded-full ring-4 ${
+                          donor.status === 'active'
+                            ? 'bg-green-500 ring-green-100'
+                            : donor.status === 'suspended'
+                              ? 'bg-orange-500 ring-orange-100'
+                              : 'bg-red-500 ring-red-100'
+                        }`}
+                      />
                     )}
                   </div>
                 </td>

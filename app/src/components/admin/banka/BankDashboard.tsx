@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { CalendarDays, Search, Filter, Loader2, CheckCircle2, Sparkles, RefreshCw } from 'lucide-react'
+import { CalendarDays, Search, Filter, Loader2, CheckCircle2, Sparkles, RefreshCw, ArrowDownUp } from 'lucide-react'
 import TransactionList from './TransactionList'
 import MatchDonorDialog from './MatchDonorDialog'
 import SuggestedMatchesDialog from './SuggestedMatchesDialog'
@@ -18,6 +18,7 @@ interface BankDashboardProps {
   currentYear: number
   currentMonth: number | 'all'
   currentStatus: string
+  currentDirection: 'all' | 'credit' | 'debit'
   currentQuery: string
   currentPage: number
 }
@@ -214,8 +215,22 @@ export default function BankDashboard(props: BankDashboardProps) {
                className="pl-11 pr-10 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-100 appearance-none min-w-[160px]"
              >
                <option value="all">Všetky stavy</option>
-               <option value="unmatched">Len nespárované (Choroby)</option>
+               <option value="unmatched">Len nespárované</option>
                <option value="matched">Úspešne spárované</option>
+             </select>
+           </div>
+
+           {/* Smer pohybu: príjmy / výdaje */}
+           <div className="relative">
+             <ArrowDownUp className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+             <select
+               value={props.currentDirection}
+               onChange={(e) => updateFilters('direction', e.target.value === 'all' ? null : e.target.value)}
+               className="pl-11 pr-10 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-100 appearance-none min-w-[160px]"
+             >
+               <option value="all">Príjmy aj výdaje</option>
+               <option value="credit">Len príjmy</option>
+               <option value="debit">Len výdaje</option>
              </select>
            </div>
         </div>

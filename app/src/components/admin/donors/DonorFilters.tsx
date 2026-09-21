@@ -71,6 +71,8 @@ export default function DonorFilters({ parishes, projects }: DonorFiltersProps) 
     const sortOrder = searchParams.get('sortOrder')
     if (sortBy) params.set('sortBy', sortBy)
     if (sortOrder) params.set('sortOrder', sortOrder)
+    const pageSize = searchParams.get('pageSize')
+    if (pageSize) params.set('pageSize', pageSize)
     
     router.push(`/admin/darcovia?${params.toString()}`)
   }

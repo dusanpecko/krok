@@ -6,6 +6,7 @@ interface BankPageProps {
     year?: string
     month?: string
     status?: string
+    direction?: string
     q?: string
     page?: string
   }>
@@ -21,6 +22,7 @@ export default async function BankaPage({ searchParams }: BankPageProps) {
   const currentYear = params.year ? parseInt(params.year) : years[0]
   const currentMonth = params.month ? parseInt(params.month) : ('all' as const)
   const currentStatus = (params.status || 'all') as 'all' | 'matched' | 'unmatched'
+  const currentDirection = (params.direction === 'credit' || params.direction === 'debit' ? params.direction : 'all') as 'all' | 'credit' | 'debit'
   const currentQuery = params.q || ''
   const currentPage = parseInt(params.page || '1')
 
@@ -30,6 +32,7 @@ export default async function BankaPage({ searchParams }: BankPageProps) {
       year: currentYear,
       month: currentMonth === 'all' ? 'all' : currentMonth,
       status: currentStatus,
+      direction: currentDirection,
       search: currentQuery,
       page: currentPage
     }),
@@ -57,6 +60,7 @@ export default async function BankaPage({ searchParams }: BankPageProps) {
         currentYear={currentYear}
         currentMonth={currentMonth}
         currentStatus={currentStatus}
+        currentDirection={currentDirection}
         currentQuery={currentQuery}
         currentPage={currentPage}
       />

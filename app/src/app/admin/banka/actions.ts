@@ -59,6 +59,8 @@ export async function getTransactions(params: {
   year: number
   month: number | 'all'
   status: 'all' | 'matched' | 'unmatched'
+  /** Smer pohybu: príjmy (credit), výdaje (debit) alebo všetko */
+  direction?: 'all' | 'credit' | 'debit'
   search: string
   page: number
 }) {
@@ -94,6 +96,11 @@ export async function getTransactions(params: {
   } else if (params.status === 'unmatched') {
     // Výplaty z Mollie nie sú „na spárovanie" – dary sú už zaznamenané online
     query = query.eq('matched', false).neq('category', MOLLIE_PAYOUT_CATEGORY)
+  }
+
+  // 2b. Smer pohybu
+  if (params.direction === 'credit' || params.direction === 'debit') {
+    query = query.eq('direction', params.direction)
   }
 
   // 3. Search

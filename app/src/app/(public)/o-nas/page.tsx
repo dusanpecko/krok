@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Photo from '@/components/public/Photo'
 import {
   Lightbulb,
   Smile,
@@ -9,7 +10,7 @@ import {
   GraduationCap,
   Church,
   HeartHandshake,
-  ImageIcon,
+  Briefcase,
   Quote,
   ShieldCheck,
   Users,
@@ -26,36 +27,6 @@ export const metadata: Metadata = {
       'Spoznajte hodnoty, poslanie a ľudí pastoračného fondu KROK Žilinskej diecézy.',
     type: 'website',
   },
-}
-
-// Vyšrafovaný rámček ako placeholder pre budúcu fotografiu
-function ImagePlaceholder({
-  label,
-  className = '',
-}: {
-  label: string
-  className?: string
-}) {
-  return (
-    <div
-      className={`relative rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] overflow-hidden flex flex-col items-center justify-center gap-3 text-center p-6 ${className}`}
-    >
-      {/* Jemné šrafovanie na pozadí */}
-      <div
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px)',
-        }}
-      />
-      <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-        <ImageIcon size={22} className="text-gold-bright/70" />
-      </div>
-      <p className="text-xs text-blue-100/50 leading-relaxed max-w-xs relative z-10">
-        {label}
-      </p>
-    </div>
-  )
 }
 
 // Kicker – zlatý nadpis sekcie s líniou (vzor z homepage)
@@ -105,29 +76,27 @@ const piliere = [
     icon: BookOpen,
     title: 'Duchovný rast a vzdelávanie',
     desc: 'Prehlbujeme vzťah s Bohom v realite všedného dňa. Podporujeme kurzy, semináre, duchovné obnovy a podobné aktivity, ktoré dávajú viere hĺbku a pevný základ.',
-    imageLabel:
-      '[Fotografia: účastníci duchovnej obnovy alebo kurzu, otvorené Sväté písmo]',
   },
   {
     icon: GraduationCap,
     title: 'Formácia osobností a lídrov',
     desc: 'Investujeme do ľudí, ktorí tvoria živú Cirkev. Podporujeme študentov, laikov, bohoslovcov i kňazov na ceste k zrelosti, aby sa stali inšpiratívnymi lídrami svojich komunít.',
-    imageLabel:
-      '[Fotografia: mladí animátori alebo bohoslovci pri formačnom stretnutí]',
   },
   {
     icon: Church,
     title: 'Budovanie živých spoločenstiev',
     desc: 'Premieňame farnosti a komunity na otvorený domov. Pomáhame vytvárať miesta prijatia a povzbudenia, kde môže každý naplno rozvinúť svoj potenciál.',
-    imageLabel:
-      '[Fotografia: farské spoločenstvo, stretnutie rodín alebo mladých vo farnosti]',
   },
   {
     icon: HeartHandshake,
     title: 'Služba a dialóg',
     desc: 'Vieru meníme na skutky. Cez konkrétnu pomoc núdznym a otvorenú komunikáciu s verejnosťou prinášame hodnoty evanjelia do moderného sveta.',
-    imageLabel: '[Fotografia: dobrovoľníci pri konkrétnej službe núdznym]',
   },
+]
+
+const kancelaria = [
+  { role: 'Výkonný riaditeľ', name: 'Mgr. Dušan Pecko' },
+  { role: 'Office manager', name: 'Mgr. Júlia Balážová' },
 ]
 
 const spravnaRada = [
@@ -171,9 +140,11 @@ export default function ONasPage() {
             </p>
           </div>
           <div className="lg:col-span-5">
-            <ImagePlaceholder
-              label="[Fotografia: Katedrála Najsvätejšej Trojice v Žiline alebo spoločenstvo veriacich diecézy]"
-              className="aspect-[4/3]"
+            <Photo
+              src="/zilina.webp"
+              alt="Žilina – Katedrála Najsvätejšej Trojice"
+              className="aspect-[3/2]"
+              priority
             />
           </div>
         </header>
@@ -225,9 +196,10 @@ export default function ONasPage() {
         <section className="mb-24">
           <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
             <div className="lg:col-span-5 order-2 lg:order-1">
-              <ImagePlaceholder
-                label="[Fotografia: rodina alebo darcovia – veľká rodina malých darcov, atmosféra spoločenstva]"
-                className="aspect-[4/3]"
+              <Photo
+                src="/Poslanie.webp"
+                alt="Rodina malých darcov s veľkým srdcom"
+                className="aspect-video"
               />
             </div>
             <div className="lg:col-span-7 order-1 lg:order-2">
@@ -271,13 +243,9 @@ export default function ONasPage() {
             {piliere.map((p) => (
               <div
                 key={p.title}
-                className="bg-white/[0.04] border border-white/10 rounded-2xl overflow-hidden flex flex-col"
+                className="bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 hover:border-gold/30 rounded-2xl overflow-hidden flex flex-col transition-all"
               >
-                <ImagePlaceholder
-                  label={p.imageLabel}
-                  className="aspect-[16/7] rounded-none border-0 border-b-2 border-dashed border-white/10"
-                />
-                <div className="p-6 flex-1">
+                <div className="p-6 sm:p-7 flex-1">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-gold/15 flex items-center justify-center flex-shrink-0">
                       <p.icon size={20} className="text-gold-bright" />
@@ -311,7 +279,35 @@ export default function ONasPage() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {/* Kancelária fondu */}
+            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-xl bg-gold/15 flex items-center justify-center">
+                  <Briefcase size={22} className="text-gold-bright" />
+                </div>
+                <h3 className="text-xl font-extrabold text-white">
+                  Kancelária fondu
+                </h3>
+              </div>
+              <p className="text-sm text-blue-100/60 leading-relaxed mb-6">
+                Každodenný chod fondu, komunikácia s darcami a príprava projektov.
+              </p>
+              <ul className="space-y-4">
+                {kancelaria.map((osoba) => (
+                  <li key={osoba.name} className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0 mt-2" />
+                    <span>
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-gold-bright/80">
+                        {osoba.role}
+                      </span>
+                      <span className="text-sm text-blue-50 font-medium">{osoba.name}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Správna rada */}
             <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-4">
@@ -388,11 +384,13 @@ export default function ONasPage() {
             <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-gold/10 blur-[100px] pointer-events-none rounded-full" />
 
             <div className="relative grid lg:grid-cols-12 gap-10 items-center">
-              {/* Portrét – placeholder */}
+              {/* Portrét */}
               <div className="lg:col-span-4">
-                <ImagePlaceholder
-                  label="[Portrétová fotografia: Mons. Tomáš Galis, žilinský biskup]"
-                  className="aspect-[3/4] max-w-[280px] mx-auto"
+                <Photo
+                  src="/biskup.webp"
+                  alt="Mons. Tomáš Galis, žilinský biskup"
+                  className="aspect-[2/3] max-w-[280px] mx-auto"
+                  sizes="280px"
                 />
               </div>
 

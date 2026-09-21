@@ -1,11 +1,11 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Photo from '@/components/public/Photo'
 import {
   HeartHandshake,
   Users,
   Church,
   Gift,
-  ImageIcon,
   QrCode,
   Landmark,
   Euro,
@@ -25,36 +25,6 @@ export const metadata: Metadata = {
       'Hľadáme 77 pravidelných darcov – zapojte sa do veľkej narodeninovej súťaže o 20 vecných cien.',
     type: 'website',
   },
-}
-
-// Vyšrafovaný rámček ako placeholder pre budúcu fotografiu (vzor zo stránky O nás)
-function ImagePlaceholder({
-  label,
-  className = '',
-}: {
-  label: string
-  className?: string
-}) {
-  return (
-    <div
-      className={`relative rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] overflow-hidden flex flex-col items-center justify-center gap-3 text-center p-6 ${className}`}
-    >
-      {/* Jemné šrafovanie na pozadí */}
-      <div
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px)',
-        }}
-      />
-      <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-        <ImageIcon size={22} className="text-gold-bright/70" />
-      </div>
-      <p className="text-xs text-blue-100/50 leading-relaxed max-w-xs relative z-10">
-        {label}
-      </p>
-    </div>
-  )
 }
 
 // Kicker – zlatý nadpis sekcie s líniou (vzor z homepage)
@@ -167,9 +137,11 @@ export default function SutazPage() {
             </p>
           </div>
           <div className="lg:col-span-5">
-            <ImagePlaceholder
-              label="[Vizuál kampane: Hľadáme 77 pravidelných darcov – Ďakujeme, že nám pomáhate pomáhať]"
-              className="aspect-[4/3]"
+            <Photo
+              src="/sutaz/narodeniny_1.webp"
+              alt="Hľadáme 77 pravidelných darcov – Ďakujeme, že nám pomáhate pomáhať"
+              className="aspect-video"
+              priority
             />
           </div>
         </header>
@@ -258,10 +230,15 @@ export default function SutazPage() {
                 </Link>{' '}
                 a nastavte si pravidelný dar. Alebo nasnímajte QR kód.
               </p>
-              <ImagePlaceholder
-                label="[QR kód na stránku súťaže]"
-                className="aspect-square max-w-[220px] mx-auto mt-auto"
-              />
+              <div className="mt-auto mx-auto w-[220px] max-w-full bg-white rounded-2xl p-3 shadow-2xl">
+                <Photo
+                  src="/sutaz/QR_caj.webp"
+                  alt="QR kód na stránku súťaže"
+                  className="aspect-square rounded-xl border-0 shadow-none"
+                  sizes="220px"
+                  tint={0}
+                />
+              </div>
             </div>
 
             {/* 2. Internet banking */}
@@ -341,9 +318,11 @@ export default function SutazPage() {
 
             <div className="relative grid lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-4">
-                <ImagePlaceholder
-                  label="[Fotografia: svätá omša alebo kňaz pri oltári – omša obetovaná za darcov]"
-                  className="aspect-[3/4] max-w-[280px] mx-auto"
+                <Photo
+                  src="/sutaz/omsa_1.webp"
+                  alt="Svätá omša obetovaná za darcov"
+                  className="aspect-square max-w-[320px] mx-auto"
+                  sizes="320px"
                 />
               </div>
               <div className="lg:col-span-8">
@@ -370,6 +349,12 @@ export default function SutazPage() {
             CTA
             ===================================================== */}
         <section className="text-center max-w-3xl mx-auto">
+          <Photo
+            src="/sutaz/hladame_darcov.webp"
+            alt="Hľadáme pravidelných darcov"
+            className="aspect-video mb-10"
+            sizes="(max-width: 768px) 100vw, 768px"
+          />
           <h2 className="text-2xl sm:text-3xl font-light leading-tight mb-4">
             Zapojte sa ešte dnes
           </h2>

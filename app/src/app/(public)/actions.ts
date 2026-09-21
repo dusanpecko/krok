@@ -109,3 +109,29 @@ export async function getFeaturedProjects() {
   const { getFeaturedPublicProjects } = await import('@/lib/projects/public')
   return getFeaturedPublicProjects(3)
 }
+
+/** Zverejnení sponzori pre pás „Podporili nás“ (aktívni, v období zverejnenia). Suma len ak je verejná. */
+export async function getPublicSponsors(): Promise<import('@/lib/sponsors/types').PublicSponsor[]> {
+  const today = new Date().toISOString().slice(0, 10)
+  const { data, error } = await supabaseAdmin
+    .from('sponsors')
+    .select('id, name, description, logo_url, logo_dark_url, website_url, amount, amount_public')
+    .eq('is_active', true)
+    .or(`publish_from.is.null,publish_from.lte.${today}`)
+    .or(`publish_until.is.null,publish_until.gte.${today}`)
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true })
+  if (error) {
+    console.error('[sponzori] getPublicSponsors:', error.message)
+    return []
+  }
+  return (data ?? []).map((s) => ({
+    id: s.id as string,
+    name: s.name as string,
+    description: (s.description as string | null) ?? null,
+    logo_url: (s.logo_url as string | null) ?? null,
+    logo_dark_url: (s.logo_dark_url as string | null) ?? null,
+    website_url: (s.website_url as string | null) ?? null,
+    amount: s.amount_public && s.amount != null ? Number(s.amount) : null,
+  }))
+}

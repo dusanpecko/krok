@@ -18,6 +18,7 @@ import {
   Globe,
   CreditCard,
   Megaphone,
+  Handshake,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -48,6 +49,7 @@ const mainLinks = [
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
   { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
   { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },
+  { href: '/admin/sponzori', label: 'Sponzori', icon: Handshake },
 ]
 
 const settingsLinks = [

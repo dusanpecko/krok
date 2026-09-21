@@ -31,6 +31,7 @@ import { startOnlineDonation, getMyOnlineSubscriptions, type MyOnlineSubscriptio
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import RecurringChoice, { type RecurringChoiceValue } from '@/components/public/RecurringChoice';
 import FeaturedProjects from '@/components/public/FeaturedProjects';
+import SponsorsStrip from '@/components/public/SponsorsStrip';
 
 // ==========================================
 // 1. DYNAMICKÉ PLACEHOLDERY A NASTAVENIE DÁT
@@ -996,6 +997,9 @@ export default function KrokLandingPage() {
 
         </div>
       </section>
+
+      {/* Podporili nás – logá sponzorov (ak nejakí sú) */}
+      <SponsorsStrip />
 
       {/* Aktuálne výzvy na podporu (featured) */}
       <FeaturedProjects />

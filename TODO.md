@@ -130,3 +130,9 @@ Návrh a rozhodnutia: `krok_navrh_vyzvy.md`. Stav: commitnuté a pushnuté 2026-
   - [ ] ⏳ Po prvom reálnom synce overiť, že platba s VS 1177xxxx skončila ako dar k výzve.
 - [ ] 🟢 Zmazať `src/components/admin/projects/ProjectDialog.tsx` (už len re-export, auto režim nepovolil rm).
 - [ ] 🟢 Pri ukončení výzvy: zoznam predplatných naviazaných na ňu pre admina (neukončovať automaticky).
+
+## Sponzori / Podporili nás (implementované 2026-09-21)
+- [ ] 🔴 Spustiť migráciu `supabase/025_sponsors.sql` v Supabase SQL editore (tabuľka `sponsors` + RLS). Bez nej /admin/sponzori aj pás na domovskej zlyhajú na chýbajúcu tabuľku.
+- Admin `/admin/sponzori` (dialóg CRUD, orezanie loga cez react-easy-crop → PNG, logo na svetlý aj tmavý podklad, suma verejná/interná, obdobie zverejnenia, poradie). Kód: `src/app/admin/sponzori/*`, `src/components/admin/sponsors/*`, typy `src/lib/sponsors/types.ts`.
+- Domovská: `SponsorsStrip` (pás „Podporili nás“ pod sekciou Dôkaz, pred Aktuálnymi výzvami; biele dlaždice s logami; skrytý, ak nie je nikto zverejnený). Dáta `getPublicSponsors()` v `(public)/actions.ts`.
+- [ ] 🟢 Zmazať duplicitné `public/QR_caj.webp` a nepoužitý `public/1_omsa.webp` (súťaž používa `public/sutaz/*`).

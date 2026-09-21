@@ -102,3 +102,11 @@ export async function deleteImage(key: string): Promise<boolean> {
         return false
     }
 }
+
+/** Kľúč objektu v B2 z verejnej URL (časť za názvom bucketu), alebo null. */
+export function getB2KeyFromUrl(url?: string | null): string | null {
+  if (!url) return null
+  const bucketName = process.env.B2_BUCKET_NAME || 'parochia-storage-v1'
+  const parts = url.split(bucketName + '/')
+  return parts.length > 1 ? parts[1] : null
+}

@@ -58,3 +58,16 @@ export function isSponsorPublished(s: Pick<Sponsor, 'is_active' | 'publish_from'
 export function formatSponsorAmount(amount: number, currency = 'EUR'): string {
   return new Intl.NumberFormat('sk-SK', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount)
 }
+
+/**
+ * Radenie sponzorov: poradie 1, 2, 3… ide prvé, hodnota 0 (= bez poradia) až za nimi.
+ * Pri rovnakom poradí abecedne podľa názvu.
+ */
+export function sortSponsors<T extends { name: string; sort_order: number }>(list: T[]): T[] {
+  return [...list].sort((a, b) => {
+    const ao = a.sort_order > 0 ? a.sort_order : Number.POSITIVE_INFINITY
+    const bo = b.sort_order > 0 ? b.sort_order : Number.POSITIVE_INFINITY
+    if (ao !== bo) return ao - bo
+    return a.name.localeCompare(b.name, 'sk')
+  })
+}

@@ -115,7 +115,7 @@ export async function getPublicSponsors(): Promise<import('@/lib/sponsors/types'
   const today = new Date().toISOString().slice(0, 10)
   const { data, error } = await supabaseAdmin
     .from('sponsors')
-    .select('id, name, description, logo_url, logo_dark_url, website_url, amount, amount_public')
+    .select('id, name, description, logo_url, logo_dark_url, website_url, amount, amount_public, sort_order')
     .eq('is_active', true)
     .or(`publish_from.is.null,publish_from.lte.${today}`)
     .or(`publish_until.is.null,publish_until.gte.${today}`)
@@ -125,13 +125,25 @@ export async function getPublicSponsors(): Promise<import('@/lib/sponsors/types'
     console.error('[sponzori] getPublicSponsors:', error.message)
     return []
   }
-  return (data ?? []).map((s) => ({
-    id: s.id as string,
-    name: s.name as string,
-    description: (s.description as string | null) ?? null,
-    logo_url: (s.logo_url as string | null) ?? null,
-    logo_dark_url: (s.logo_dark_url as string | null) ?? null,
-    website_url: (s.website_url as string | null) ?? null,
-    amount: s.amount_public && s.amount != null ? Number(s.amount) : null,
+  const { sortSponsors } = await import('@/lib/sponsors/types')
+  return sortSponsors(
+    (data ?? []).map((s) => ({
+      id: s.id as string,
+      name: s.name as string,
+      description: (s.description as string | null) ?? null,
+      logo_url: (s.logo_url as string | null) ?? null,
+      logo_dark_url: (s.logo_dark_url as string | null) ?? null,
+      website_url: (s.website_url as string | null) ?? null,
+      amount: s.amount_public && s.amount != null ? Number(s.amount) : null,
+      sort_order: Number(s.sort_order ?? 0),
+    }))
+  ).map((s) => ({
+    id: s.id,
+    name: s.name,
+    description: s.description,
+    logo_url: s.logo_url,
+    logo_dark_url: s.logo_dark_url,
+    website_url: s.website_url,
+    amount: s.amount,
   }))
 }

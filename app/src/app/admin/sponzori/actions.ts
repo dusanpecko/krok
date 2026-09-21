@@ -4,7 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
 import { uploadImage, deleteImage, getB2KeyFromUrl } from '@/lib/storage'
-import type { Sponsor, SponsorPayload } from '@/lib/sponsors/types'
+import { sortSponsors, type Sponsor, type SponsorPayload } from '@/lib/sponsors/types'
 
 /** Admin akcie pre sponzorov / partnerov (pás „Podporili nás“). */
 
@@ -54,7 +54,7 @@ export async function getSponsors(): Promise<Sponsor[]> {
     console.error('[sponzori] getSponsors:', error.message)
     return []
   }
-  return ((data ?? []) as Raw[]).map(mapSponsor)
+  return sortSponsors(((data ?? []) as Raw[]).map(mapSponsor))
 }
 
 export async function upsertSponsor(payload: SponsorPayload): Promise<{ success: true; id: string } | { success: false; error: string }> {

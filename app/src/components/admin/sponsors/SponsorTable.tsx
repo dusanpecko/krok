@@ -93,7 +93,11 @@ export default function SponsorTable({ sponsors, onEdit, onDelete }: Props) {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold font-mono">{s.sort_order}</span>
+                    {s.sort_order > 0 ? (
+                      <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold font-mono">{s.sort_order}</span>
+                    ) : (
+                      <span className="text-xs text-gray-300" title="Bez poradia – na konci, abecedne">–</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">

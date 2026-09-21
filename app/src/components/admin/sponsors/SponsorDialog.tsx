@@ -177,7 +177,8 @@ export default function SponsorDialog({ sponsor, onSave, onClose }: Props) {
               </div>
               <div className="space-y-2">
                 <label className={labelCls}>Poradie</label>
-                <input name="sort_order" type="number" value={form.sort_order} onChange={handleChange} className={inputCls} />
+                <input name="sort_order" type="number" min="0" value={form.sort_order} onChange={handleChange} className={inputCls} />
+                <p className="text-[10px] text-gray-400 px-1">1 = prvý. 0 = bez poradia, zaradí sa na koniec (abecedne).</p>
               </div>
             </div>
 

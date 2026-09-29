@@ -20,7 +20,7 @@ interface Props {
   subscriptions: MyOnlineSubscription[]
 }
 
-const PRESETS = [5, 10, 20]
+const PRESETS = [7, 14, 21] // násobky 7 – 7 rokov fondu
 
 function formatEur(amount: number) {
   return amount.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR' })
@@ -35,7 +35,7 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
   // Pravidelné dary na konkrétne výzvy sa menia na stránke danej výzvy.
   const generalSubs = subscriptions.filter((s) => !s.project_id)
   const [recurring, setRecurring] = useState(true)
-  const [preset, setPreset] = useState<number | 'custom'>(10)
+  const [preset, setPreset] = useState<number | 'custom'>(14)
   const [custom, setCustom] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

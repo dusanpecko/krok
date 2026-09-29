@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { sanitizeSearchTerm } from '@/lib/search'
+import { DEFAULT_SORT_BY, DEFAULT_SORT_ORDER } from './donor-sort'
 
 /**
  * Zdieľaný dotaz na zoznam darcov pre stránku /admin/darcovia aj export.
@@ -46,7 +47,8 @@ export interface DonorListRow {
 const SORT_FIELDS: DonorSortBy[] = ['last_name', 'variable_symbol', 'status', 'email', 'total_donated', 'last_donation']
 
 export function parseDonorListParams(raw: Record<string, string | undefined>): DonorListParams {
-  const sortBy = SORT_FIELDS.includes(raw.sortBy as DonorSortBy) ? (raw.sortBy as DonorSortBy) : 'last_name'
+  const hasSort = SORT_FIELDS.includes(raw.sortBy as DonorSortBy)
+  const sortBy = hasSort ? (raw.sortBy as DonorSortBy) : (DEFAULT_SORT_BY as DonorSortBy)
   const pageSizeRaw = parseInt(raw.pageSize || '', 10)
   const pageSize = (PAGE_SIZES as readonly number[]).includes(pageSizeRaw) ? pageSizeRaw : DEFAULT_PAGE_SIZE
   return {
@@ -59,7 +61,7 @@ export function parseDonorListParams(raw: Record<string, string | undefined>): D
     selected: raw.selected || 'all',
     ids: raw.ids ? raw.ids.split(',').filter(Boolean) : [],
     sortBy,
-    sortOrder: raw.sortOrder === 'desc' ? 'desc' : 'asc',
+    sortOrder: raw.sortOrder === 'desc' || raw.sortOrder === 'asc' ? raw.sortOrder : hasSort ? 'asc' : DEFAULT_SORT_ORDER,
     page: Math.max(1, parseInt(raw.page || '1', 10) || 1),
     pageSize,
   }

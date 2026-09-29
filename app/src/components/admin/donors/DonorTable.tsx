@@ -9,6 +9,7 @@ import {
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { toggleDonorStatus } from '@/app/admin/darcovia/actions'
+import { DEFAULT_SORT_BY, DEFAULT_SORT_ORDER } from '@/app/admin/darcovia/donor-sort'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Donor {
@@ -90,8 +91,8 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
 
   // Sorting
   const handleSort = (field: string) => {
-    const sortBy = searchParams.get('sortBy') || 'last_name'
-    const sortOrder = searchParams.get('sortOrder') || 'asc'
+    const sortBy = searchParams.get('sortBy') || DEFAULT_SORT_BY
+    const sortOrder = searchParams.get('sortOrder') || (searchParams.get('sortBy') ? 'asc' : DEFAULT_SORT_ORDER)
     
     let newOrder = 'asc'
     if (sortBy === field && sortOrder === 'asc') {
@@ -105,8 +106,8 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
   }
 
   const renderSortIcon = (field: string) => {
-    const sortBy = searchParams.get('sortBy') || 'last_name'
-    const sortOrder = searchParams.get('sortOrder') || 'asc'
+    const sortBy = searchParams.get('sortBy') || DEFAULT_SORT_BY
+    const sortOrder = searchParams.get('sortOrder') || (searchParams.get('sortBy') ? 'asc' : DEFAULT_SORT_ORDER)
     
     if (sortBy !== field) {
       return <ArrowUpDown size={14} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />

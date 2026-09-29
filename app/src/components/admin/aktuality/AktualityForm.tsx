@@ -45,6 +45,13 @@ export default function AktualityForm({ initialData, projectOptions = [], defaul
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || '')
   const [content, setContent] = useState(initialData?.content || '')
   const [status, setStatus] = useState<'draft' | 'published' | 'archived'>(initialData?.status || 'draft')
+  // Dátum publikovania – <input type="datetime-local"> pracuje v miestnom čase (YYYY-MM-DDTHH:mm)
+  const [publishedAt, setPublishedAt] = useState<string>(() => {
+    if (!initialData?.published_at) return ''
+    const d = new Date(initialData.published_at)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  })
   const [featuredImage, setFeaturedImage] = useState(initialData?.featured_image || '')
   const [audioUrl, setAudioUrl] = useState(initialData?.audio_url || '')
   const [pinned, setPinned] = useState(initialData?.pinned ?? false)
@@ -279,7 +286,8 @@ export default function AktualityForm({ initialData, projectOptions = [], defaul
         featured_image: featuredImage,
         audio_url: audioUrl || null,
         status,
-        published_at: initialData?.published_at,
+        // Prázdne pole → pri zverejnení sa doplní aktuálny čas (na serveri)
+        published_at: publishedAt ? new Date(publishedAt).toISOString() : null,
         pinned,
         pin_order: pinned ? (parseInt(pinOrder, 10) || 0) : 0,
         project_id: projectId || null
@@ -361,6 +369,20 @@ export default function AktualityForm({ initialData, projectOptions = [], defaul
                 <option value="published">Zverejnené (Live)</option>
                 <option value="archived">Archivované (Archived)</option>
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="post-published-at" className="text-xs font-bold text-gray-400">Dátum publikovania</label>
+              <input
+                id="post-published-at"
+                type="datetime-local"
+                value={publishedAt}
+                onChange={(e) => setPublishedAt(e.target.value)}
+                className="w-full text-sm font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[10px] text-gray-400">
+                Zobrazí sa pri článku a určuje jeho poradie v aktualitách. Prázdne = pri zverejnení sa doplní aktuálny čas.
+              </p>
             </div>
 
             {/* Väzba na výzvu na podporu */}

@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import NewsletterSignup from './NewsletterSignup'
 
 export default function Footer() {
   return (
@@ -17,9 +18,10 @@ export default function Footer() {
                 className=""
               />
             </div>
-            <p className="text-gray-400 max-w-sm mb-6">
+            <p className="text-gray-400 max-w-sm mb-8">
               Pastoračný fond Žilinskej diecézy podporuje aktivity v oblasti pastorácie, vzdelávania a pomoci blížnym.
             </p>
+            <NewsletterSignup source="footer" />
           </div>
 
           {/* Links */}

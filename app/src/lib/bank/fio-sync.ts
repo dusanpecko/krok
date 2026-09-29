@@ -2,10 +2,23 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { isMolliePayout, MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
-import { getAnonymousDonorId, loadProjectLegacyVsMap, normalizeVs } from '@/lib/bank/legacy-project-vs'
+import {
+  createLegacyPayerResolver,
+  getAnonymousDonorId,
+  isHistoricalPayment,
+  legacyProjectForPayment,
+  loadHistoricalExcludedProjectIds,
+  loadIbanDonorMap,
+  loadPseudoDonorIds,
+  normalizeIban,
+  loadProjectLegacyVsMap,
+  normalizeVs,
+} from '@/lib/bank/legacy-project-vs'
 
 /**
- * Synchronizácia transakcií z Fio banky cez REST API (posledných 30 dní).
+ * Synchronizácia transakcií z Fio banky cez REST API (predvolene posledných 30 dní,
+ * voliteľne ľubovoľné obdobie – napr. doplnenie chýbajúcich rokov histórie).
+ * Vkladajú sa len pohyby, ktoré ešte nie sú v DB (podľa ID pohybu = entry_ref).
  *
  * Toto je INTERNÁ implementácia bez autorizácie – volá ju:
  *   - server action `syncFioTransactions` (admin, oprávnenie view_bank),
@@ -56,7 +69,24 @@ const parseNumberCol = (col: any): number | null => {
   return Number(col)
 }
 
-export async function runFioSync(): Promise<FioSyncResult> {
+/** Supabase `.in()` ide v URL – dlhé zoznamy (celý rok) posielame po dávkach. */
+const IN_CHUNK = 200
+const INSERT_CHUNK = 500
+
+function chunks<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+  return out
+}
+
+export interface FioSyncRange {
+  /** YYYY-MM-DD */
+  dateFrom: string
+  /** YYYY-MM-DD */
+  dateTo: string
+}
+
+export async function runFioSync(range?: FioSyncRange): Promise<FioSyncResult> {
   const token = process.env.FIO_API_TOKEN
   if (!token) {
     return { 
@@ -83,14 +113,14 @@ export async function runFioSync(): Promise<FioSyncResult> {
   lastSyncAttemptAt = now
 
   try {
-    // 1. Vypočítaj dátumové rozmedzie (posledných 30 dní)
+    // 1. Vypočítaj dátumové rozmedzie (predvolene posledných 30 dní)
     const today = new Date()
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(today.getDate() - 30)
 
     const formatDate = (date: Date) => date.toISOString().split('T')[0]
-    const dateFrom = formatDate(thirtyDaysAgo)
-    const dateTo = formatDate(today)
+    const dateFrom = range?.dateFrom ?? formatDate(thirtyDaysAgo)
+    const dateTo = range?.dateTo ?? formatDate(today)
 
     // 2. Volanie Fio REST API
     const url = `https://fioapi.fio.cz/v1/rest/periods/${token}/${dateFrom}/${dateTo}/transactions.json`
@@ -105,6 +135,13 @@ export async function runFioSync(): Promise<FioSyncResult> {
     })
 
     if (!response.ok) {
+      if (response.status === 422) {
+        // Dáta staršie ako 90 dní – Fio vyžaduje silnú autorizáciu požiadavky
+        return {
+          success: false,
+          error: 'Fio vyžaduje silnú autorizáciu (dáta staršie ako 90 dní). Potvrďte požiadavku v internetbankingu / Smartbankingu Fio a do 10 minút spustite synchronizáciu znova (niekedy to prejde až na 2.–3. pokus, medzi pokusmi počkajte 30 s).',
+        }
+      }
       if (response.status === 409) {
         return { 
           success: false, 
@@ -166,18 +203,19 @@ export async function runFioSync(): Promise<FioSyncResult> {
       return { success: true, total: rawTransactions.length, imported: 0, matched: 0, message: 'Transakcie neobsahovali unikátne ID pohybu.' }
     }
 
-    // Zistíme, ktoré entry_ref už máme v databáze
-    const { data: existingTxs, error: existError } = await supabaseAdmin
-      .from('bank_transactions')
-      .select('entry_ref')
-      .in('entry_ref', entryRefs)
-
-    if (existError) {
-      console.error('Error checking existing transactions:', existError)
-      return { success: false, error: 'Chyba pri kontrole existujúcich transakcií v databáze.' }
+    // Zistíme, ktoré entry_ref už máme v databáze (po dávkach – pri celom roku sú ich tisíce)
+    const existingRefsSet = new Set<string>()
+    for (const part of chunks(entryRefs, IN_CHUNK)) {
+      const { data: existingTxs, error: existError } = await supabaseAdmin
+        .from('bank_transactions')
+        .select('entry_ref')
+        .in('entry_ref', part)
+      if (existError) {
+        console.error('Error checking existing transactions:', existError)
+        return { success: false, error: 'Chyba pri kontrole existujúcich transakcií v databáze.' }
+      }
+      for (const t of existingTxs ?? []) existingRefsSet.add(t.entry_ref)
     }
-
-    const existingRefsSet = new Set(existingTxs?.map(tx => tx.entry_ref) || [])
 
     // Odfiltrujeme len tie transakcie, ktoré EŠTE NEMÁME v databáze
     const newTransactions = rawTransactions.filter((tx: any) => {
@@ -224,7 +262,7 @@ export async function runFioSync(): Promise<FioSyncResult> {
       })
     }
 
-    const { data: projects } = await supabaseAdmin.from('projects').select('id, specific_symbol')
+    const { data: projects } = await supabaseAdmin.from('projects').select('id, name, specific_symbol')
     const projectSsMap = new Map<string, string>()
     if (projects) {
       projects.forEach(p => {
@@ -232,9 +270,27 @@ export async function runFioSync(): Promise<FioSyncResult> {
       })
     }
 
-    // VS výziev zo starého webu (bežiace trvalé príkazy) → dar k výzve cez systémového anonymného darcu
+    // VS výziev zo starého webu (bežiace trvalé príkazy)
     const projectLegacyVsMap = await loadProjectLegacyVsMap(supabaseAdmin)
-    const anonymousDonorId = projectLegacyVsMap.size > 0 ? await getAnonymousDonorId(supabaseAdmin) : null
+    const historicalExcluded = await loadHistoricalExcludedProjectIds(supabaseAdmin)
+    const projectNameById = new Map((projects ?? []).map((p) => [p.id, p.name as string | null]))
+    // Nové platby s VS výzvy → darca podľa platiteľa (IBAN / meno / nový), nie zástupný „darca výzvy“.
+    // Historické (pred spustením výziev) ostávajú ako zvyšok histórie – resolver sa ich netýka.
+    const legacyPayers = await createLegacyPayerResolver(
+      supabaseAdmin,
+      projectLegacyVsMap,
+      newTransactions
+        .filter((tx) => !isHistoricalPayment(parseStringCol(tx.column0)))
+        .map((tx) => ({
+          counterparty_iban: parseStringCol(tx.column2),
+          counterparty_name: parseStringCol(tx.column10) || parseStringCol(tx.column7) || null,
+          variable_symbol: parseStringCol(tx.column5),
+        }))
+    )
+    let anonymousDonorId: string | null | undefined
+    // Pravidlo IBAN: účet, z ktorého už prišla platba spárovaná s darcom (aj ručne), páruje ďalšie platby
+    const pseudoDonorIds = await loadPseudoDonorIds(supabaseAdmin, projectLegacyVsMap)
+    const ibanDonorMap = await loadIbanDonorMap(supabaseAdmin, newTransactions.map((tx) => parseStringCol(tx.column2)), pseudoDonorIds)
 
     // 6. Spracovanie a mapovanie transakcií
     const txToInsert = []
@@ -253,8 +309,10 @@ export async function runFioSync(): Promise<FioSyncResult> {
       const bookingDateRaw = parseStringCol(tx.column0) || new Date().toISOString()
       const bookingDate = bookingDateRaw.substring(0, 10) // očakáva sa YYYY-MM-DD
       
-      const counterIban = parseStringCol(tx.column17)
-      const counterBic = parseStringCol(tx.column18)
+      // Fio API: column2 = Protiúčet (IBAN), column26 = BIC.
+      // (column17 je „ID pokynu“ a column18 „Upřesnění“ – nie údaje o účte)
+      const counterIban = parseStringCol(tx.column2)
+      const counterBic = parseStringCol(tx.column26)
       
       // Meno protiúčtu – vyskúšame viacero stiahnutých polí pre maximálne pokrytie
       const counterName = parseStringCol(tx.column10) || parseStringCol(tx.column7) || null
@@ -287,13 +345,38 @@ export async function runFioSync(): Promise<FioSyncResult> {
       if (direction === 'credit' && isMolliePayout({ direction, counterparty_name: counterName, counterparty_iban: counterIban, remittance_info: remittanceInfo })) {
         category = MOLLIE_PAYOUT_CATEGORY
       } else if (direction === 'credit' && vs) {
-        if (donorVsMap.has(vs)) {
+        const legacyProjectId = projectLegacyVsMap.get(normalizeVs(vs))
+        if (legacyProjectId && isHistoricalPayment(bookingDate)) {
+          // História: ako doteraz – zástupný „darca výzvy“ podľa VS, inak anonymný darca
+          if (donorVsMap.has(vs)) {
+            matchedDonorId = donorVsMap.get(vs)
+          } else {
+            if (anonymousDonorId === undefined) anonymousDonorId = await getAnonymousDonorId(supabaseAdmin)
+            matchedDonorId = anonymousDonorId
+          }
+          isMatched = !!matchedDonorId
+          if (isMatched) category = 'donation'
+        } else if (legacyProjectId) {
+          // VS patrí výzve zo starého webu → dar k výzve, darca podľa platiteľa.
+          // Má prednosť pred donorVsMap (tam sú aj zástupní „darcovia výzvy“ zo starého webu).
+          matchedDonorId = await legacyPayers.resolve(
+            { counterparty_iban: counterIban, counterparty_name: counterName, variable_symbol: vs },
+            projectNameById.get(legacyProjectId)
+          )
+          isMatched = !!matchedDonorId
+          if (isMatched) category = 'donation'
+        } else if (donorVsMap.has(vs)) {
           matchedDonorId = donorVsMap.get(vs)
           isMatched = true
           category = 'donation'
-        } else if (anonymousDonorId && projectLegacyVsMap.has(normalizeVs(vs))) {
-          // VS patrí výzve zo starého webu, nie darcovi → anonymný dar k výzve
-          matchedDonorId = anonymousDonorId
+        }
+      }
+
+      // Bez zhody podľa VS → pravidlo IBAN (darca z predošlých spárovaných platieb z účtu)
+      if (!isMatched && direction === 'credit' && category !== MOLLIE_PAYOUT_CATEGORY) {
+        const byIban = ibanDonorMap.get(normalizeIban(counterIban))
+        if (byIban) {
+          matchedDonorId = byIban
           isMatched = true
           category = 'donation'
         }
@@ -322,15 +405,18 @@ export async function runFioSync(): Promise<FioSyncResult> {
       if (isMatched) matchedCount++
     }
 
-    // Zápis do DB
-    const { data: insertedTxs, error: insertError } = await supabaseAdmin
-      .from('bank_transactions')
-      .insert(txToInsert)
-      .select()
-
-    if (insertError) {
-      console.error('Fio API sync insertion error:', insertError)
-      return { success: false, error: 'Zlyhalo uloženie transakcií do databázy.' }
+    // Zápis do DB (po dávkach)
+    const insertedTxs: any[] = []
+    for (const part of chunks(txToInsert, INSERT_CHUNK)) {
+      const { data, error: insertError } = await supabaseAdmin
+        .from('bank_transactions')
+        .insert(part)
+        .select()
+      if (insertError) {
+        console.error('Fio API sync insertion error:', insertError)
+        return { success: false, error: `Zlyhalo uloženie transakcií do databázy (uložených ${insertedTxs.length} z ${txToInsert.length}).` }
+      }
+      insertedTxs.push(...(data ?? []))
     }
 
     // 7. Automatické priradenie k darom (donations) pre úspešne spárované
@@ -341,7 +427,7 @@ export async function runFioSync(): Promise<FioSyncResult> {
         const donationsToInsert = matchedTxs.map(tx => {
           const pId =
             (tx.specific_symbol && projectSsMap.has(tx.specific_symbol) ? projectSsMap.get(tx.specific_symbol) : null) ??
-            projectLegacyVsMap.get(normalizeVs(tx.variable_symbol)) ??
+            legacyProjectForPayment(tx.booking_date, tx.variable_symbol, projectLegacyVsMap, historicalExcluded) ??
             null
 
           return {
@@ -355,12 +441,13 @@ export async function runFioSync(): Promise<FioSyncResult> {
           }
         })
 
-        const { error: donationsError } = await supabaseAdmin
-          .from('donations')
-          .insert(donationsToInsert)
-
-        if (donationsError) {
-          console.error('Error inserting donations during API sync:', donationsError)
+        for (const part of chunks(donationsToInsert, INSERT_CHUNK)) {
+          const { error: donationsError } = await supabaseAdmin
+            .from('donations')
+            .upsert(part, { onConflict: 'bank_transaction_id' })
+          if (donationsError) {
+            console.error('Error inserting donations during API sync:', donationsError)
+          }
         }
       }
     }

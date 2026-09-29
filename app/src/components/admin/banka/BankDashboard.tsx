@@ -6,7 +6,7 @@ import { CalendarDays, Search, Filter, Loader2, CheckCircle2, Sparkles, RefreshC
 import TransactionList from './TransactionList'
 import MatchDonorDialog from './MatchDonorDialog'
 import SuggestedMatchesDialog from './SuggestedMatchesDialog'
-import { matchTransaction, bulkMatchAnonymous, syncFioTransactions } from '@/app/admin/banka/actions'
+import { matchTransaction, bulkMatchAnonymous, syncFioTransactions, setTransactionProject } from '@/app/admin/banka/actions'
 
 interface BankDashboardProps {
   years: number[]
@@ -42,12 +42,16 @@ export default function BankDashboard(props: BankDashboardProps) {
   const [isSuggestedOpen, setIsSuggestedOpen] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
 
-  const handleSyncBanka = async () => {
+  // Doplnenie histórie: synchronizácia celého roka (Fio pri dátach > 90 dní vyžaduje autorizáciu)
+  const historyYears = Array.from({ length: new Date().getFullYear() - 2019 + 1 }, (_, i) => new Date().getFullYear() - i)
+  const [historyYear, setHistoryYear] = useState<number>(historyYears[0])
+
+  const handleSyncBanka = async (year?: number) => {
     setIsSyncing(true)
     try {
-      const res = await syncFioTransactions()
+      const res = await syncFioTransactions(year)
       if (res.success) {
-        let msg = `Synchronizácia úspešná. Stiahnutých: ${res.total || 0} platieb`
+        let msg = `${year ? `Rok ${year}: s` : 'S'}ynchronizácia úspešná. Stiahnutých: ${res.total || 0} platieb`
         if (res.imported !== undefined) {
           msg += `, nových: ${res.imported}`
         }
@@ -82,6 +86,22 @@ export default function BankDashboard(props: BankDashboardProps) {
           router.refresh()
        }
     })
+  }
+
+  // Ručná oprava výzvy pri spárovanej platbe
+  const [savingProjectTxId, setSavingProjectTxId] = useState<string | null>(null)
+  const handleProjectChange = async (tx: any, projectId: string | null) => {
+    setSavingProjectTxId(tx.id)
+    const res = await setTransactionProject(tx.id, projectId)
+    setSavingProjectTxId(null)
+    if (res.success) {
+      const name = props.projects.find((p) => p.id === projectId)?.name
+      setSuccessMsg(name ? `Dar bol priradený k výzve „${name}“.` : 'Dar bol presunutý medzi všeobecné dary (bez výzvy).')
+      setTimeout(() => setSuccessMsg(null), 3000)
+      startTransition(() => router.refresh())
+    } else {
+      alert(res.error)
+    }
   }
 
   const handleBulkMatchAnon = async () => {
@@ -159,13 +179,32 @@ export default function BankDashboard(props: BankDashboardProps) {
 
         <div className="flex flex-wrap gap-3 w-full md:w-auto justify-end">
           <button 
-            onClick={handleSyncBanka}
+            onClick={() => handleSyncBanka()}
             disabled={isSyncing || isPending}
             className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2"
           >
             {isSyncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
             Synchronizovať banku
           </button>
+
+          <div className="flex items-center rounded-xl border border-emerald-200 bg-white overflow-hidden" title="Doplní chýbajúce platby celého roka z Fio (už importované preskočí). Pri rokoch starších ako 90 dní treba požiadavku potvrdiť v internetbankingu / Smartbankingu Fio a spustiť znova.">
+            <select
+              value={historyYear}
+              onChange={(e) => setHistoryYear(Number(e.target.value))}
+              disabled={isSyncing || isPending}
+              className="pl-3 pr-1 py-2.5 text-xs font-black text-emerald-800 bg-transparent outline-none cursor-pointer"
+              aria-label="Rok na synchronizáciu"
+            >
+              {historyYears.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <button
+              onClick={() => handleSyncBanka(historyYear)}
+              disabled={isSyncing || isPending}
+              className="px-3 py-2.5 text-xs font-black text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 border-l border-emerald-200"
+            >
+              Synchronizovať rok
+            </button>
+          </div>
 
           <button 
             onClick={() => setIsSuggestedOpen(true)}
@@ -271,8 +310,11 @@ export default function BankDashboard(props: BankDashboardProps) {
       {/* TABLE */}
       <TransactionList 
          transactions={props.initialData} 
+         projects={props.projects}
          onPairClick={(tx) => setPairingTx(tx)}
          onQuickMatchAnon={handleQuickMatchAnon}
+         onProjectChange={handleProjectChange}
+         savingProjectTxId={savingProjectTxId}
       />
 
       {/* PAGINATION */}

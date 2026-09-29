@@ -3,7 +3,18 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { XMLParser } from 'fast-xml-parser'
 import { requirePermission, UnauthorizedError, ForbiddenError } from '@/lib/auth'
 import { isMolliePayout, MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
-import { getAnonymousDonorId, loadProjectLegacyVsMap, normalizeVs } from '@/lib/bank/legacy-project-vs'
+import {
+  createLegacyPayerResolver,
+  getAnonymousDonorId,
+  isHistoricalPayment,
+  legacyProjectForPayment,
+  loadHistoricalExcludedProjectIds,
+  loadIbanDonorMap,
+  loadPseudoDonorIds,
+  normalizeIban,
+  loadProjectLegacyVsMap,
+  normalizeVs,
+} from '@/lib/bank/legacy-project-vs'
 
 export async function POST(request: Request) {
   try {
@@ -153,7 +164,7 @@ export async function POST(request: Request) {
       })
     }
 
-    const { data: projects } = await supabase.from('projects').select('id, specific_symbol')
+    const { data: projects } = await supabase.from('projects').select('id, name, specific_symbol')
     const projectSsMap = new Map<string, string>()
     if (projects) {
       projects.forEach(p => {
@@ -161,15 +172,50 @@ export async function POST(request: Request) {
       })
     }
 
-    // VS výziev zo starého webu (bežiace trvalé príkazy) → dar k výzve cez systémového anonymného darcu
+    // VS výziev zo starého webu (bežiace trvalé príkazy) → dar k výzve, darca podľa platiteľa
     const projectLegacyVsMap = await loadProjectLegacyVsMap(supabase)
-    const anonymousDonorId = projectLegacyVsMap.size > 0 ? await getAnonymousDonorId(supabase) : null
+    const historicalExcluded = await loadHistoricalExcludedProjectIds(supabase)
+    const projectNameById = new Map((projects ?? []).map((p) => [p.id, p.name as string | null]))
+    let anonymousDonorId: string | null | undefined
+    const entryBookingDate = (e: any) => String(e.BookgDt?.Dt || e.ValDt?.Dt || '')
+
+    // Už importované platby preskočíme hneď (inak by sa pre ne zakladali darcovia)
+    const { data: alreadyImported } = await supabase
+      .from('bank_transactions')
+      .select('entry_ref')
+      .in('entry_ref', entries.map((e: any) => String(e.NtryRef || 'UNKNOWN_REF')))
+    const alreadyImportedRefs = new Set((alreadyImported ?? []).map((t) => t.entry_ref))
+    const freshEntries = entries.filter((e: any) => !alreadyImportedRefs.has(String(e.NtryRef || 'UNKNOWN_REF')))
+    const preSkippedCount = entries.length - freshEntries.length
+
+    // Pravidlo IBAN: účet, z ktorého už prišla platba spárovaná s darcom (aj ručne), páruje ďalšie platby
+    const pseudoDonorIds = await loadPseudoDonorIds(supabase, projectLegacyVsMap)
+    const ibanDonorMap = await loadIbanDonorMap(
+      supabase,
+      freshEntries.map((entry: any) => entry.NtryDtls?.TxDtls?.RltdPties?.DbtrAcct?.Id?.IBAN ?? null),
+      pseudoDonorIds
+    )
+
+    const legacyPayers = await createLegacyPayerResolver(
+      supabase,
+      projectLegacyVsMap,
+      // Historické platby (pred spustením výziev) resolver nerieši – ostávajú ako zvyšok histórie
+      freshEntries.filter((entry: any) => !isHistoricalPayment(entryBookingDate(entry))).map((entry: any) => {
+        const tx = entry.NtryDtls?.TxDtls
+        const vsMatch = String(tx?.Refs?.EndToEndId || '').match(/VS(\d+)/i)
+        return {
+          counterparty_iban: tx?.RltdPties?.DbtrAcct?.Id?.IBAN ?? null,
+          counterparty_name: tx?.RltdPties?.Dbtr?.Nm || String(tx?.AddtlTxInf || '') || null,
+          variable_symbol: vsMatch ? vsMatch[1] : null,
+        }
+      })
+    )
 
     // 6. Process Transactions
     const txToInsert = []
     let matchedCount = 0
 
-    for (const entry of entries) {
+    for (const entry of freshEntries) {
       const entryRef = String(entry.NtryRef || 'UNKNOWN_REF')
       const amountStr = entry.Amt?.['#text'] || entry.Amt || '0'
       const amount = parseFloat(amountStr)
@@ -217,13 +263,38 @@ export async function POST(request: Request) {
       if (direction === 'credit' && isMolliePayout({ direction, counterparty_name: counterName, counterparty_iban: counterIban, remittance_info: `${ustrd} ${addtlInf}` })) {
          category = MOLLIE_PAYOUT_CATEGORY
       } else if (direction === 'credit' && vs) {
-         if (donorVsMap.has(vs)) {
+         const legacyProjectId = projectLegacyVsMap.get(normalizeVs(vs))
+         if (legacyProjectId && isHistoricalPayment(bookingDate)) {
+            // História: ako doteraz – zástupný „darca výzvy“ podľa VS, inak anonymný darca
+            if (donorVsMap.has(vs)) {
+               matchedDonorId = donorVsMap.get(vs)
+            } else {
+               if (anonymousDonorId === undefined) anonymousDonorId = await getAnonymousDonorId(supabase)
+               matchedDonorId = anonymousDonorId
+            }
+            isMatched = !!matchedDonorId
+            if (isMatched) category = 'donation'
+         } else if (legacyProjectId) {
+            // VS patrí výzve zo starého webu → dar k výzve, darca podľa platiteľa.
+            // Má prednosť pred donorVsMap (tam sú aj zástupní „darcovia výzvy“ zo starého webu).
+            matchedDonorId = await legacyPayers.resolve(
+               { counterparty_iban: counterIban ?? null, counterparty_name: counterName || null, variable_symbol: vs },
+               projectNameById.get(legacyProjectId)
+            )
+            isMatched = !!matchedDonorId
+            if (isMatched) category = 'donation'
+         } else if (donorVsMap.has(vs)) {
             matchedDonorId = donorVsMap.get(vs)
             isMatched = true
             category = 'donation'
-         } else if (anonymousDonorId && projectLegacyVsMap.has(normalizeVs(vs))) {
-            // VS patrí výzve zo starého webu, nie darcovi → anonymný dar k výzve
-            matchedDonorId = anonymousDonorId
+         }
+      }
+
+      // Bez zhody podľa VS → pravidlo IBAN (darca z predošlých spárovaných platieb z účtu)
+      if (!isMatched && direction === 'credit' && category !== MOLLIE_PAYOUT_CATEGORY) {
+         const byIban = ibanDonorMap.get(normalizeIban(counterIban))
+         if (byIban) {
+            matchedDonorId = byIban
             isMatched = true
             category = 'donation'
          }
@@ -269,6 +340,7 @@ export async function POST(request: Request) {
         skippedCount = txToInsert.length - newTxsToInsert.length
       }
     }
+    skippedCount += preSkippedCount
 
     // Insert only NEW to DB and get back the records to extract IDs for donations
     let insertedTxs: any[] = []
@@ -300,7 +372,7 @@ export async function POST(request: Request) {
              // Find matching specific symbol to donor project mapping if applicable
              const pId =
                (tx.specific_symbol && projectSsMap.has(tx.specific_symbol) ? projectSsMap.get(tx.specific_symbol) : null) ??
-               projectLegacyVsMap.get(normalizeVs(tx.variable_symbol)) ??
+               legacyProjectForPayment(tx.booking_date, tx.variable_symbol, projectLegacyVsMap, historicalExcluded) ??
                null
              
              return {

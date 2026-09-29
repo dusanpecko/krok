@@ -17,7 +17,10 @@ export default function MatchDonorDialog({ transaction, projects, onClose, onSuc
   const [isSearching, setIsSearching] = useState(false)
   const [selectedDonor, setSelectedDonor] = useState<any | null>(null)
   
-  const [selectedProject, setSelectedProject] = useState<string>('')
+  // Predvolená výzva: aktuálne priradená (pri oprave), inak rozpoznaná podľa SS / VS / popisu
+  const [selectedProject, setSelectedProject] = useState<string>(
+    transaction.project_hint?.assigned?.id ?? transaction.project_hint?.detected?.id ?? ''
+  )
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,13 +32,6 @@ export default function MatchDonorDialog({ transaction, projects, onClose, onSuc
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Predvoliť projekt ak transakcia má špecifický symbol
-  useEffect(() => {
-    if (transaction.specific_symbol && projects.length > 0) {
-      const p = projects.find(proj => proj.specific_symbol === transaction.specific_symbol)
-      if (p) setSelectedProject(p.id)
-    }
-  }, [transaction.specific_symbol, projects])
 
   const handleSearch = async (val: string) => {
     setQuery(val)

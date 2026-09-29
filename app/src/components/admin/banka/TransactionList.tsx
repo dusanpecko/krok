@@ -1,14 +1,89 @@
 'use client'
 
-import { ArrowDownRight, ArrowUpRight, CheckCircle2, UserPlus } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, CheckCircle2, UserPlus, AlertTriangle } from 'lucide-react'
+import type { ProjectHint } from '@/lib/bank/project-hint'
 
 interface TransactionListProps {
   transactions: any[]
+  projects: { id: string; name: string }[]
   onPairClick: (tx: any) => void
   onQuickMatchAnon: (tx: any) => void
+  onProjectChange: (tx: any, projectId: string | null) => void
+  /** id transakcie, pri ktorej práve prebieha zmena výzvy */
+  savingProjectTxId?: string | null
 }
 
-export default function TransactionList({ transactions, onPairClick, onQuickMatchAnon }: TransactionListProps) {
+const REASON_LABEL: Record<string, string> = {
+  ss: 'podľa SS',
+  vs: 'podľa VS výzvy',
+  text: 'podľa popisu',
+}
+
+/** Stĺpec „Výzva“ – priradená výzva, dôvod a upozornenie na nesúlad so SS / VS / popisom. */
+function ProjectCell({ tx, projects, onProjectChange, saving }: {
+  tx: any
+  projects: { id: string; name: string }[]
+  onProjectChange: (tx: any, projectId: string | null) => void
+  saving: boolean
+}) {
+  const hint: ProjectHint | null = tx.project_hint
+  if (!hint) return <span className="text-xs text-gray-300">—</span>
+
+  const { assigned, detected, mismatch } = hint
+  const hasDonation = tx.matched && !!tx.donation_id
+
+  // Dôvod priradenia: sedí so SS / VS / popisom, inak ručne
+  const assignedReason = assigned
+    ? detected && detected.id === assigned.id
+      ? REASON_LABEL[detected.reason]
+      : 'ručne'
+    : null
+
+  return (
+    <div className="flex flex-col gap-1.5 min-w-[180px]">
+      {hasDonation ? (
+        <select
+          value={assigned?.id ?? ''}
+          disabled={saving}
+          onChange={(e) => onProjectChange(tx, e.target.value || null)}
+          className={`w-full text-xs font-bold rounded-lg px-2 py-1.5 border outline-none cursor-pointer disabled:opacity-50 ${
+            assigned ? 'bg-blue-50 border-blue-100 text-blue-800' : 'bg-gray-50 border-gray-200 text-gray-500'
+          }`}
+          title="Zmeniť výzvu, ku ktorej je dar zapísaný"
+        >
+          <option value="">Bez výzvy (všeobecný dar)</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      ) : (
+        <span className="text-xs text-gray-400 italic">Nespárované</span>
+      )}
+
+      {assignedReason && !mismatch && (
+        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">{assignedReason}</span>
+      )}
+
+      {mismatch && detected && (
+        <button
+          type="button"
+          disabled={!hasDonation || saving}
+          onClick={() => onProjectChange(tx, detected.id)}
+          className="inline-flex items-start gap-1 text-left text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 hover:bg-amber-100 disabled:hover:bg-amber-50 disabled:cursor-default"
+          title={hasDonation ? 'Kliknutím priradíte dar k tejto výzve' : 'Po spárovaní s darcom vyberte výzvu v dialógu'}
+        >
+          <AlertTriangle size={12} className="shrink-0 mt-px" />
+          <span>
+            {REASON_LABEL[detected.reason]}{detected.keyword ? ` („${detected.keyword}“)` : ''}: {detected.name}
+            {hasDonation && <span className="underline ml-1">Priradiť</span>}
+          </span>
+        </button>
+      )}
+    </div>
+  )
+}
+
+export default function TransactionList({ transactions, projects, onPairClick, onQuickMatchAnon, onProjectChange, savingProjectTxId }: TransactionListProps) {
   if (transactions.length === 0) {
     return (
       <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-sm">
@@ -27,6 +102,7 @@ export default function TransactionList({ transactions, onPairClick, onQuickMatc
             <th className="px-6 py-4">Protiúčet / Meno</th>
             <th className="px-6 py-4">Suma</th>
             <th className="px-6 py-4">Symboly / Správa</th>
+            <th className="px-6 py-4">Výzva</th>
             <th className="px-6 py-4 text-right">Stav spárovania</th>
           </tr>
         </thead>
@@ -85,6 +161,15 @@ export default function TransactionList({ transactions, onPairClick, onQuickMatc
                   </div>
                 </td>
                 
+                <td className="px-6 py-4 align-top">
+                  <ProjectCell
+                    tx={tx}
+                    projects={projects}
+                    onProjectChange={onProjectChange}
+                    saving={savingProjectTxId === tx.id}
+                  />
+                </td>
+
                 <td className="px-6 py-4 text-right">
                   {tx.category === 'mollie_payout' ? (
                      <div className="flex flex-col items-end">

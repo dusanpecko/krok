@@ -6,6 +6,8 @@ import { requirePermission } from '@/lib/auth'
 import { sanitizeSearchTerm, sanitizeFilterValue } from '@/lib/search'
 import { runFioSync } from '@/lib/bank/fio-sync'
 import { MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
+import { computeProjectHint, type HintProject } from '@/lib/bank/project-hint'
+import { loadProjectLegacyVsMap, loadPseudoDonorIds, normalizeIban } from '@/lib/bank/legacy-project-vs'
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -73,7 +75,8 @@ export async function getTransactions(params: {
     .from('bank_transactions')
     .select(`
       *,
-      donors ( id, first_name, last_name, vs:variable_symbol )
+      donors ( id, first_name, last_name, vs:variable_symbol ),
+      donations ( id, project_id )
     `, { count: 'exact' })
 
   // 1. Dátumy (Rok a voliteľne mesiac)
@@ -121,11 +124,51 @@ export async function getTransactions(params: {
     return { data: [], count: 0, totalPages: 0 }
   }
 
+  // Výzva k platbe: čo je priradené v donations vs. čo naznačuje SS / VS / popis
+  const { data: projects } = await supabaseAdmin
+    .from('projects')
+    .select('id, name, specific_symbol, legacy_variable_symbol')
+  const hintProjects = (projects ?? []) as HintProject[]
+
+  const withHints = (data ?? []).map((tx) => {
+    // donations je 1:1 (unikátny bank_transaction_id) – PostgREST vracia objekt, starší tvar pole
+    const d = Array.isArray(tx.donations) ? tx.donations[0] : tx.donations
+    const project_hint =
+      tx.direction === 'credit' && tx.category !== MOLLIE_PAYOUT_CATEGORY
+        ? computeProjectHint(tx, hintProjects, d?.project_id ?? null)
+        : null
+    return { ...tx, donation_id: d?.id ?? null, project_hint }
+  })
+
   return {
-    data,
+    data: withHints,
     count: count || 0,
     totalPages: Math.ceil((count || 0) / pageSize)
   }
+}
+
+/**
+ * Zmena výzvy pri už spárovanej platbe (ručná oprava zlého automatického priradenia).
+ * Mení len project_id existujúceho daru – darca ostáva.
+ */
+export async function setTransactionProject(transactionId: string, projectId: string | null) {
+  await requirePermission('view_bank')
+  const { data, error } = await supabaseAdmin
+    .from('donations')
+    .update({ project_id: projectId })
+    .eq('bank_transaction_id', transactionId)
+    .select('id')
+
+  if (error) {
+    console.error('Error setting transaction project:', error)
+    return { success: false, error: 'Zmena výzvy zlyhala.' }
+  }
+  if (!data || data.length === 0) {
+    return { success: false, error: 'Platba nemá zapísaný dar – najprv ju spárujte s darcom.' }
+  }
+
+  revalidatePath('/admin/banka')
+  return { success: true }
 }
 
 /**
@@ -216,20 +259,30 @@ export async function matchTransaction(
     return { success: false, error: 'Chyba pri aktualizácii statusu transakcie.' }
   }
 
-  // 3. Analyzuj a vlož ju do donations!
-  const dDate = new Date(tx.booking_date)
-  
+  // 3. Zapíš dar do donations – jedna transakcia = jeden dar.
+  // Pri úprave už spárovanej platby (iný darca / výzva) sa existujúci dar prepíše, nie zduplikuje.
+  // projectId === undefined → výzvu nemeníme (volanie bez výberu projektu).
   const { error: donationError } = await supabaseAdmin
     .from('donations')
-    .insert({
+    .upsert({
       bank_transaction_id: tx.id,
       donor_id: donorId,
-      project_id: projectId || null,
+      ...(projectId !== undefined ? { project_id: projectId || null } : {}),
       amount: tx.amount,
       donation_date: tx.booking_date,
       payment_method: 'bank_transfer',
       matched: true
-    })
+    }, { onConflict: 'bank_transaction_id' })
+
+  // Pravidlo IBAN: zapamätáme účet darcovi, aby sa ďalšie platby z neho spárovali automaticky
+  // (zástupných / anonymných darcov vynecháme)
+  const iban = normalizeIban(tx.counterparty_iban)
+  if (iban) {
+    const pseudo = await loadPseudoDonorIds(supabaseAdmin, await loadProjectLegacyVsMap(supabaseAdmin))
+    if (!pseudo.has(donorId)) {
+      await supabaseAdmin.from('donors').update({ iban }).eq('id', donorId).is('iban', null)
+    }
+  }
 
   if (donationError) {
     console.error('Error storing donation record:', donationError)
@@ -339,7 +392,7 @@ export async function bulkMatchAnonymous(params: {
 
   const { error: donationError } = await supabaseAdmin
     .from('donations')
-    .insert(donationsToInsert)
+    .upsert(donationsToInsert, { onConflict: 'bank_transaction_id' })
 
   if (donationError) {
     console.error('Bulk donations error:', donationError)
@@ -607,7 +660,7 @@ export async function bulkMatchSuggested(matches: {
 
     const { error: insertError } = await supabaseAdmin
       .from('donations')
-      .insert(donationsToInsert)
+      .upsert(donationsToInsert, { onConflict: 'bank_transaction_id' })
 
     if (insertError) {
       console.error('Error inserting donations in bulkMatchSuggested:', insertError)
@@ -623,16 +676,21 @@ export async function bulkMatchSuggested(matches: {
 }
 
 /**
- * Pomocné funkcie pre bezpečné parsovanie stiahnutých stĺpcov z Fio JSON API.
- * Ošetrujú prípad, kedy banka vráti polia ako objekt { value } alebo ako primitívnu hodnotu, prípadne null.
- */
-/**
- * Synchronizuje transakcie z Fio banky cez REST API za posledných 30 dní.
+ * Synchronizuje transakcie z Fio banky cez REST API – bez parametra za posledných 30 dní,
+ * s rokom celý kalendárny rok (doplnenie chýbajúcej histórie; vkladajú sa len nové pohyby).
  * Implementácia je v `lib/bank/fio-sync.ts` (zdieľaná s cronom).
  */
-export async function syncFioTransactions() {
+export async function syncFioTransactions(year?: number) {
   await requirePermission('view_bank')
-  return runFioSync()
+  if (year === undefined) return runFioSync()
+
+  const currentYear = new Date().getFullYear()
+  if (!Number.isInteger(year) || year < 2015 || year > currentYear) {
+    return { success: false as const, error: 'Neplatný rok.' }
+  }
+  const today = new Date().toISOString().slice(0, 10)
+  const dateTo = year === currentYear ? today : `${year}-12-31`
+  return runFioSync({ dateFrom: `${year}-01-01`, dateTo })
 }
 
 

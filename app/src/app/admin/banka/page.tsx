@@ -1,6 +1,9 @@
 import { getBankYears, getTransactions, getProjects } from './actions'
 import BankDashboard from '@/components/admin/banka/BankDashboard'
 
+// Synchronizácia celého roka z Fio (server action) môže trvať dlhšie než bežný request
+export const maxDuration = 300
+
 interface BankPageProps {
   searchParams: Promise<{
     year?: string

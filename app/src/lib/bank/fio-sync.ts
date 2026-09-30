@@ -4,6 +4,8 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { isMolliePayout, MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
 import {
   createLegacyPayerResolver,
+  getGeneralAnonymousDonorId,
+  POST_VOUCHER_IBAN,
   findDonorByVsInText,
   getAnonymousDonorId,
   isHistoricalPayment,
@@ -293,6 +295,7 @@ export async function runFioSync(range?: FioSyncRange): Promise<FioSyncResult> {
         }))
     )
     let anonymousDonorId: string | null | undefined
+    let generalAnonymousDonorId: string | null | undefined
     // Pravidlo IBAN: účet, z ktorého už prišla platba spárovaná s darcom (aj ručne), páruje ďalšie platby
     const pseudoDonorIds = await loadPseudoDonorIds(supabaseAdmin, projectLegacyVsMap)
     const ibanDonorMap = await loadIbanDonorMap(supabaseAdmin, newTransactions.map((tx) => parseStringCol(tx.column2)), pseudoDonorIds)
@@ -392,6 +395,16 @@ export async function runFioSync(range?: FioSyncRange): Promise<FioSyncResult> {
         const byIban = ibanDonorMap.get(normalizeIban(counterIban))
         if (byIban) {
           matchedDonorId = byIban
+          isMatched = true
+          category = 'donation'
+        }
+      }
+
+      // Poštový poukaz (bez VS) → všeobecný dar na „DARY Donátor“
+      if (!isMatched && direction === 'credit' && normalizeIban(counterIban) === POST_VOUCHER_IBAN) {
+        if (generalAnonymousDonorId === undefined) generalAnonymousDonorId = await getGeneralAnonymousDonorId(supabaseAdmin)
+        if (generalAnonymousDonorId) {
+          matchedDonorId = generalAnonymousDonorId
           isMatched = true
           category = 'donation'
         }

@@ -209,6 +209,15 @@ export async function loadPseudoDonorIds(admin: SupabaseClient, projectLegacyVsM
  */
 export const SHARED_PAYER_IBANS = new Set(['SK7502000080100138303012', 'SK6902000020140015805012'])
 
+/** Poštové poukazy (jednotliví platitelia cez poštu) → všeobecný dar na „DARY Donátor“ (rozhodnutie 2026-09-30). */
+export const POST_VOUCHER_IBAN = 'SK6902000020140015805012'
+
+/** Id darcu „DARY Donátor“ (legacy_id 11770000) – všeobecné anonymné dary. */
+export async function getGeneralAnonymousDonorId(admin: SupabaseClient): Promise<string | null> {
+  const { data } = await admin.from('donors').select('id').eq('legacy_id', LEGACY_ANONYMOUS_DONOR_LEGACY_ID).maybeSingle()
+  return (data?.id as string | undefined) ?? null
+}
+
 /**
  * „Pravidlo IBAN“: mapa IBAN → darca z donors.iban a z histórie spárovaných platieb
  * (ručné spárovanie tak funguje ako pravidlo pre ďalšie platby z toho istého účtu).

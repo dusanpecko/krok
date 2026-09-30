@@ -5,6 +5,8 @@ import { requirePermission, UnauthorizedError, ForbiddenError } from '@/lib/auth
 import { isMolliePayout, MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
 import {
   createLegacyPayerResolver,
+  getGeneralAnonymousDonorId,
+  POST_VOUCHER_IBAN,
   findDonorByVsInText,
   getAnonymousDonorId,
   isHistoricalPayment,
@@ -182,6 +184,7 @@ export async function POST(request: Request) {
     const historicalExcluded = await loadHistoricalExcludedProjectIds(supabase)
     const projectNameById = new Map((projects ?? []).map((p) => [p.id, p.name as string | null]))
     let anonymousDonorId: string | null | undefined
+    let generalAnonymousDonorId: string | null | undefined
     const entryBookingDate = (e: any) => String(e.BookgDt?.Dt || e.ValDt?.Dt || '')
 
     // Už importované platby preskočíme hneď (inak by sa pre ne zakladali darcovia)
@@ -310,6 +313,16 @@ export async function POST(request: Request) {
          const byIban = ibanDonorMap.get(normalizeIban(counterIban))
          if (byIban) {
             matchedDonorId = byIban
+            isMatched = true
+            category = 'donation'
+         }
+      }
+
+      // Poštový poukaz (bez VS) → všeobecný dar na „DARY Donátor“
+      if (!isMatched && direction === 'credit' && normalizeIban(counterIban) === POST_VOUCHER_IBAN) {
+         if (generalAnonymousDonorId === undefined) generalAnonymousDonorId = await getGeneralAnonymousDonorId(supabase)
+         if (generalAnonymousDonorId) {
+            matchedDonorId = generalAnonymousDonorId
             isMatched = true
             category = 'donation'
          }

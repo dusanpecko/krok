@@ -1,17 +1,18 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, ExternalLink, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { ExternalLink, X } from 'lucide-react'
 import { getPublicSponsors } from '@/app/(public)/actions'
 import { formatSponsorAmount, type PublicSponsor } from '@/lib/sponsors/types'
 import { trackEvent } from '@/lib/analytics'
 
 /** Tónovanie bielej dlaždice do farby stránky (rovnaký princíp ako Photo na súťaži). */
 const TILE_TINT = 0.1
-const AUTOPLAY_MS = 4000
 
 /**
- * Pás „Podporili nás“ na domovskej stránke: logá ako slider, klik na logo
+ * Pás „Podporili nás“ na domovskej stránke: mriežka lôg (ako na lectio.one) – zalamuje sa
+ * do riadkov a je vycentrovaná, na konci dlaždica „Miesto pre vás“. Klik na logo
  * otvorí okno s detailom sponzora (logo, názov, popis, suma, tlačidlo na web).
  * Otvorenie okna aj klik na web sa posielajú do Umami.
  */
@@ -56,7 +57,7 @@ export default function SponsorsStrip() {
           </p>
         </div>
 
-        <LogoSlider sponsors={sponsors} onSelect={open} />
+        <LogoGrid sponsors={sponsors} onSelect={open} />
       </div>
 
       {selected && <SponsorModal sponsor={selected} onClose={() => setSelected(null)} />}
@@ -70,7 +71,7 @@ function LogoTile({ sponsor, onClick }: { sponsor: PublicSponsor; onClick: () =>
       type="button"
       onClick={onClick}
       title={sponsor.description ?? sponsor.name}
-      className="group relative w-full h-36 sm:h-40 rounded-2xl overflow-hidden bg-white border border-white/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-gold/20 focus:outline-none focus-visible:ring-4 focus-visible:ring-gold/40 cursor-pointer"
+      className="group relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden bg-white border border-white/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-gold/20 focus:outline-none focus-visible:ring-4 focus-visible:ring-gold/40 cursor-pointer"
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center p-5 gap-2">
         {sponsor.logo_url ? (
@@ -79,7 +80,6 @@ function LogoTile({ sponsor, onClick }: { sponsor: PublicSponsor; onClick: () =>
         ) : (
           <span className="text-blue-deep font-extrabold text-lg text-center leading-tight px-2">{sponsor.name}</span>
         )}
-        <span className="text-[11px] font-bold text-blue-deep/60 truncate max-w-full">{sponsor.name}</span>
       </div>
       {/* Tón stránky cez dlaždicu, zmizne pri hoveri, aby logo vyniklo */}
       <div
@@ -91,73 +91,25 @@ function LogoTile({ sponsor, onClick }: { sponsor: PublicSponsor; onClick: () =>
   )
 }
 
-function LogoSlider({ sponsors, onSelect }: { sponsors: PublicSponsor[]; onSelect: (s: PublicSponsor) => void }) {
-  const trackRef = useRef<HTMLDivElement>(null)
-  const pausedRef = useRef(false)
-  const few = sponsors.length <= 3
-
-  const scrollByTiles = (dir: 1 | -1) => {
-    const el = trackRef.current
-    if (!el) return
-    const tile = el.querySelector<HTMLElement>('[data-tile]')
-    const step = tile ? tile.offsetWidth + 20 : el.clientWidth * 0.8
-    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4
-    if (dir === 1 && atEnd) el.scrollTo({ left: 0, behavior: 'smooth' })
-    else el.scrollBy({ left: dir * step, behavior: 'smooth' })
-  }
-
-  // Autoplay: každé 4 s o jednu dlaždicu, pauza pri hoveri / fokuse; pri málo logách sa nepoužije
-  useEffect(() => {
-    if (few) return
-    const id = window.setInterval(() => {
-      if (pausedRef.current || document.hidden) return
-      scrollByTiles(1)
-    }, AUTOPLAY_MS)
-    return () => window.clearInterval(id)
-  }, [few])
-
+function LogoGrid({ sponsors, onSelect }: { sponsors: PublicSponsor[]; onSelect: (s: PublicSponsor) => void }) {
+  const tile = 'w-[calc(50%-0.625rem)] sm:w-[200px] lg:w-[180px] xl:w-[190px]'
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => { pausedRef.current = true }}
-      onMouseLeave={() => { pausedRef.current = false }}
-      onFocus={() => { pausedRef.current = true }}
-      onBlur={() => { pausedRef.current = false }}
-    >
-      <div
-        ref={trackRef}
-        className={`flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${few ? 'justify-center' : ''}`}
-      >
-        {sponsors.map((s) => (
-          <div key={s.id} data-tile className="snap-start shrink-0 w-[200px] sm:w-[230px]">
-            <LogoTile sponsor={s} onClick={() => onSelect(s)} />
-          </div>
-        ))}
+    <div className="flex flex-wrap justify-center gap-5">
+      {sponsors.map((s) => (
+        <div key={s.id} className={tile}>
+          <LogoTile sponsor={s} onClick={() => onSelect(s)} />
+        </div>
+      ))}
+      {/* Pozvánka pre ďalších partnerov */}
+      <div className={tile}>
+        <Link
+          href="/kontakt"
+          className="group w-full h-28 sm:h-32 rounded-2xl border-2 border-dashed border-white/20 hover:border-gold/60 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center text-center p-4 transition-colors"
+        >
+          <span className="text-sm font-extrabold text-white group-hover:text-gold-bright">Miesto pre vás</span>
+          <span className="text-xs text-zinc-400 mt-1">Staňte sa partnerom</span>
+        </Link>
       </div>
-
-      {!few && (
-        <>
-          <button
-            type="button"
-            onClick={() => scrollByTiles(-1)}
-            aria-label="Predchádzajúce logá"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-5 w-10 h-10 rounded-full bg-blue-deep/90 border border-white/15 text-white hover:border-gold/60 hover:text-gold-bright shadow-xl flex items-center justify-center cursor-pointer"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollByTiles(1)}
-            aria-label="Ďalšie logá"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-5 w-10 h-10 rounded-full bg-blue-deep/90 border border-white/15 text-white hover:border-gold/60 hover:text-gold-bright shadow-xl flex items-center justify-center cursor-pointer"
-          >
-            <ChevronRight size={18} />
-          </button>
-          {/* Jemné prechody na okrajoch */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-blue-deep to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blue-deep to-transparent" />
-        </>
-      )}
     </div>
   )
 }

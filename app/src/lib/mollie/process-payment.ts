@@ -368,7 +368,12 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
     online_subscription_id: sub?.id ?? existing?.online_subscription_id ?? null,
     paid_at: paidAtIso,
     metadata: meta,
-    ...identity,
+    // parish_id nie je stĺpec online_payments – ide len do ensureDonor (farnosť darcu)
+    donor_id: identity.donor_id,
+    auth_user_id: identity.auth_user_id,
+    email: identity.email,
+    donor_name: identity.donor_name,
+    project_id: identity.project_id,
   }
 
   let paymentRow: PaymentRow

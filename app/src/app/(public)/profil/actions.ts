@@ -1,84 +1,99 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { allocateDonorVs } from '@/lib/donors/vs'
+import { addDonorProject, validateParishId, validateProjectId } from '@/lib/parishes/choices'
+import { NO_PARISH } from '@/lib/parishes/constants'
 
+function serviceClient() {
+  return createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+}
+
+/**
+ * Profil darcu prihláseného používateľa (návrh farností § 6.4 – O21).
+ * Poradie hľadania:
+ *  1. auth_user_id = používateľ → tento riadok; ak sa zmenil e-mail v účte, zosynchronizuje sa
+ *  2. e-mail (ešte neprepojený darca, napr. z FileMakeru) → doplní sa auth_user_id
+ *  3. inak sa založí nový darca (VS zo sekvencie; farnosť a projekt z registrácie, overené)
+ * Zmena e-mailu v účte tak nikdy nezaloží druhý profil.
+ */
 export async function getCurrentDonor() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) return null
 
-  const userEmail = user.email?.trim().toLowerCase()
-  if (!userEmail) return null
+  const userEmail = user.email?.trim().toLowerCase() || null
+  const admin = serviceClient()
 
-  // 1. Vytvoriť admin klienta na prepojenie profilu (obídenie RLS pred prvým prepojením)
-  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
-  const supabaseAdmin = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const { data: byAuth } = await admin.from('donors').select('id, email').eq('auth_user_id', user.id).maybeSingle()
 
-  // 2. Skontrolovať, či už existuje darca s rovnakým e-mailom
-  const { data: existingDonor, error: donorFetchError } = await supabaseAdmin
-    .from('donors')
-    .select('id, auth_user_id')
-    .ilike('email', userEmail)
-    .maybeSingle()
-
-  if (existingDonor) {
-    // Ak darca existuje, ale nemá ešte priradené auth_user_id, prepojíme ho!
-    if (!existingDonor.auth_user_id) {
-      const { error: updateError } = await supabaseAdmin
-        .from('donors')
-        .update({ auth_user_id: user.id })
-        .eq('id', existingDonor.id)
-
-      if (updateError) {
-        console.error('[getCurrentDonor] Zlyhalo priradenie auth_user_id:', updateError.message)
-      }
+  if (byAuth) {
+    if (userEmail && (byAuth.email || '').toLowerCase() !== userEmail) {
+      await admin.from('donors').update({ email: userEmail, updated_at: new Date().toISOString() }).eq('id', byAuth.id)
     }
-  } else {
-    // Ak darca vôbec neexistuje v tabuľke public.donors, automaticky ho vytvoríme
-    // (novoregistrovaní cez e-mail aj cez Google). Meno berieme prednostne z
-    // metadát z registrácie (first_name/last_name), inak z full_name / e-mailu.
-    const meta = user.user_metadata || {}
-    const fallbackName = meta.full_name || meta.name || userEmail.split('@')[0]
-    const parts = String(fallbackName).split(' ')
-    const firstName = meta.first_name || parts[0] || 'Darca'
-    const lastName = meta.last_name || parts.slice(1).join(' ') || 'KROK'
+  } else if (userEmail) {
+    const meta = (user.user_metadata || {}) as Record<string, unknown>
+    const parishId = await validateParishId(admin, meta.parish_id)
+    const projectId = await validateProjectId(admin, meta.project_id)
+    const choiceMade = meta.parish_id === NO_PARISH || !!parishId || !!projectId
 
-    // Získať ďalšie VS pre tohto darcu
-    const { data: vsData } = await supabaseAdmin
+    const { data: byEmail } = await admin
       .from('donors')
-      .select('variable_symbol')
-      .not('variable_symbol', 'is', null)
+      .select('id, parish_id')
+      .ilike('email', userEmail)
+      .is('auth_user_id', null)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
 
-    const maxVS = (vsData || []).reduce((max, d) => {
-      const num = parseInt(d.variable_symbol || '0')
-      return num > max ? num : max
-    }, 11771451)
-    const vs = (maxVS + 1).toString()
+    if (byEmail) {
+      // Prvé prepojenie existujúceho darcu s účtom
+      const { error } = await admin
+        .from('donors')
+        .update({
+          auth_user_id: user.id,
+          ...(parishId && !byEmail.parish_id ? { parish_id: parishId } : {}),
+          ...(choiceMade ? { onboarding_completed_at: new Date().toISOString() } : {}),
+        })
+        .eq('id', byEmail.id)
+      if (error) console.error('[getCurrentDonor] Prepojenie auth_user_id zlyhalo:', error.message)
+      await addDonorProject(admin, byEmail.id, projectId)
+    } else {
+      // Nový darca (registrácia e-mailom aj cez Google). Meno z metadát registrácie, inak z full_name / e-mailu.
+      const fallbackName = String(meta.full_name || meta.name || userEmail.split('@')[0])
+      const parts = fallbackName.split(' ')
+      const firstName = String(meta.first_name || parts[0] || 'Darca')
+      const lastName = String(meta.last_name || parts.slice(1).join(' ') || 'KROK')
 
-    const { error: createError } = await supabaseAdmin
-      .from('donors')
-      .insert({
-        auth_user_id: user.id,
-        email: userEmail,
-        first_name: firstName,
-        last_name: lastName,
-        variable_symbol: vs,
-        donor_type: 'individual',
-        status: 'active',
-        registered_at: new Date().toISOString()
-      })
-
-    if (createError) {
-      console.error('[getCurrentDonor] Zlyhalo vytvorenie nového profilu pre darcu:', createError.message)
+      try {
+        const vs = await allocateDonorVs(admin)
+        const { data: created, error } = await admin
+          .from('donors')
+          .insert({
+            auth_user_id: user.id,
+            email: userEmail,
+            first_name: firstName,
+            last_name: lastName,
+            variable_symbol: vs,
+            parish_id: parishId,
+            donor_type: 'individual',
+            status: 'active',
+            registered_at: new Date().toISOString(),
+            onboarding_completed_at: choiceMade ? new Date().toISOString() : null,
+          })
+          .select('id')
+          .single()
+        if (error) console.error('[getCurrentDonor] Založenie profilu zlyhalo:', error.message)
+        if (created) await addDonorProject(admin, created.id, projectId)
+      } catch (e) {
+        console.error('[getCurrentDonor]', e instanceof Error ? e.message : e)
+      }
     }
   }
 
-  // 3. Načítať darcu cez štandardný klientský supabase (RLS už prepustí dopyt, lebo auth_user_id = user.id)
+  // Načítanie cez klienta používateľa (RLS prepustí vlastný riadok podľa auth_user_id)
   const { data: donor, error } = await supabase
     .from('donors')
     .select(`
@@ -88,39 +103,109 @@ export async function getCurrentDonor() {
         name
       )
     `)
-    .eq('email', userEmail)
-    .single()
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
 
-  if (error) {
-    console.error('Error fetching donor after sync:', error)
+  if (error || !donor) {
+    if (error) console.error('Error fetching donor after sync:', error)
     return null
   }
-
-  return donor
+  // donor_projects má RLS len pre admina – podporované projekty doplníme servisným klientom
+  const { data: donorProjects } = await admin.from('donor_projects').select('project_id').eq('donor_id', donor.id)
+  return { ...donor, donor_projects: (donorProjects ?? []) as { project_id: string }[] }
 }
 
-export async function updateProfile(data: any) {
+/** Darca ešte nepotvrdil výber farnosti / projektu → presmerovať na /profil/vitajte. */
+export async function donorNeedsOnboarding(donor: {
+  parish_id?: string | null
+  onboarding_completed_at?: string | null
+  donor_projects?: { project_id: string }[] | null
+} | null): Promise<boolean> {
+  if (!donor) return false
+  return !donor.onboarding_completed_at && !donor.parish_id && !(donor.donor_projects?.length)
+}
+
+/**
+ * Onboarding (/profil/vitajte): farnosť (alebo „nepatrím do farnosti“) + voliteľne projekt.
+ */
+export async function saveOnboarding(data: { parish_id: string; project_id?: string | null }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false as const, error: 'Neprihlásený používateľ' }
 
+  const admin = serviceClient()
+  const parishId = data.parish_id === NO_PARISH ? null : await validateParishId(admin, data.parish_id)
+  if (data.parish_id !== NO_PARISH && !parishId) return { success: false as const, error: 'Vyberte farnosť zo zoznamu.' }
+  const projectId = await validateProjectId(admin, data.project_id)
+
+  const { data: donor } = await admin.from('donors').select('id').eq('auth_user_id', user.id).maybeSingle()
+  if (!donor) return { success: false as const, error: 'Profil darcu sa nenašiel.' }
+
+  const { error } = await admin
+    .from('donors')
+    .update({ parish_id: parishId, onboarding_completed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', donor.id)
+  if (error) return { success: false as const, error: 'Nepodarilo sa uložiť výber.' }
+  await addDonorProject(admin, donor.id, projectId)
+
+  revalidatePath('/profil')
+  return { success: true as const }
+}
+
+export async function updateProfile(data: {
+  first_name: string
+  last_name: string
+  phone?: string | null
+  street?: string | null
+  city?: string | null
+  postal_code?: string | null
+  /** id farnosti alebo 'none' */
+  parish_id?: string | null
+  /** zmena podporovaného projektu: predošlý → nový */
+  project_id?: string | null
+  previous_project_id?: string | null
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Neprihlásený používateľ' }
 
-  const { error } = await supabase
+  const admin = serviceClient()
+  const { data: donor } = await admin.from('donors').select('id').eq('auth_user_id', user.id).maybeSingle()
+  if (!donor) return { success: false, error: 'Profil darcu sa nenašiel.' }
+
+  const parishPatch: Record<string, unknown> = {}
+  if (data.parish_id !== undefined) {
+    const parishId = data.parish_id === NO_PARISH || !data.parish_id ? null : await validateParishId(admin, data.parish_id)
+    if (data.parish_id && data.parish_id !== NO_PARISH && !parishId) return { success: false, error: 'Vyberte farnosť zo zoznamu.' }
+    parishPatch.parish_id = parishId
+    parishPatch.onboarding_completed_at = new Date().toISOString()
+  }
+
+  const { error } = await admin
     .from('donors')
     .update({
       first_name: data.first_name,
       last_name: data.last_name,
-      phone: data.phone,
-      street: data.street,
-      city: data.city,
-      postal_code: data.postal_code,
-      updated_at: new Date().toISOString()
+      phone: data.phone || null,
+      street: data.street || null,
+      city: data.city || null,
+      postal_code: data.postal_code || null,
+      ...parishPatch,
+      updated_at: new Date().toISOString(),
     })
-    .eq('email', user.email)
+    .eq('id', donor.id)
 
   if (error) {
     console.error('Update profile error:', error)
     return { success: false, error: 'Nepodarilo sa uložiť zmeny.' }
+  }
+
+  // Projekt meníme len ak ho darca v profile zmenil (iné väzby nastavené v admine ostávajú)
+  if (data.project_id !== undefined && (data.project_id || null) !== (data.previous_project_id || null)) {
+    if (data.previous_project_id) {
+      await admin.from('donor_projects').delete().eq('donor_id', donor.id).eq('project_id', data.previous_project_id)
+    }
+    await addDonorProject(admin, donor.id, await validateProjectId(admin, data.project_id))
   }
 
   revalidatePath('/profil')
@@ -146,11 +231,7 @@ export async function completeProfile(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Neprihlásený používateľ' }
 
-  const { createClient: createServiceClient } = await import('@supabase/supabase-js')
-  const admin = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const admin = serviceClient()
 
   const { data: donor } = await admin
     .from('donors')
@@ -175,7 +256,7 @@ export async function completeProfile(data: {
       street: data.street?.trim() || null,
       city: data.city?.trim() || null,
       postal_code: data.postal_code?.trim() || null,
-      parish_id: data.parish_id || null,
+      parish_id: await validateParishId(admin, data.parish_id),
       notes,
       updated_at: new Date().toISOString(),
     })
@@ -187,17 +268,7 @@ export async function completeProfile(data: {
   }
 
   // Prepojenie s podporeným projektom (ak zvolený a ešte neexistuje)
-  if (data.project_id) {
-    const { data: existing } = await admin
-      .from('donor_projects')
-      .select('id')
-      .eq('donor_id', donor.id)
-      .eq('project_id', data.project_id)
-      .maybeSingle()
-    if (!existing) {
-      await admin.from('donor_projects').insert({ donor_id: donor.id, project_id: data.project_id })
-    }
-  }
+  await addDonorProject(admin, donor.id, await validateProjectId(admin, data.project_id))
 
   revalidatePath('/profil')
   return { success: true }

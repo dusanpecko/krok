@@ -7,6 +7,7 @@ import {
   Landmark, LogOut
 } from 'lucide-react'
 import { updateProfile } from '@/app/(public)/profil/actions'
+import { NO_PARISH } from '@/lib/parishes/constants'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
@@ -19,6 +20,9 @@ interface ProfileContentProps {
   donor: any
   donations: any[]
   subscriptions?: MyOnlineSubscription[]
+  /** Možnosti výberu farnosti a podporovaného projektu */
+  parishes?: { id: string; name: string }[]
+  projects?: { id: string; name: string }[]
 }
 
 type Tab = 'data' | 'donations' | 'support'
@@ -78,7 +82,10 @@ function BackgroundSparkles() {
   )
 }
 
-export default function ProfileContent({ donor, donations, subscriptions = [] }: ProfileContentProps) {
+export default function ProfileContent({ donor, donations, subscriptions = [], parishes = [], projects = [] }: ProfileContentProps) {
+  // Podporovaný projekt z profilu (prvý verejný z donor_projects); iné väzby z adminu sa nemenia
+  const initialProjectId: string =
+    (donor.donor_projects ?? []).map((d: { project_id: string }) => d.project_id).find((id: string) => projects.some((p) => p.id === id)) ?? ''
   const { supabase } = useSupabase()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('data')
@@ -91,6 +98,8 @@ export default function ProfileContent({ donor, donations, subscriptions = [] }:
     street: donor.street || '',
     city: donor.city || '',
     postal_code: donor.postal_code || '',
+    parish_id: donor.parish_id || (donor.onboarding_completed_at ? NO_PARISH : ''),
+    project_id: initialProjectId,
   })
 
   const prefersReducedMotion = useReducedMotion()
@@ -113,7 +122,7 @@ export default function ProfileContent({ donor, donations, subscriptions = [] }:
     router.refresh()
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
@@ -122,7 +131,12 @@ export default function ProfileContent({ donor, donations, subscriptions = [] }:
     setLoading(true)
     setMessage(null)
 
-    const res = await updateProfile(formData)
+    const res = await updateProfile({
+      ...formData,
+      parish_id: formData.parish_id || undefined,
+      project_id: formData.project_id || null,
+      previous_project_id: initialProjectId || null,
+    })
     if (res.success) {
       setMessage({ type: 'success', text: 'Vaše údaje boli úspešne aktualizované.' })
     } else {
@@ -373,6 +387,38 @@ export default function ProfileContent({ donor, donations, subscriptions = [] }:
                       </div>
                     </div>
 
+                    {/* Farnosť a podporovaný projekt */}
+                    <div className="px-6 sm:px-8 pb-6 sm:pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label htmlFor="profile-parish" className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Moja farnosť</label>
+                        <select
+                          id="profile-parish"
+                          name="parish_id"
+                          value={formData.parish_id}
+                          onChange={handleChange}
+                          className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none text-sm font-semibold cursor-pointer"
+                        >
+                          <option value="" className="bg-blue-deep">Vyberte farnosť…</option>
+                          {parishes.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
+                          <option value={NO_PARISH} className="bg-blue-deep">Nepatrím do žiadnej farnosti</option>
+                        </select>
+                        <p className="text-[11px] text-zinc-500">Vaše dary sa započítavajú do príspevku tejto farnosti do fondu.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="profile-project" className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Podporujem projekt</label>
+                        <select
+                          id="profile-project"
+                          name="project_id"
+                          value={formData.project_id}
+                          onChange={handleChange}
+                          className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none text-sm font-semibold cursor-pointer"
+                        >
+                          <option value="" className="bg-blue-deep">Fond KROK všeobecne</option>
+                          {projects.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
                     <div className="p-6 bg-white/[0.02] border-t border-white/10 flex justify-end">
                       <button 
                         type="submit"
@@ -407,7 +453,7 @@ export default function ProfileContent({ donor, donations, subscriptions = [] }:
                       </div>
                       <div className="flex justify-between items-center py-3.5 border-b border-white/5 hover:border-white/10 transition-colors">
                         <span className="text-zinc-400 text-sm font-light">Farnosť</span>
-                        <span className="font-bold text-white">{donor.parishes?.name || 'Všeobecná'}</span>
+                        <span className="font-bold text-white">{donor.parishes?.name || 'Bez farnosti'}</span>
                       </div>
                       <div className="flex justify-between items-center py-3.5">
                         <span className="text-zinc-400 text-sm font-light">Status</span>

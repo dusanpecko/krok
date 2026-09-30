@@ -1,18 +1,23 @@
 import { createClient } from '@/lib/supabase/server'
 import { getUserAccess } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { donorNeedsOnboarding, getCurrentDonor } from '@/app/(public)/profil/actions'
 
 /**
  * Rozhodne, kam presmerovať používateľa po prihlásení (email aj Google).
  *
- * - Ak je zadaný bezpečný `to` (interná cesta), rešpektuje ho.
- * - Inak podľa role: admin/pracovník → /admin, bežný darca → /profil.
+ * - Admin / pracovník (má rolu) → bezpečný `to`, inak /admin.
+ * - Darca → profil sa tu aj založí (getCurrentDonor). Ak ešte nepotvrdil farnosť / projekt,
+ *   ide najprv na /profil/vitajte (aj pri Google registrácii, ktorá nemá formulár).
+ *   Onboarding je PRED `to`, aby sa nedal obísť odkazom `?to=/profil`; `to` sa nesie ďalej.
  *
  * Sem smeruje email login (window.location) aj OAuth callback po výmene kódu.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
-  const to = searchParams.get('to')
+  const toParam = searchParams.get('to')
+  // Bezpečná interná cesta (nie open-redirect): musí začínať '/' a nie '//'
+  const to = toParam && toParam.startsWith('/') && !toParam.startsWith('//') ? toParam : null
 
   const supabase = await createClient()
   const {
@@ -23,12 +28,16 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/prihlasenie`)
   }
 
-  // Bezpečná interná cesta (nie open-redirect): musí začínať '/' a nie '//'
-  if (to && to.startsWith('/') && !to.startsWith('//')) {
-    return NextResponse.redirect(`${origin}${to}`)
+  const { isAdmin, roles } = await getUserAccess(user.id)
+  if (isAdmin || roles.length > 0) {
+    return NextResponse.redirect(`${origin}${to ?? '/admin'}`)
   }
 
-  const { isAdmin, roles } = await getUserAccess(user.id)
-  const target = isAdmin || roles.length > 0 ? '/admin' : '/profil'
-  return NextResponse.redirect(`${origin}${target}`)
+  const donor = await getCurrentDonor()
+  if (await donorNeedsOnboarding(donor)) {
+    const next = to ?? '/profil'
+    return NextResponse.redirect(`${origin}/profil/vitajte?to=${encodeURIComponent(next)}`)
+  }
+
+  return NextResponse.redirect(`${origin}${to ?? '/profil'}`)
 }

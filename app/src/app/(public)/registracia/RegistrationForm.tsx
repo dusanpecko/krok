@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { User2, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, MailCheck, Loader2, ArrowDown } from 'lucide-react'
 import Link from 'next/link'
 import DonationSection from '@/components/public/DonationSection'
+import { getRegistrationFormOptions } from './actions'
+import { NO_PARISH } from '@/lib/parishes/constants'
 
 // Tmavé polia formulára v štýle webu (rovnaké ako kontaktný formulár)
 const inputCls =
@@ -32,6 +34,13 @@ export default function RegistrationForm() {
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [consent, setConsent] = useState(false)
+  // Farnosť (povinná voľba – aj „nepatrím do farnosti“) a podporovaný projekt (nepovinné)
+  const [parishId, setParishId] = useState('')
+  const [projectId, setProjectId] = useState('')
+  const [options, setOptions] = useState<{ parishes: { id: string; name: string }[]; projects: { id: string; name: string }[] }>({ parishes: [], projects: [] })
+  useEffect(() => {
+    getRegistrationFormOptions().then(setOptions).catch(() => {})
+  }, [])
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -58,6 +67,10 @@ export default function RegistrationForm() {
       setError('Heslá sa nezhodujú.')
       return
     }
+    if (!parishId) {
+      setError('Vyberte svoju farnosť, prípadne možnosť „Nepatrím do žiadnej farnosti“.')
+      return
+    }
     if (!consent) {
       setError('Pre registráciu je potrebný súhlas so spracovaním osobných údajov.')
       return
@@ -71,7 +84,8 @@ export default function RegistrationForm() {
         email: email.trim().toLowerCase(),
         password,
         options: {
-          data: { first_name: fn, last_name: ln, full_name: `${fn} ${ln}` },
+          // farnosť a projekt overí server pri založení profilu (getCurrentDonor)
+          data: { first_name: fn, last_name: ln, full_name: `${fn} ${ln}`, parish_id: parishId, project_id: projectId || null },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
@@ -232,6 +246,25 @@ export default function RegistrationForm() {
                 <input id="reg-pass2" type={showPassword ? 'text' : 'password'} value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
                   className={`${inputCls} pl-10 pr-4`} placeholder="Zopakujte heslo" required autoComplete="new-password" />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="reg-parish" className={labelCls}>Moja farnosť <span className="text-gold-bright">*</span></label>
+              <select id="reg-parish" value={parishId} onChange={(e) => setParishId(e.target.value)} required
+                className={`${inputCls} px-4 cursor-pointer`}>
+                <option value="" className="bg-blue-deep">Vyberte farnosť…</option>
+                {options.parishes.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
+                <option value={NO_PARISH} className="bg-blue-deep">Nepatrím do žiadnej farnosti / podporujem projekt</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="reg-project" className={labelCls}>Podporujem projekt <span className="normal-case tracking-normal font-medium text-zinc-500">(nepovinné)</span></label>
+              <select id="reg-project" value={projectId} onChange={(e) => setProjectId(e.target.value)}
+                className={`${inputCls} px-4 cursor-pointer`}>
+                <option value="" className="bg-blue-deep">Fond KROK všeobecne</option>
+                {options.projects.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
+              </select>
             </div>
 
             <label className="flex items-start gap-3 cursor-pointer">

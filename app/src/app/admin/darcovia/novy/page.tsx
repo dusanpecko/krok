@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import DonorForm from '@/components/admin/donors/DonorForm'
-import { createDonor, generateNextVS } from '../actions'
+import { createDonor } from '../actions'
 import { ChevronRight, Home, Users } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -19,8 +19,6 @@ export default async function NewDonorPage() {
     .select('id, name')
     .order('name')
 
-  // 2. Pre-generate next VS for display placeholder (though it will be re-generated on save)
-  const nextVS = await generateNextVS()
 
   // 3. Define the save action
   const handleSave = async (data: any) => {

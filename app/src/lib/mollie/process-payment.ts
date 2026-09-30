@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { allocateDonorVs } from '@/lib/donors/vs'
 import type { Payment } from '@mollie/api-client'
 import { formatMollieAmount, getMollieClient, getMollieMode, getWebhookUrl } from './client'
 
@@ -139,11 +140,7 @@ async function ensureDonor(
   const firstName = nameParts[0] || 'Darca'
   const lastName = nameParts.slice(1).join(' ') || (nameParts[0] ? '' : 'online') || 'online'
 
-  const { data: vsData } = await admin.from('donors').select('variable_symbol').not('variable_symbol', 'is', null)
-  const maxVS = (vsData || []).reduce((max: number, d: { variable_symbol: string | null }) => {
-    const num = parseInt(d.variable_symbol || '0', 10)
-    return num > max ? num : max
-  }, 11771451)
+  const vs = await allocateDonorVs(admin)
 
   const { data: created, error } = await admin
     .from('donors')
@@ -152,7 +149,7 @@ async function ensureDonor(
       email,
       first_name: firstName,
       last_name: lastName,
-      variable_symbol: String(maxVS + 1),
+      variable_symbol: vs,
       parish_id: ident.parish_id || null,
       donor_type: 'individual',
       status: 'active',

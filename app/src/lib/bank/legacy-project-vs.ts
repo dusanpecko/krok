@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { allocateDonorVs } from '@/lib/donors/vs'
 
 /**
  * Párovanie darov prevodom podľa VS výzvy zo starého webu (rad 1177xxxx).
@@ -314,19 +315,8 @@ export async function createLegacyPayerResolver(
     return (withIban ?? []) as { id: string; iban: string | null }[]
   }
 
-  // VS pre nových darcov (rovnako ako registrácia / Mollie: max + 1)
-  let nextVs: number | null = null
-  const allocateVs = async () => {
-    if (nextVs === null) {
-      const { data: vsData } = await admin.from('donors').select('variable_symbol').not('variable_symbol', 'is', null)
-      nextVs = (vsData ?? []).reduce((max: number, d: { variable_symbol: string | null }) => {
-        const n = parseInt(d.variable_symbol || '0', 10)
-        return n > max ? n : max
-      }, 11771451)
-    }
-    nextVs += 1
-    return String(nextVs)
-  }
+  // VS pre nových darcov – atomicky cez DB sekvenciu (migrácia 032)
+  const allocateVs = () => allocateDonorVs(admin)
 
   let anonymousId: string | null | undefined
 

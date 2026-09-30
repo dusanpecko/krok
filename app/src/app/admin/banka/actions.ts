@@ -8,6 +8,7 @@ import { runFioSync } from '@/lib/bank/fio-sync'
 import { MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
 import { computeProjectHint, type HintProject } from '@/lib/bank/project-hint'
 import { loadProjectLegacyVsMap, loadPseudoDonorIds, normalizeIban, SHARED_PAYER_IBANS } from '@/lib/bank/legacy-project-vs'
+import { allocateDonorVs } from '@/lib/donors/vs'
 import { extractPdfText, parsePostStatementText, splitPostAddress, splitPostName } from '@/lib/bank/post-statement'
 
 /** Rozúčtovaná hromadná platba (inkaso pošty) – dary sú v donations.source_bank_transaction_id */
@@ -832,14 +833,12 @@ export async function savePostSplit(
   if (rows.some((r) => !(Number(r.amount) > 0) || !/^\d{10}$/.test(r.ecp))) return { success: false, error: 'Neplatný riadok rozúčtovania.' }
 
   let created = 0
-  let nextVs: number | null = null
   const donorIds: string[] = []
 
   for (const r of rows) {
     let donorId = r.donorId
     if (donorId === 'new') {
-      if (nextVs === null) nextVs = Number(await generateNextDonorVs())
-      else nextVs += 1
+      const vs = await allocateDonorVs(supabaseAdmin)
       const { first, last, titleBefore } = splitPostName(r.name)
       const { city, street } = splitPostAddress(r.address)
       const { data: d, error } = await supabaseAdmin
@@ -850,7 +849,7 @@ export async function savePostSplit(
           title_before: titleBefore,
           city,
           street,
-          variable_symbol: String(nextVs),
+          variable_symbol: vs,
           post_ecp: r.ecp,
           donor_type: 'individual',
           status: 'active',
@@ -897,13 +896,4 @@ export async function savePostSplit(
   revalidatePath('/admin/banka')
   revalidatePath('/admin/darcovia')
   return { success: true, count: rows.length, created }
-}
-
-async function generateNextDonorVs(): Promise<string> {
-  const { data } = await supabaseAdmin.from('donors').select('variable_symbol').not('variable_symbol', 'is', null)
-  const max = (data ?? []).reduce((m: number, d: { variable_symbol: string | null }) => {
-    const n = parseInt(d.variable_symbol || '0', 10)
-    return n > m ? n : m
-  }, 11771451)
-  return String(max + 1)
 }

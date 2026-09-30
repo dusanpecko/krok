@@ -6,32 +6,17 @@ import { requirePermission } from '@/lib/auth'
 import * as ExcelJS from 'exceljs'
 import { fetchDonorList, parseDonorListParams, type DonorListRow } from './donor-query'
 import { claimBankPaymentsByVs } from '@/lib/bank/claim-by-vs'
+import { allocateDonorVs } from '@/lib/donors/vs'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
-/**
- * Generates the next Variable Symbol based on the highest existing VS.
- * Format: Increment from 11771451
- */
+/** Nový VS darcu – atomicky cez DB sekvenciu (migrácia 032). */
 export async function generateNextVS() {
   await requirePermission('view_donors')
-  const supabase = await createClient()
-  
-  // Find the highest numeric VS
-  const { data, error } = await supabase
-    .from('donors')
-    .select('variable_symbol')
-    .not('variable_symbol', 'is', null)
+  return allocateDonorVs(serviceClient())
+}
 
-  if (error) {
-    console.error('Error fetching VS:', error)
-    return '11771452' // Fallback
-  }
-
-  const maxVS = data.reduce((max, d) => {
-    const num = parseInt(d.variable_symbol || '0')
-    return num > max ? num : max
-  }, 11771451)
-
-  return (maxVS + 1).toString()
+function serviceClient() {
+  return createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
 export async function updateDonor(id: string, data: any) {

@@ -1,4 +1,5 @@
-import { getCurrentDonor, getDonorDonations } from './actions'
+import { redirect } from 'next/navigation'
+import { donorNeedsOnboarding, getCurrentDonor, getDonorDonations } from './actions'
 import { getRegistrationFormOptions } from '../registracia/actions'
 import { getMyOnlineSubscriptions } from '../platby/actions'
 import ProfileContent from '@/components/public/ProfileContent'
@@ -20,6 +21,9 @@ export default async function ProfilePage() {
     )
   }
 
+  // Brána: kto ešte nepotvrdil farnosť / projekt, ide najprv na výber (aj po Google registrácii)
+  if (await donorNeedsOnboarding(donor)) redirect('/profil/vitajte')
+
   const [donations, options, subscriptions] = await Promise.all([
     getDonorDonations(donor.id),
     getRegistrationFormOptions(),
@@ -28,7 +32,13 @@ export default async function ProfilePage() {
 
   return (
     <div className="bg-blue-deep min-h-screen">
-      <ProfileContent donor={donor} donations={donations} subscriptions={subscriptions} />
+      <ProfileContent
+        donor={donor}
+        donations={donations}
+        subscriptions={subscriptions}
+        parishes={options.parishes}
+        projects={options.projects}
+      />
       <ProfileCompletionModal
         donor={donor}
         parishes={options.parishes}

@@ -61,8 +61,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Ochrana darcovskej zóny (/profil)
-  if (request.nextUrl.pathname.startsWith('/profil') && !user) {
+  // Ochrana darcovskej zóny (/profil) a zóny farnosti (/moja-farnost – členstvo overuje server)
+  if ((request.nextUrl.pathname.startsWith('/profil') || request.nextUrl.pathname.startsWith('/moja-farnost')) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/prihlasenie'
     url.searchParams.set('redirect', request.nextUrl.pathname)

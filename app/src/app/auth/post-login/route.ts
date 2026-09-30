@@ -2,11 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { getUserAccess } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { donorNeedsOnboarding, getCurrentDonor } from '@/app/(public)/profil/actions'
+import { getMyParishes } from '@/lib/parishes/access'
 
 /**
  * Rozhodne, kam presmerovať používateľa po prihlásení (email aj Google).
  *
  * - Admin / pracovník (má rolu) → bezpečný `to`, inak /admin.
+ * - Účet farnosti (parish_users, bez admin roly) → bezpečný `to`, inak /moja-farnost.
  * - Darca → profil sa tu aj založí (getCurrentDonor). Ak ešte nepotvrdil farnosť / projekt,
  *   ide najprv na /profil/vitajte (aj pri Google registrácii, ktorá nemá formulár).
  *   Onboarding je PRED `to`, aby sa nedal obísť odkazom `?to=/profil`; `to` sa nesie ďalej.
@@ -31,6 +33,12 @@ export async function GET(request: Request) {
   const { isAdmin, roles } = await getUserAccess(user.id)
   if (isAdmin || roles.length > 0) {
     return NextResponse.redirect(`${origin}${to ?? '/admin'}`)
+  }
+
+  // Kňaz / farnosť – nie je darca, onboarding farnosti darcu sa ho netýka
+  const myParishes = await getMyParishes(user.id)
+  if (myParishes.length > 0) {
+    return NextResponse.redirect(`${origin}${to ?? '/moja-farnost'}`)
   }
 
   const donor = await getCurrentDonor()

@@ -4,16 +4,16 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth'
 import { generateSlug } from '@/lib/slug'
+import { loadParishDetail } from '@/lib/parishes/load'
+import { logParishChange, writeSchedule, writeVillages } from '@/lib/parishes/writes'
+import { FIELD_LABEL, PROTECTED_PARISH_FIELDS, normalizeParishValue } from '@/lib/parishes/fields'
+import { getBaseUrl } from '@/lib/mollie/client'
 import {
   PARISH_EDITABLE_FIELDS,
   type ClergyMember,
   type ParishDetail,
   type ParishListItem,
-  type ParishRow,
-  type ParishSeason,
-  type ParishYearSummary,
   type Schedule,
-  type ScheduleItem,
   type VillageWithStats,
 } from '@/lib/parishes/types'
 
@@ -108,77 +108,9 @@ export async function getDeaneryOptions(): Promise<{ id: string; name: string }[
 
 // ------------------------------------------------------------ detail
 
-const emptySchedule = (season: ParishSeason): Schedule => ({
-  season,
-  is_active: season === 'regular',
-  valid_from: season === 'summer' ? `${new Date().getFullYear()}-07-01` : null,
-  valid_to: season === 'summer' ? `${new Date().getFullYear()}-08-31` : null,
-  note: null,
-  items: [],
-})
-
 export async function getParishForAdmin(id: string): Promise<ParishDetail | null> {
   await requirePermission(PERM)
-  const admin = db()
-  const { data: parish } = await admin.from('parishes').select('*').eq('id', id).maybeSingle()
-  if (!parish) return null
-
-  const [{ data: villages }, { data: schedules }, { data: clergy }, { data: summary }, { count: donorsCount }, { data: logRows }] = await Promise.all([
-    admin.from('parish_villages').select('id, name, is_seat, district, church_name, has_church, sort_order, parish_population_stats(year, population, catholics, source)').eq('parish_id', id).order('sort_order'),
-    admin.from('parish_schedules').select('id, season, is_active, valid_from, valid_to, note, parish_schedule_items(*)').eq('parish_id', id),
-    admin.from('parish_clergy').select('*').eq('parish_id', id).order('sort_order'),
-    admin.from('v_parish_year_summary').select('*').eq('parish_id', id).order('year', { ascending: false }),
-    admin.from('donors').select('id', { count: 'exact', head: true }).eq('parish_id', id),
-    admin.from('parish_change_log').select('id, action, entity, changes, created_at, user_id').eq('parish_id', id).order('created_at', { ascending: false }).limit(30),
-  ])
-
-  const schedMap: Record<ParishSeason, Schedule> = { regular: emptySchedule('regular'), summer: emptySchedule('summer') }
-  for (const s of schedules ?? []) {
-    const items = ((s.parish_schedule_items ?? []) as (ScheduleItem & { sort_order: number; schedule_id: string })[])
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map(({ sort_order: _o, schedule_id: _s, ...it }) => {
-        void _o
-        void _s
-        return { ...it, time_from: it.time_from?.slice(0, 5) ?? null, time_to: it.time_to?.slice(0, 5) ?? null }
-      })
-    schedMap[s.season as ParishSeason] = { season: s.season, is_active: s.is_active, valid_from: s.valid_from, valid_to: s.valid_to, note: s.note, items }
-  }
-
-  // E-maily autorov zmien v histórii
-  const userIds = [...new Set((logRows ?? []).map((l) => l.user_id).filter(Boolean) as string[])]
-  const emails = new Map<string, string>()
-  for (const uid of userIds) {
-    const { data } = await admin.auth.admin.getUserById(uid)
-    if (data?.user?.email) emails.set(uid, data.user.email)
-  }
-
-  return {
-    parish: parish as ParishRow,
-    villages: (villages ?? []).map((v) => {
-      const st = ((v.parish_population_stats ?? []) as { year: number; population: number | null; catholics: number | null; source: string | null }[]).find((s) => s.year === STATS_YEAR)
-      return {
-        id: v.id,
-        name: v.name,
-        is_seat: v.is_seat,
-        district: v.district,
-        church_name: v.church_name,
-        has_church: v.has_church,
-        population: st?.population ?? null,
-        catholics: st?.catholics ?? null,
-        source: st?.source ?? null,
-      }
-    }),
-    schedules: schedMap,
-    clergy: (clergy ?? []) as ClergyMember[],
-    summary: ((summary ?? []) as ParishYearSummary[]).map((s) => ({
-      ...s,
-      prescribed_amount: s.prescribed_amount != null ? Number(s.prescribed_amount) : null,
-      collected_amount: Number(s.collected_amount),
-      fulfillment_pct: s.fulfillment_pct != null ? Number(s.fulfillment_pct) : null,
-    })),
-    donorsCount: donorsCount ?? 0,
-    log: (logRows ?? []).map((l) => ({ id: l.id, action: l.action, entity: l.entity, changes: l.changes, created_at: l.created_at, user_email: l.user_id ? emails.get(l.user_id) ?? null : null })),
-  }
+  return loadParishDetail(db(), id)
 }
 
 // ------------------------------------------------------------ zápis
@@ -254,33 +186,9 @@ export async function createParish(input: { name: string; kind: string; deanery_
 export async function saveVillages(parishId: string, villages: VillageWithStats[]): Promise<Result> {
   const { user } = await requirePermission(PERM)
   const admin = db()
-  const clean = villages
-    .map((v) => ({ ...v, name: v.name.trim() }))
-    .filter((v) => v.name)
-  const names = clean.map((v) => v.name.toLowerCase())
-  if (new Set(names).size !== names.length) return { success: false, error: 'Názvy obcí sa nesmú opakovať.' }
-
-  const { data: existing } = await admin.from('parish_villages').select('id').eq('parish_id', parishId)
-  const keepIds = new Set(clean.map((v) => v.id).filter(Boolean) as string[])
-  const removeIds = (existing ?? []).map((e) => e.id as string).filter((id) => !keepIds.has(id))
-  if (removeIds.length) await admin.from('parish_villages').delete().in('id', removeIds)
-
-  for (const [i, v] of clean.entries()) {
-    const row = { parish_id: parishId, name: v.name, is_seat: i === 0 || v.is_seat, district: v.district || null, church_name: v.church_name || null, has_church: v.has_church, sort_order: i }
-    const { data: saved, error } = v.id
-      ? await admin.from('parish_villages').update(row).eq('id', v.id).select('id').single()
-      : await admin.from('parish_villages').insert(row).select('id').single()
-    if (error || !saved) return { success: false, error: `Obec „${v.name}“: uloženie zlyhalo.` }
-    if (v.population != null || v.catholics != null) {
-      await admin
-        .from('parish_population_stats')
-        .upsert({ village_id: saved.id, year: STATS_YEAR, population: v.population, catholics: v.catholics, source: v.source || 'ručne' }, { onConflict: 'village_id,year' })
-    } else {
-      await admin.from('parish_population_stats').delete().eq('village_id', saved.id).eq('year', STATS_YEAR)
-    }
-  }
-
-  await log(parishId, user.id, 'population', 'admin_update', { villages: clean.map((v) => `${v.name}: ${v.catholics ?? '–'}/${v.population ?? '–'}`) })
+  const res = await writeVillages(admin, parishId, villages)
+  if (!res.success) return res
+  await logParishChange(admin, parishId, user.id, 'population', 'admin_update', { villages: villages.filter((v) => v.name.trim()).map((v) => `${v.name}: ${v.catholics ?? '–'}/${v.population ?? '–'}`) })
   revalidatePath(`/admin/farnosti/${parishId}`)
   revalidatePath('/admin/farnosti')
   return { success: true }
@@ -290,43 +198,9 @@ export async function saveVillages(parishId: string, villages: VillageWithStats[
 export async function saveSchedule(parishId: string, schedule: Schedule): Promise<Result> {
   const { user } = await requirePermission(PERM)
   const admin = db()
-  const items = schedule.items.filter((it) => it.day_of_week != null || it.day_label)
-  for (const it of items) {
-    if (!it.time_from && !it.relative_note) return { success: false, error: 'Každá položka potrebuje čas alebo poznámku (napr. „30 minút pred sv. omšou“).' }
-    if (it.time_to && it.time_from && it.time_to < it.time_from) return { success: false, error: 'Koniec nesmie byť skôr ako začiatok.' }
-  }
-
-  const { data: sched, error } = await admin
-    .from('parish_schedules')
-    .upsert(
-      { parish_id: parishId, season: schedule.season, is_active: schedule.is_active, valid_from: schedule.valid_from || null, valid_to: schedule.valid_to || null, note: schedule.note || null, updated_at: new Date().toISOString(), updated_by: user.id },
-      { onConflict: 'parish_id,season' }
-    )
-    .select('id')
-    .single()
-  if (error || !sched) return { success: false, error: 'Uloženie rozvrhu zlyhalo.' }
-
-  await admin.from('parish_schedule_items').delete().eq('schedule_id', sched.id)
-  if (items.length) {
-    const { error: itemsErr } = await admin.from('parish_schedule_items').insert(
-      items.map((it, i) => ({
-        schedule_id: sched.id,
-        service_type: it.service_type,
-        occasion: it.occasion,
-        day_of_week: it.day_of_week,
-        day_label: it.day_label || null,
-        time_from: it.time_from || null,
-        time_to: it.time_to || null,
-        relative_note: it.relative_note || null,
-        note: it.note || null,
-        village_id: it.village_id || null,
-        sort_order: i,
-      }))
-    )
-    if (itemsErr) return { success: false, error: 'Uloženie položiek rozvrhu zlyhalo.' }
-  }
-
-  await log(parishId, user.id, 'schedule', 'admin_update', { season: schedule.season, items: items.length, is_active: schedule.is_active })
+  const res = await writeSchedule(admin, parishId, schedule, user.id)
+  if (!res.success) return res
+  await logParishChange(admin, parishId, user.id, 'schedule', 'admin_update', { season: schedule.season, items: schedule.items.length, is_active: schedule.is_active })
   revalidatePath(`/admin/farnosti/${parishId}`)
   return { success: true }
 }
@@ -356,5 +230,193 @@ export async function saveClergy(parishId: string, clergy: ClergyMember[]): Prom
   }
   await log(parishId, user.id, 'clergy', 'admin_update', { clergy: clean.map((c) => `${c.full_name} (${c.position})`) })
   revalidatePath(`/admin/farnosti/${parishId}`)
+  return { success: true }
+}
+
+
+// ------------------------------------------------------------ prístupy farnosti (§ 5.1, O7)
+
+export interface ParishAccessRow {
+  user_id: string
+  email: string | null
+  role: 'admin' | 'editor'
+  position: string | null
+  invited_at: string | null
+  accepted_at: string | null
+}
+
+export async function getParishAccess(parishId: string): Promise<ParishAccessRow[]> {
+  await requirePermission(PERM)
+  const admin = db()
+  const { data } = await admin.from('parish_users').select('user_id, role, position, invited_at, accepted_at').eq('parish_id', parishId)
+  const rows: ParishAccessRow[] = []
+  for (const r of data ?? []) {
+    const { data: u } = await admin.auth.admin.getUserById(r.user_id)
+    rows.push({ ...r, email: u?.user?.email ?? null } as ParishAccessRow)
+  }
+  return rows
+}
+
+async function findAuthUserByEmail(admin: ReturnType<typeof db>, email: string) {
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+    if (error) return null
+    const u = data.users.find((x) => x.email?.toLowerCase() === email)
+    if (u) return u
+    if (data.users.length < 200) return null
+  }
+  return null
+}
+
+/**
+ * Pridelí farnosti účet (diecéza). Existujúci používateľ dostane prístup hneď;
+ * inak Supabase pošle pozvánku e-mailom (nastavenie hesla → /moja-farnost).
+ * Admin účet je pre farnosť práve jeden (uq_parish_admin) – predošlý sa zmení na editora.
+ */
+export async function grantParishAccess(parishId: string, input: { email: string; role: 'admin' | 'editor'; position?: string }): Promise<Result<{ invited: boolean }>> {
+  const { user } = await requirePermission(PERM)
+  const admin = db()
+  const email = input.email?.trim().toLowerCase()
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Zadajte platný e-mail.' }
+  const role = input.role === 'editor' ? 'editor' : 'admin'
+
+  let authUser = await findAuthUserByEmail(admin, email)
+  let invited = false
+  if (!authUser) {
+    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${getBaseUrl()}/auth/callback?redirect=${encodeURIComponent('/moja-farnost')}`,
+    })
+    if (error || !data?.user) return { success: false, error: `Pozvánku sa nepodarilo odoslať: ${error?.message ?? 'neznáma chyba'}` }
+    authUser = data.user
+    invited = true
+  }
+
+  if (role === 'admin') await admin.from('parish_users').update({ role: 'editor' }).eq('parish_id', parishId).eq('role', 'admin').neq('user_id', authUser.id)
+  const { error } = await admin.from('parish_users').upsert(
+    { parish_id: parishId, user_id: authUser.id, role, position: input.position?.trim() || null, invited_by: user.id, invited_at: new Date().toISOString() },
+    { onConflict: 'parish_id,user_id' }
+  )
+  if (error) return { success: false, error: 'Pridelenie prístupu zlyhalo.' }
+  await logParishChange(admin, parishId, user.id, 'access', 'admin_update', { granted: [null, `${email} (${role})`], invited })
+  revalidatePath(`/admin/farnosti/${parishId}`)
+  return { success: true, invited }
+}
+
+export async function revokeParishAccess(parishId: string, userId: string): Promise<Result> {
+  const { user } = await requirePermission(PERM)
+  const admin = db()
+  const { data: u } = await admin.auth.admin.getUserById(userId)
+  await admin.from('parish_users').delete().eq('parish_id', parishId).eq('user_id', userId)
+  await logParishChange(admin, parishId, user.id, 'access', 'admin_update', { revoked: [u?.user?.email ?? userId, null] })
+  revalidatePath(`/admin/farnosti/${parishId}`)
+  return { success: true }
+}
+
+// ------------------------------------------------------------ návrhy zmien od farností (§ 3.6)
+
+export interface ChangeRequestRow {
+  id: string
+  parish_id: string
+  parish_name: string
+  entity: string
+  payload: Record<string, unknown>
+  /** pre entity 'parish': aktuálne hodnoty navrhovaných polí */
+  current: Record<string, unknown>
+  status: 'pending' | 'approved' | 'rejected'
+  submitted_at: string
+  submitted_by_email: string | null
+  review_note: string | null
+}
+
+export async function getChangeRequests(opts: { status?: 'pending' | 'all'; parishId?: string } = {}): Promise<ChangeRequestRow[]> {
+  await requirePermission(PERM)
+  const admin = db()
+  let q = admin.from('parish_change_requests').select('*, parishes(name, official_name)').order('submitted_at', { ascending: false }).limit(100)
+  if ((opts.status ?? 'pending') === 'pending') q = q.eq('status', 'pending')
+  if (opts.parishId) q = q.eq('parish_id', opts.parishId)
+  const { data } = await q
+  const out: ChangeRequestRow[] = []
+  for (const r of (data ?? []) as (Record<string, unknown> & { parishes: { name: string; official_name: string | null } | null })[]) {
+    let current: Record<string, unknown> = {}
+    if (r.entity === 'parish') {
+      const fields = Object.keys(r.payload as object).filter((f) => (PROTECTED_PARISH_FIELDS as readonly string[]).includes(f))
+      if (fields.length) {
+        const { data: p } = await admin.from('parishes').select(fields.join(',')).eq('id', r.parish_id as string).maybeSingle()
+        current = (p ?? {}) as unknown as Record<string, unknown>
+      }
+    } else if (r.entity === 'population') {
+      const { data: v } = await admin.from('parish_villages').select('name, parish_population_stats(catholics, population)').eq('parish_id', r.parish_id as string).order('sort_order')
+      current = { villages: (v ?? []).map((x) => `${x.name}: ${(x.parish_population_stats as { catholics: number | null }[])?.[0]?.catholics ?? '–'}`) }
+    }
+    const { data: u } = r.submitted_by ? await admin.auth.admin.getUserById(r.submitted_by as string) : { data: null }
+    out.push({
+      id: r.id as string,
+      parish_id: r.parish_id as string,
+      parish_name: r.parishes?.official_name ?? r.parishes?.name ?? '',
+      entity: r.entity as string,
+      payload: r.payload as Record<string, unknown>,
+      current,
+      status: r.status as ChangeRequestRow['status'],
+      submitted_at: r.submitted_at as string,
+      submitted_by_email: u?.user?.email ?? null,
+      review_note: (r.review_note as string | null) ?? null,
+    })
+  }
+  return out
+}
+
+export async function countPendingChangeRequests(): Promise<number> {
+  await requirePermission(PERM)
+  const { count } = await db().from('parish_change_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+  return count ?? 0
+}
+
+/** Schválenie návrhu – premietne payload do registra a zapíše audit. */
+export async function approveChangeRequest(id: string): Promise<Result> {
+  const { user } = await requirePermission(PERM)
+  const admin = db()
+  const { data: r } = await admin.from('parish_change_requests').select('*').eq('id', id).maybeSingle()
+  if (!r || r.status !== 'pending') return { success: false, error: 'Návrh sa nenašiel alebo už bol vybavený.' }
+
+  if (r.entity === 'parish') {
+    const patch: Record<string, unknown> = {}
+    const changes: Record<string, [unknown, unknown]> = {}
+    const fields = Object.keys(r.payload).filter((f) => (PROTECTED_PARISH_FIELDS as readonly string[]).includes(f))
+    const { data: before } = await admin.from('parishes').select(fields.join(',') || 'id').eq('id', r.parish_id).maybeSingle()
+    for (const f of fields) {
+      const { value, error } = normalizeParishValue(f, r.payload[f])
+      if (error) return { success: false, error: `${FIELD_LABEL[f] ?? f}: ${error}` }
+      patch[f] = value
+      changes[f] = [(before as unknown as Record<string, unknown> | null)?.[f] ?? null, value]
+    }
+    if (Object.keys(patch).length) {
+      const { error } = await admin.from('parishes').update({ ...patch, profile_updated_at: new Date().toISOString(), profile_updated_by: user.id }).eq('id', r.parish_id)
+      if (error) return { success: false, error: 'Zmenu sa nepodarilo premietnuť.' }
+    }
+    await logParishChange(admin, r.parish_id, user.id, 'parish', 'approve', changes)
+  } else if (r.entity === 'population') {
+    const res = await writeVillages(admin, r.parish_id, (r.payload.villages ?? []) as VillageWithStats[], 'návrh farnosti')
+    if (!res.success) return res
+    await logParishChange(admin, r.parish_id, user.id, 'population', 'approve', { request: id })
+  } else {
+    return { success: false, error: 'Neznámy typ návrhu.' }
+  }
+
+  await admin.from('parish_change_requests').update({ status: 'approved', reviewed_by: user.id, reviewed_at: new Date().toISOString() }).eq('id', id)
+  revalidatePath('/admin/farnosti/schvalovanie')
+  revalidatePath(`/admin/farnosti/${r.parish_id}`)
+  return { success: true }
+}
+
+export async function rejectChangeRequest(id: string, note: string): Promise<Result> {
+  const { user } = await requirePermission(PERM)
+  const admin = db()
+  if (!note?.trim()) return { success: false, error: 'Uveďte dôvod zamietnutia – farnosť ho uvidí.' }
+  const { data: r } = await admin.from('parish_change_requests').select('parish_id, status, entity').eq('id', id).maybeSingle()
+  if (!r || r.status !== 'pending') return { success: false, error: 'Návrh sa nenašiel alebo už bol vybavený.' }
+  await admin.from('parish_change_requests').update({ status: 'rejected', reviewed_by: user.id, reviewed_at: new Date().toISOString(), review_note: note.trim() }).eq('id', id)
+  await logParishChange(admin, r.parish_id, user.id, r.entity, 'reject', { request: id, note: note.trim() })
+  revalidatePath('/admin/farnosti/schvalovanie')
+  revalidatePath(`/admin/farnosti/${r.parish_id}`)
   return { success: true }
 }

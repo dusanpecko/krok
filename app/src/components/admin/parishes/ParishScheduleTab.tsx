@@ -27,10 +27,13 @@ export default function ParishScheduleTab({
   parishId,
   schedules,
   villages,
+  save: saveAction = saveSchedule,
 }: {
   parishId: string
   schedules: Record<ParishSeason, Schedule>
   villages: VillageWithStats[]
+  /** Uloženie – admin (predvolené) alebo zóna farnosti */
+  save?: (parishId: string, schedule: Schedule) => Promise<{ success: true } | { success: false; error: string }>
 }) {
   const router = useRouter()
   const [season, setSeason] = useState<ParishSeason>('regular')
@@ -54,7 +57,7 @@ export default function ParishScheduleTab({
   const save = () =>
     startTransition(async () => {
       setMsg(null)
-      const res = await saveSchedule(parishId, current)
+      const res = await saveAction(parishId, current)
       if (res.success) {
         setMsg({ kind: 'success', text: season === 'regular' ? 'Rozvrh „cez rok“ bol uložený.' : 'Letný rozvrh bol uložený.' })
         router.refresh()

@@ -9,8 +9,10 @@ import ParishVillagesTab from './ParishVillagesTab'
 import ParishScheduleTab from './ParishScheduleTab'
 import ParishClergyTab from './ParishClergyTab'
 import ParishDonationsTab from './ParishDonationsTab'
+import ParishAccessTab from './ParishAccessTab'
+import type { ChangeRequestRow, ParishAccessRow } from '@/app/admin/farnosti/actions'
 
-type TabKey = 'basic' | 'villages' | 'schedule' | 'clergy' | 'donations'
+type TabKey = 'basic' | 'villages' | 'schedule' | 'clergy' | 'donations' | 'access'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'basic', label: 'Základné údaje' },
@@ -18,9 +20,20 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'schedule', label: 'Bohoslužby' },
   { key: 'clergy', label: 'Kňazi' },
   { key: 'donations', label: 'Dary a história' },
+  { key: 'access', label: 'Prístupy a návrhy' },
 ]
 
-export default function ParishDetailView({ detail, deaneries }: { detail: ParishDetail; deaneries: { id: string; name: string }[] }) {
+export default function ParishDetailView({
+  detail,
+  deaneries,
+  access,
+  requests,
+}: {
+  detail: ParishDetail
+  deaneries: { id: string; name: string }[]
+  access: ParishAccessRow[]
+  requests: ChangeRequestRow[]
+}) {
   const [tab, setTab] = useState<TabKey>('basic')
   const { parish } = detail
   const catholics = detail.villages.reduce((a, v) => a + (v.catholics ?? 0), 0)
@@ -66,6 +79,9 @@ export default function ParishDetailView({ detail, deaneries }: { detail: Parish
             className={`px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${tab === t.key ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
           >
             {t.label}
+            {t.key === 'access' && requests.some((r) => r.status === 'pending') && (
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-amber-400 text-white text-[10px]">{requests.filter((r) => r.status === 'pending').length}</span>
+            )}
           </button>
         ))}
       </div>
@@ -75,6 +91,7 @@ export default function ParishDetailView({ detail, deaneries }: { detail: Parish
       {tab === 'schedule' && <ParishScheduleTab parishId={parish.id} schedules={detail.schedules} villages={detail.villages} />}
       {tab === 'clergy' && <ParishClergyTab parishId={parish.id} initial={detail.clergy} />}
       {tab === 'donations' && <ParishDonationsTab summary={detail.summary} log={detail.log} donorsCount={detail.donorsCount} />}
+      {tab === 'access' && <ParishAccessTab parishId={parish.id} access={access} requests={requests} defaultEmail={parish.email} />}
     </div>
   )
 }

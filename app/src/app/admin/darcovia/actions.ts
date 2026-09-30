@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth'
 import * as ExcelJS from 'exceljs'
 import { fetchDonorList, parseDonorListParams, type DonorListRow } from './donor-query'
+import { claimBankPaymentsByVs } from '@/lib/bank/claim-by-vs'
 
 /**
  * Generates the next Variable Symbol based on the highest existing VS.
@@ -37,6 +38,10 @@ export async function updateDonor(id: string, data: any) {
   await requirePermission('view_donors')
   const supabase = await createClient()
   
+  const vs = String(data.variable_symbol || '').trim() || null
+  const conflict = await vsConflictMessage(supabase, vs, id)
+  if (conflict) return { success: false, error: conflict }
+
   // 1. Update basic fields
   const { error: updateError } = await supabase
     .from('donors')
@@ -52,7 +57,7 @@ export async function updateDonor(id: string, data: any) {
       city: data.city || null,
       postal_code: data.postal_code || null,
       iban: data.iban || null,
-      variable_symbol: data.variable_symbol, // Read-only in UI, but kept in payload
+      variable_symbol: vs, // v UI zamknutý, dá sa odomknúť (ručne pridelený VS)
       parish_id: data.parish_id || null,
       donor_type: data.donor_type,
       status: data.status,
@@ -86,18 +91,38 @@ export async function updateDonor(id: string, data: any) {
     }
   }
 
+  // Doterajšie platby s VS darcu (nespárované / na anonymnom darcovi) → k darcovi
+  const claimed = await claimBankPaymentsByVs(id, vs)
+
   revalidatePath('/admin/darcovia')
   revalidatePath(`/admin/darcovia/${id}`)
+  if (claimed) revalidatePath('/admin/banka')
 
-  return { success: true }
+  return { success: true, claimed }
+}
+
+/** Zrozumiteľná chyba pri obsadenom VS (unikátny index donors_variable_symbol_key). */
+async function vsConflictMessage(supabase: Awaited<ReturnType<typeof createClient>>, vs: string | null | undefined, exceptId?: string) {
+  if (!vs) return null
+  let q = supabase.from('donors').select('id, first_name, last_name').eq('variable_symbol', vs)
+  if (exceptId) q = q.neq('id', exceptId)
+  const { data } = await q.limit(1).maybeSingle()
+  if (data) return `Variabilný symbol ${vs} už má darca ${data.first_name} ${data.last_name}.`
+  // VS môže byť aj „ďalší VS“ inej (zlúčenej) karty
+  let qa = supabase.from('donors').select('id, first_name, last_name').contains('alt_variable_symbols', [vs])
+  if (exceptId) qa = qa.neq('id', exceptId)
+  const { data: alt } = await qa.limit(1).maybeSingle()
+  return alt ? `Variabilný symbol ${vs} je ďalší VS darcu ${alt.first_name} ${alt.last_name}.` : null
 }
 
 export async function createDonor(data: any) {
   await requirePermission('view_donors')
   const supabase = await createClient()
   
-  // Generate VS if not provided
-  const vs = data.variable_symbol || await generateNextVS()
+  // Generate VS if not provided (ručne zadaný VS – napr. už pridelený darcovi – sa zachová)
+  const vs = String(data.variable_symbol || '').trim() || await generateNextVS()
+  const conflict = await vsConflictMessage(supabase, vs)
+  if (conflict) return { success: false, error: conflict }
 
   // Vyberieme project_ids pred insertom — nie je stĺpec v tabuľke donors
   const { project_ids, ...donorData } = data
@@ -126,8 +151,12 @@ export async function createDonor(data: any) {
     await supabase.from('donor_projects').insert(pData)
   }
 
+  // Doterajšie platby s týmto VS (nespárované / na anonymnom darcovi) → k novému darcovi
+  const claimed = await claimBankPaymentsByVs(newDonor.id, vs)
+
   revalidatePath('/admin/darcovia')
-  return { success: true, id: newDonor.id }
+  revalidatePath('/admin/banka')
+  return { success: true, id: newDonor.id, claimed }
 }
 
 export async function toggleDonorStatus(id: string, currentStatus: string) {

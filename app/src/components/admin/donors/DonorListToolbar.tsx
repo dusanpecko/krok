@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Download, FileSpreadsheet, FileText, Loader2, ChevronDown, Rows3 } from 'lucide-react'
 import { exportDonors } from '@/app/admin/darcovia/actions'
@@ -21,6 +21,22 @@ export default function DonorListToolbar({ shown, total, pageSize, pageSizes }: 
   const [menuOpen, setMenuOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Označení darcov (checkboxy v tabuľke) – ukladá ich DonorTable do localStorage
+  const [markedIds, setMarkedIds] = useState<string[]>([])
+  useEffect(() => {
+    const load = () => {
+      try {
+        const saved = localStorage.getItem('krok_selected_donors')
+        setMarkedIds(saved ? (JSON.parse(saved) as string[]) : [])
+      } catch {
+        setMarkedIds([])
+      }
+    }
+    load()
+    window.addEventListener('krok_selected_donors_changed', load)
+    return () => window.removeEventListener('krok_selected_donors_changed', load)
+  }, [])
+
   const changePageSize = (size: number) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('pageSize', String(size))
@@ -28,15 +44,26 @@ export default function DonorListToolbar({ shown, total, pageSize, pageSizes }: 
     startTransition(() => router.push(`/admin/darcovia?${params.toString()}`))
   }
 
-  const runExport = async (format: 'csv' | 'xlsx') => {
+  /** onlyMarked = exportujú sa len označení darcovia (bez ohľadu na ostatné filtre) */
+  const runExport = async (format: 'csv' | 'xlsx', onlyMarked = false) => {
     setMenuOpen(false)
     setExporting(format)
     setError(null)
     try {
       const raw: Record<string, string> = {}
-      searchParams.forEach((v, k) => {
-        raw[k] = v
-      })
+      if (onlyMarked) {
+        // len označení – radenie ponecháme, filtre nie
+        for (const k of ['sortBy', 'sortOrder']) {
+          const v = searchParams.get(k)
+          if (v) raw[k] = v
+        }
+        raw.selected = 'marked'
+        raw.ids = markedIds.join(',')
+      } else {
+        searchParams.forEach((v, k) => {
+          raw[k] = v
+        })
+      }
       const res = await exportDonors(raw, format)
       if (!res.success) {
         setError(res.error)
@@ -88,7 +115,7 @@ export default function DonorListToolbar({ shown, total, pageSize, pageSizes }: 
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            disabled={exporting !== null || total === 0}
+            disabled={exporting !== null || (total === 0 && markedIds.length === 0)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 rounded-xl text-sm font-bold transition-all cursor-pointer disabled:opacity-50"
           >
             {exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
@@ -98,7 +125,23 @@ export default function DonorListToolbar({ shown, total, pageSize, pageSizes }: 
           {menuOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                {markedIds.length > 0 && (
+                  <>
+                    <p className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-blue-600">
+                      Len označení ({markedIds.length})
+                    </p>
+                    <button type="button" onClick={() => runExport('xlsx', true)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer">
+                      <FileSpreadsheet size={16} className="text-emerald-600" />
+                      <span className="font-bold">Excel – označení</span>
+                    </button>
+                    <button type="button" onClick={() => runExport('csv', true)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer">
+                      <FileText size={16} className="text-blue-600" />
+                      <span className="font-bold">CSV – označení</span>
+                    </button>
+                    <div className="my-2 border-t border-gray-100" />
+                  </>
+                )}
                 <p className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400">
                   Exportuje sa {total} darcov podľa filtrov a radenia
                 </p>

@@ -25,6 +25,8 @@ interface Donor {
   id: string
   legacy_id?: string | null
   variable_symbol?: string | null
+  /** Ďalšie VS zo zlúčených kariet (len na zobrazenie) */
+  alt_variable_symbols?: string[] | null
   title_before?: string | null
   first_name: string
   last_name: string
@@ -113,7 +115,13 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
         project_ids: selectedProjectIds
       })
       if (result.success) {
-        setMessage({ type: 'success', text: 'Údaje darcu boli úspešne uložené.' })
+        const claimed = (result as { claimed?: number }).claimed
+        setMessage({
+          type: 'success',
+          text: claimed
+            ? `Údaje darcu boli uložené. K darcovi sa pripojilo ${claimed} doterajších platieb s jeho VS.`
+            : 'Údaje darcu boli úspešne uložené.',
+        })
         setTimeout(() => router.refresh(), 1000)
       } else {
         setMessage({ type: 'error', text: result.error || 'Nastala chyba pri ukladaní.' })
@@ -405,11 +413,25 @@ export default function DonorForm({ donor, parishes, projects, donations, onSave
                     {vsUnlocked ? <Unlock size={15} /> : <Lock size={15} />}
                   </button>
                 </div>
-                {vsUnlocked && (
+                {!!formData.alt_variable_symbols?.length && (
+                  <p className="text-[11px] text-gray-500">
+                    Ďalšie VS (zo zlúčenej karty, párujú sa tiež):{' '}
+                    <span className="font-mono font-bold text-gray-700">{formData.alt_variable_symbols.join(', ')}</span>
+                  </p>
+                )}
+                {vsUnlocked ? (
                   <p className="text-[10px] text-amber-600 font-semibold flex items-center gap-1">
                     <AlertCircle size={10} />
-                    Uistite sa, že VS je unikátny a neopakuje sa u iného darcu.
+                    Zadajte VS, ktorý už darca používa. Po uložení sa k nemu pripoja jeho doterajšie platby s týmto VS.
                   </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setVsUnlocked(true)}
+                    className="text-[11px] font-bold text-blue-600 hover:underline"
+                  >
+                    Darca už má pridelený VS? Zadať vlastný VS
+                  </button>
                 )}
               </div>
 

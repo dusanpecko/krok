@@ -1,5 +1,5 @@
 import { createClient as createServiceClient, type SupabaseClient } from '@supabase/supabase-js'
-import { requireAuth } from '@/lib/auth'
+import { getUserAccess, requireAuth } from '@/lib/auth'
 
 /**
  * Prístup kňaza / farnosti k vlastnej farnosti (návrh § 3.7, § 5.2).
@@ -35,12 +35,23 @@ export async function getMyParishes(userId: string): Promise<MyParish[]> {
     .map((r) => ({ id: r.parishes!.id, name: r.parishes!.name, official_name: r.parishes!.official_name, role: r.role }))
 }
 
-/** Overí, že prihlásený používateľ spravuje farnosť; prvé použitie zapíše accepted_at. */
+/**
+ * Overí, že prihlásený používateľ spravuje farnosť; prvé použitie zapíše accepted_at.
+ * Diecéza (oprávnenie manage_parishes) môže vstúpiť do zóny ktorejkoľvek farnosti
+ * ako jej správca – „prihlásiť sa za farnosť“ (impersonating = true, zmeny sa logujú pod adminom).
+ */
 export async function requireParishMember(parishId: string) {
   const user = await requireAuth()
   const db = serviceDb()
   const { data } = await db.from('parish_users').select('role, accepted_at').eq('parish_id', parishId).eq('user_id', user.id).maybeSingle()
-  if (!data) throw new ParishForbiddenError()
-  if (!data.accepted_at) await db.from('parish_users').update({ accepted_at: new Date().toISOString() }).eq('parish_id', parishId).eq('user_id', user.id)
-  return { user, role: data.role as 'admin' | 'editor', db }
+  if (data) {
+    if (!data.accepted_at) await db.from('parish_users').update({ accepted_at: new Date().toISOString() }).eq('parish_id', parishId).eq('user_id', user.id)
+    return { user, role: data.role as 'admin' | 'editor', db, impersonating: false }
+  }
+  const access = await getUserAccess(user.id)
+  if (access.isAdmin || access.permissions.includes('manage_parishes')) {
+    const { data: exists } = await db.from('parishes').select('id').eq('id', parishId).maybeSingle()
+    if (exists) return { user, role: 'admin' as const, db, impersonating: true }
+  }
+  throw new ParishForbiddenError()
 }

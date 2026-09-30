@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info } from 'lucide-react'
+import Link from 'next/link'
+import { Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft } from 'lucide-react'
 import {
   saveMySchedule,
   submitParishChange,
@@ -37,6 +38,16 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
 
   return (
     <div className="space-y-6">
+      {view.impersonating && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-sm">
+          <span className="flex items-center gap-2 font-bold">
+            <Eye size={16} /> Ste prihlásený ako farnosť (náhľad biskupského úradu). Zmeny sa uložia naostro a v histórii budú pod vaším menom.
+          </span>
+          <Link href={`/admin/farnosti/${p.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-amber-300 font-black hover:bg-amber-100">
+            <ArrowLeft size={14} /> Späť do adminu
+          </Link>
+        </div>
+      )}
       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
           <Church className="w-7 h-7 text-blue-600" /> {p.official_name ?? p.name}

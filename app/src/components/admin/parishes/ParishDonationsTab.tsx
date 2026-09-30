@@ -8,6 +8,7 @@ const eur = (n: number | null) => (n == null ? '—' : n.toLocaleString('sk-SK',
 const ACTION_LABEL: Record<string, string> = {
   import: 'Import',
   admin_update: 'Úprava (diecéza)',
+  parish_update: 'Úprava (farnosť)',
   submit: 'Návrh farnosti',
   approve: 'Schválené',
   reject: 'Zamietnuté',

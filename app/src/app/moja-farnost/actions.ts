@@ -32,13 +32,15 @@ export interface MyParishRequest {
 
 export interface MyParishView extends Omit<ParishDetail, 'log' | 'donorsCount'> {
   role: 'admin' | 'editor'
+  /** diecéza je „prihlásená za farnosť“ (náhľad z adminu) */
+  impersonating: boolean
   deaneryName: string | null
   donorsCount: number
   requests: MyParishRequest[]
 }
 
 export async function getMyParishView(parishId: string): Promise<MyParishView> {
-  const { role, db } = await requireParishMember(parishId)
+  const { role, db, impersonating } = await requireParishMember(parishId)
   const detail = await loadParishDetail(db, parishId)
   if (!detail) throw new Error('Farnosť sa nenašla.')
   const [{ data: deanery }, { data: requests }] = await Promise.all([
@@ -55,6 +57,7 @@ export async function getMyParishView(parishId: string): Promise<MyParishView> {
     summary: role === 'admin' ? detail.summary : [],
     donorsCount: role === 'admin' ? detail.donorsCount : 0,
     role,
+    impersonating,
     deaneryName: (deanery as { name: string } | null)?.name ?? null,
     requests: (requests ?? []) as MyParishRequest[],
   }

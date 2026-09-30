@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ExternalLink, Church } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Church, LogIn } from 'lucide-react'
 import { KIND_LABEL, type ParishDetail } from '@/lib/parishes/types'
 import ParishBasicTab from './ParishBasicTab'
 import ParishVillagesTab from './ParishVillagesTab'
@@ -63,7 +63,14 @@ export default function ParishDetailView({
             )}
           </p>
         </div>
-        <div className="flex gap-6 text-right">
+        <div className="flex flex-wrap items-center gap-6 text-right">
+          <Link
+            href={`/moja-farnost/${parish.id}`}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-black hover:bg-amber-100"
+            title="Otvorí zónu farnosti presne tak, ako ju vidí kňaz"
+          >
+            <LogIn size={16} /> Prihlásiť sa za farnosť
+          </Link>
           <Stat label="Katolíci" value={catholics ? catholics.toLocaleString('sk-SK') : '—'} />
           <Stat label="Darcovia" value={String(detail.donorsCount)} />
           <Stat label={`Vybrané ${new Date().getFullYear()}`} value={thisYear ? thisYear.collected_amount.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '—'} />

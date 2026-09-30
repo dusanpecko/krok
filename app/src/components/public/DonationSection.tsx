@@ -5,6 +5,7 @@ import { Heart, QrCode, Copy, FileText, CreditCard, Loader2, AlertCircle } from 
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { getPaymentQrCode } from '@/app/(public)/actions';
+import { getRegistrationFormOptions } from '@/app/(public)/registracia/actions';
 import { startOnlineDonation, getMyOnlineSubscriptions, type MyOnlineSubscription } from '@/app/(public)/platby/actions';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import RecurringChoice, { type RecurringChoiceValue } from '@/components/public/RecurringChoice';
@@ -39,7 +40,18 @@ export default function DonationSection({
   const [isMonthly, setIsMonthly] = useState(true);
   const [selectedTier, setSelectedTier] = useState<number | 'custom'>(14);
   const [customAmount, setCustomAmount] = useState<string>('');
-  const [donorName, setDonorName] = useState('');
+  // Údaje darcu – všetko nepovinné (dá sa darovať aj anonymne)
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [parishId, setParishId] = useState('');
+  const [parishes, setParishes] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    getRegistrationFormOptions()
+      .then((o) => { if (!cancelled) setParishes(o.parishes); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedIBAN, setCopiedIBAN] = useState(false);
 
@@ -114,7 +126,9 @@ export default function DonationSection({
       recurring: isMonthly,
       interval: 'month',
       email: donorEmail,
-      name: donorName,
+      firstName,
+      lastName,
+      parishId: parishId || null,
       replaceSubscriptionId: replacing ? recurringChoice.replaceId : null,
     });
     if (res.success) {
@@ -241,19 +255,48 @@ export default function DonationSection({
             </div>
 
             {/* Meno darcu (nepovinné) */}
-            <div className="space-y-2 mb-8">
-              <label htmlFor={`${id}-name`} className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold block">
-                Vaše meno (nepovinné – môžete darovať aj anonymne)
-              </label>
-              <input
-                id={`${id}-name`}
-                type="text"
-                maxLength={25}
-                value={donorName}
-                onChange={(e) => setDonorName(e.target.value)}
-                placeholder="napr. Jozef Kováč"
-                className="w-full bg-blue-deep border border-white/10 focus:border-blue rounded-xl py-3.5 px-4 text-white text-sm outline-none transition-colors"
-              />
+            <div className="space-y-3 mb-8">
+              <p className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold">
+                Vaše údaje <span className="normal-case tracking-normal font-medium text-zinc-500">(nepovinné – môžete darovať aj anonymne)</span>
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  id={`${id}-first-name`}
+                  type="text"
+                  maxLength={50}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Meno"
+                  aria-label="Meno"
+                  autoComplete="given-name"
+                  className="w-full bg-blue-deep border border-white/10 focus:border-blue rounded-xl py-3.5 px-4 text-white text-sm outline-none transition-colors"
+                />
+                <input
+                  id={`${id}-last-name`}
+                  type="text"
+                  maxLength={50}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Priezvisko"
+                  aria-label="Priezvisko"
+                  autoComplete="family-name"
+                  className="w-full bg-blue-deep border border-white/10 focus:border-blue rounded-xl py-3.5 px-4 text-white text-sm outline-none transition-colors"
+                />
+              </div>
+              {parishes.length > 0 && (
+                <select
+                  id={`${id}-parish`}
+                  value={parishId}
+                  onChange={(e) => setParishId(e.target.value)}
+                  aria-label="Farnosť"
+                  className={`w-full bg-blue-deep border border-white/10 focus:border-blue rounded-xl py-3.5 px-4 text-sm outline-none transition-colors cursor-pointer ${parishId ? 'text-white' : 'text-zinc-500'}`}
+                >
+                  <option value="">Farnosť (nepovinné)</option>
+                  {parishes.map((p) => (
+                    <option key={p.id} value={p.id} className="text-white">{p.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* Hlavné tlačidlo "Darovať" */}

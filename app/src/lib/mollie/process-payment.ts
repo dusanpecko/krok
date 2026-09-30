@@ -26,6 +26,8 @@ export interface PaymentMetadata {
   auth_user_id?: string
   email?: string
   donor_name?: string
+  /** Farnosť zvolená vo formulári daru (nepovinné) – uloží sa darcovi, ak ju ešte nemá */
+  parish_id?: string
   project_id?: string
   interval?: SubscriptionInterval
 }
@@ -105,15 +107,20 @@ export function subscriptionDescription(interval: SubscriptionInterval, projectN
  */
 async function ensureDonor(
   admin: ReturnType<typeof serviceClient>,
-  ident: { donor_id?: string | null; auth_user_id?: string | null; email?: string | null; donor_name?: string | null }
+  ident: { donor_id?: string | null; auth_user_id?: string | null; email?: string | null; donor_name?: string | null; parish_id?: string | null }
 ): Promise<string | null> {
+  // Existujúci darca: farnosť z formulára doplníme len vtedy, ak ju ešte nemá
+  const found = async (id: string) => {
+    if (ident.parish_id) await admin.from('donors').update({ parish_id: ident.parish_id }).eq('id', id).is('parish_id', null)
+    return id
+  }
   if (ident.donor_id) {
     const { data } = await admin.from('donors').select('id').eq('id', ident.donor_id).maybeSingle()
-    if (data) return data.id
+    if (data) return found(data.id)
   }
   if (ident.auth_user_id) {
     const { data } = await admin.from('donors').select('id').eq('auth_user_id', ident.auth_user_id).maybeSingle()
-    if (data) return data.id
+    if (data) return found(data.id)
   }
   const email = ident.email?.trim().toLowerCase() || null
   if (email) {
@@ -124,7 +131,7 @@ async function ensureDonor(
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle()
-    if (data) return data.id
+    if (data) return found(data.id)
   }
 
   // Nový darca (bez účtu) – meno z formulára, inak „Darca online"
@@ -146,6 +153,7 @@ async function ensureDonor(
       first_name: firstName,
       last_name: lastName,
       variable_symbol: String(maxVS + 1),
+      parish_id: ident.parish_id || null,
       donor_type: 'individual',
       status: 'active',
       notes: 'Vytvorený automaticky z online platby (Mollie).',
@@ -340,6 +348,7 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
     auth_user_id: existing?.auth_user_id ?? meta.auth_user_id ?? sub?.auth_user_id ?? null,
     email: existing?.email ?? meta.email ?? sub?.email ?? null,
     donor_name: existing?.donor_name ?? meta.donor_name ?? sub?.donor_name ?? null,
+    parish_id: meta.parish_id ?? null,
     project_id: existing?.project_id ?? meta.project_id ?? sub?.project_id ?? null,
   }
 

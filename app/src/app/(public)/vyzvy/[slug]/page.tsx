@@ -95,8 +95,12 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
           <ArrowLeft size={16} /> Všetky výzvy
         </Link>
 
-        {/* Hero */}
-        <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-white/5 aspect-video relative">
+        {/* Hero – nízky pás, aby bol hneď viditeľný nadpis aj formulár daru (video ostáva 16:9, užšie) */}
+        <div
+          className={`rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-white/5 relative ${
+            embed ? 'aspect-video max-w-3xl mx-auto' : 'aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1]'
+          }`}
+        >
           {embed ? (
             <iframe
               src={embed}

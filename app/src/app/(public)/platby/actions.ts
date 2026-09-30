@@ -44,6 +44,11 @@ export interface StartDonationInput {
   interval?: SubscriptionInterval
   email: string
   name?: string
+  /** Meno a priezvisko zvlášť (formulár daru) – majú prednosť pred `name` */
+  firstName?: string
+  lastName?: string
+  /** Farnosť darcu (nepovinné) */
+  parishId?: string | null
   projectId?: string | null
   /** Pri pravidelnom dare: id existujúceho pravidelného daru, ktorý sa má po úspešnej platbe zrušiť (zmena výšky). */
   replaceSubscriptionId?: string | null
@@ -78,7 +83,12 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
   if (!EMAIL_RE.test(email)) {
     return { success: false, error: 'Zadajte platnú e-mailovú adresu.' }
   }
-  const name = (input.name || '').trim().slice(0, 100)
+  const name = (
+    input.firstName || input.lastName
+      ? `${(input.firstName || '').trim()} ${(input.lastName || '').trim()}`
+      : input.name || ''
+  ).trim().slice(0, 100)
+  const parishId = input.parishId && UUID_RE.test(input.parishId) ? input.parishId : null
   const interval: SubscriptionInterval = input.interval === 'year' ? 'year' : 'month'
   const projectId = input.projectId && UUID_RE.test(input.projectId) ? input.projectId : null
 
@@ -155,6 +165,7 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
     auth_user_id: user?.id ?? undefined,
     email,
     donor_name: donorName || undefined,
+    parish_id: parishId ?? undefined,
     project_id: projectId ?? undefined,
   }
 

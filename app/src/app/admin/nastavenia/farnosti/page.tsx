@@ -23,8 +23,9 @@ export default function ParishesPage() {
     const [parishesRes, deaneriesRes] = await Promise.all([
       supabase
         .from('parishes')
+        // Konkrétne stĺpce – citlivé údaje farnosti (IČO, IBAN…) nie sú čitateľné cez klienta (migrácia 034)
         .select(`
-          *,
+          id, name, deanery, deanery_id, city, postal_code, created_at,
           deaneries ( name ),
           donors (id)
         `)

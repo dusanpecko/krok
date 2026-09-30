@@ -31,7 +31,7 @@ export async function deleteDeanery(id: string) {
   // Safety check: is it used by any parish?
   const { count, error: countError } = await supabase
     .from('parishes')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('deanery_id', id)
 
   if (count && count > 0) {

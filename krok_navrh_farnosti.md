@@ -1,6 +1,6 @@
 # Návrh: Databáza farností (profil, bohoslužby, štatistika, predpis, vlastná stránka)
 
-Stav: **návrh po treťom kole rozhodnutí (2026-09-30)**; **F1b hotová** (lokálne, e2e overené), F0/F1 čaká na CSV. Nadväzuje na `krok_navrh_vyzvy.md` a `krok_databaza_struktura.md`.
+Stav: **návrh po treťom kole rozhodnutí (2026-09-30)**; **F0, F1 a F1b hotové** (2026-09-30): register 123 farností a duchovných správ importovaný (schematizmus dcza.sk + CSV), F1b e2e overená. Ďalej F2 (admin) / F3 (predpis). Nadväzuje na `krok_navrh_vyzvy.md` a `krok_databaza_struktura.md`.
 Predpokladané migrácie: `supabase/034_parishes_extended.sql` + `035_parish_pages.sql` (+ import skript). *(Čísla 026–033 medzitým obsadili banka, newsletter, darcovia a F1b (032 sekvencia VS, 033 onboarding).)*
 
 Cieľ modulu:
@@ -769,8 +769,8 @@ Skript `scripts/import-parishes.ts`, dry-run ako default (vzor: XML import):
 
 | Fáza | Obsah | Odhad |
 |---|---|---|
-| **F0** | CSV do repa, čistý export, mapovanie dekanátov, dry-run import | 0,5–1 deň |
-| **F1** | Migrácia 026 (tabuľky, RLS, pohľady, `donations.parish_id` + trigger + backfill), import dát | 2 dni |
+| **F0** ✅ | CSV `data/farnosti2.csv` + schematizmus dcza.sk (`scripts/fetch-schematizmus.ts` → `data/schematizmus.json`), dry-run `scripts/import-parishes.ts` | 0,5–1 deň |
+| **F1** ✅ | Migrácia **034** (tabuľky, RLS, pohľady, `donations.parish_id` + trigger), import `--apply`: 123 záznamov (114 farností + 9 duchovných správ), 208 obcí, 232 kňazov, pseudo-farnosti zrušené, 9 796 darov so snapshotom farnosti | 2 dni |
 | **F1b** ✅ | **Výber farnosti a projektu v registrácii a profile** (§ 6.3) + **oprava hľadania darcu cez `auth_user_id`** (§ 6.4) + **VS zo sekvencie** (O23) – hotové 2026-09-30: migrácie 032 (`next_donor_variable_symbol`), 033 (`donors.onboarding_completed_at`), `/profil/vitajte`, `lib/parishes/choices.ts`, `lib/donors/vs.ts` | 0,5–1 deň |
 | **F2** | Admin `/admin/farnosti` – zoznam + záložky 1–3 | 2–3 dni |
 | **F3** | Predpis: `parish_target_settings`, generovanie, história, export | 1–2 dni |
@@ -800,6 +800,17 @@ Prvých 5–8 z tohto zoznamu je dobrý pilot: farnosti už s fondom spolupracuj
 Ak by mala byť skratka pre farnosti čo najskôr, poradie **F0 → F1 → F5 → F2** dá farnostiam viditeľný úžitok (vlastnú stránku) skôr než diecéze administratívu. Riziko: bez F4 nemá kto obsah napĺňať okrem admina.
 
 ---
+
+## 8.2 Výsledok importu (2026-09-30)
+
+- **Hlavný zdroj = schematizmus dcza.sk** (oficiálny zoznam 123 záznamov, kontakty, PSČ, kňazi, výročná poklona); CSV dopĺňa IČO, DIČ, účet → IBAN, kód farnosti, okres, obce so SODB 2021, spovedanie.
+- Existujúce názvy farností v DB sa nemenili (darcovia ich poznajú); oficiálny názov je v `official_name`.
+- Opravy CSV: obce pod Trnovým patria Turanom; „1600“ pri Považskom Podhradí vynechané; Makov zlúčený (IČO 31926835, druhé IČO v poznámke); sv. Barbora zlúčená (obe IČO v poznámke, IČO prázdne – **overiť**).
+- Mimo oficiálneho zoznamu sa neimportovalo: DS Nimnica, DS NsP PB, DS ZŠ s MŠ A. Bernoláka, Pustovňa bratov františkánov.
+- Mestské farnosti bez čísel v CSV → súhrn obyvatelia/katolíci zo schematizmu (`source = 'schematizmus dcza.sk'`).
+- **Bez štatistiky (doplniť ručne):** Dolný Moštenec, Hvozdnica, Jasenové, Žilina-Bánová. Bez IČO: Rosina, Hvozdnica, 4 duchovné správy.
+- Pseudo-farnosti: Lectio divina (127 darov → projekt), Dve percentá (15 darov → projekt), Charita (len `donor_projects`, O22), Rodinkovo (bez projektu) – zmazané, 11 darcov je „bez farnosti“.
+- Bezpečnosť: `parishes` pre anon/authenticated len bezpečné stĺpce (column GRANT) – predtým `SELECT *` pre každého.
 
 ## 9. Zostávajúce otázky
 

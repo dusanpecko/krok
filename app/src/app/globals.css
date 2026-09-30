@@ -588,6 +588,56 @@ body {
   margin: 0 0 1.5rem 1.5rem;
 }
 
+/* Zarovnanie obrázkov (KrokImage: data-align) – logo s textom vedľa, na stred */
+.simple-rich-editor img.img-align-left {
+  float: left;
+  display: inline;
+  margin: 0.25rem 1.5rem 1rem 0;
+}
+
+.simple-rich-editor img.img-align-right {
+  float: right;
+  display: inline;
+  margin: 0.25rem 0 1rem 1.5rem;
+}
+
+.simple-rich-editor img.img-align-center {
+  display: block;
+  margin: 1.5rem auto;
+}
+
+/* Obrázok v odkaze (klikateľné logo) */
+.simple-rich-editor a:has(> img) {
+  text-decoration: none;
+}
+
+/* Nový nadpis začína pod obtekaným obrázkom (zoznam lôg s popisom) */
+.simple-rich-editor h1,
+.simple-rich-editor h2,
+.simple-rich-editor h3 {
+  clear: both;
+}
+
+.simple-rich-editor::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* Na mobile obtekané obrázky nesmú zabrať celý riadok */
+@media (max-width: 640px) {
+  .simple-rich-editor img.img-align-left,
+  .simple-rich-editor img.img-align-right {
+    max-width: 45%;
+  }
+}
+
+/* Vybraný obrázok v editore */
+.simple-rich-editor .ProseMirror img.ProseMirror-selectednode {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
 /* Tmavý variant obsahu článkov (na tmavých verejných stránkach) */
 .theme-dark .simple-rich-editor h1,
 .theme-dark .simple-rich-editor h2,

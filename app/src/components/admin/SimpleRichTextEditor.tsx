@@ -1,6 +1,6 @@
 "use client";
 
-import Image from '@tiptap/extension-image';
+import { KrokImage, type ImageAlign } from './editor/KrokImage';
 import Link from '@tiptap/extension-link';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
@@ -11,7 +11,7 @@ import { TableRow } from '@tiptap/extension-table-row';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import { Youtube } from '@tiptap/extension-youtube';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight,
@@ -27,6 +27,32 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { uploadPostImage } from '@/app/admin/aktuality/actions';
+
+/** Predvolené šírky obrázka (hodnota = CSS šírka) */
+const IMAGE_WIDTHS: { value: string; label: string }[] = [
+  { value: '', label: 'Pôvodná šírka' },
+  { value: '100px', label: '100 px (malé logo)' },
+  { value: '150px', label: '150 px (logo)' },
+  { value: '200px', label: '200 px' },
+  { value: '300px', label: '300 px' },
+  { value: '33%', label: 'Tretina šírky' },
+  { value: '50%', label: 'Polovica šírky' },
+  { value: '75%', label: 'Tri štvrtiny' },
+  { value: '100%', label: 'Celá šírka' },
+];
+
+const IMAGE_ALIGNS: { value: ImageAlign; label: string; title: string }[] = [
+  { value: 'left', label: '◧ Vľavo', title: 'Vľavo, text obteká vpravo' },
+  { value: 'center', label: '▣ Stred', title: 'Na stred, samostatne' },
+  { value: 'right', label: '◨ Vpravo', title: 'Vpravo, text obteká vľavo' },
+  { value: 'none', label: 'Bez', title: 'Bez zarovnania (samostatne, vľavo)' },
+];
+
+/** „www.partner.sk“ → „https://www.partner.sk“ */
+function normalizeUrl(url: string): string {
+  const u = url.trim();
+  return /^(https?:|mailto:|tel:|\/)/i.test(u) ? u : `https://${u}`;
+}
 
 interface SimpleRichTextEditorProps {
   label: string;
@@ -52,9 +78,9 @@ export default function SimpleRichTextEditor({
 }: SimpleRichTextEditorProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
-  const [imageFloat, setImageFloat] = useState<'none' | 'left' | 'right'>('none');
+  const [imageFloat, setImageFloat] = useState<ImageAlign>('none');
   const [imageWidth, setImageWidth] = useState<string>('');
-  const [imageHeight, setImageHeight] = useState<string>('');
+  const [imageLink, setImageLink] = useState<string>('');
   const [uploadMethod, setUploadMethod] = useState<'url' | 'upload'>('url');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -87,7 +113,7 @@ export default function SimpleRichTextEditor({
         types: ['heading', 'paragraph'],
         alignments: ['left', 'center', 'right', 'justify'],
       }),
-      Image.configure({
+      KrokImage.configure({
         inline: true,
         allowBase64: true,
         HTMLAttributes: {
@@ -121,6 +147,20 @@ export default function SimpleRichTextEditor({
       } else {
         onChange(html);
       }
+    },
+  });
+
+  // Vybraný obrázok (panel „Obrázok“) – v Tiptap v3 sa editor sám nerenderuje pri zmene výberu
+  const imageSel = useEditorState({
+    editor,
+    selector: ({ editor: ed }) => {
+      if (!ed || !ed.isActive('image')) return null;
+      const attrs = ed.getAttributes('image');
+      return {
+        align: (attrs.align as ImageAlign) || 'none',
+        width: (attrs.width as string | null) || '',
+        href: (ed.getAttributes('link').href as string | undefined) || '',
+      };
     },
   });
 
@@ -449,6 +489,51 @@ export default function SimpleRichTextEditor({
           </div>
         </div>
  
+        {/* Panel pre vybraný obrázok: umiestnenie, šírka, odkaz */}
+        {imageSel && !disabled && (
+          <div className="bg-blue-50/60 border-b border-blue-100 px-3 py-2 flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-black text-blue-700 uppercase tracking-wider text-[10px] mr-1">Obrázok</span>
+            <div className="flex items-center gap-1 bg-white border border-blue-100 rounded-lg p-0.5">
+              {IMAGE_ALIGNS.map((a) => (
+                <button
+                  key={a.value}
+                  type="button"
+                  onClick={() => editor.chain().focus().updateAttributes('image', { align: a.value }).run()}
+                  className={`px-2 py-1 rounded-md font-bold cursor-pointer ${imageSel.align === a.value ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={a.title}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+            <select
+              value={imageSel.width}
+              onChange={(e) => editor.chain().focus().updateAttributes('image', { width: e.target.value || null }).run()}
+              className="bg-white border border-blue-100 rounded-lg px-2 py-1.5 font-bold text-gray-700 cursor-pointer"
+              aria-label="Šírka obrázka"
+            >
+              {IMAGE_WIDTHS.some((w) => w.value === imageSel.width) ? null : <option value={imageSel.width}>{imageSel.width}</option>}
+              {IMAGE_WIDTHS.map((w) => <option key={w.value} value={w.value}>{w.label}</option>)}
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                const url = window.prompt('Odkaz po kliknutí na obrázok (prázdne = zrušiť odkaz):', imageSel.href);
+                if (url === null) return;
+                if (url.trim()) editor.chain().focus().setLink({ href: normalizeUrl(url), target: '_blank' }).run();
+                else editor.chain().focus().unsetLink().run();
+              }}
+              className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg font-bold cursor-pointer border ${imageSel.href ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-blue-100 hover:bg-gray-50'}`}
+              title={imageSel.href || 'Pridať odkaz na obrázok'}
+            >
+              <LinkIcon size={12} /> {imageSel.href ? 'Odkaz ✓' : 'Odkaz'}
+            </button>
+            <span className="text-[10px] text-gray-500 ml-auto hidden md:inline">
+              Logo s textom vedľa: „Vľavo“ + šírka 150 px. Najlepšie fotky: šírka 1200–1600 px, logá 300–400 px.
+            </span>
+          </div>
+        )}
+
         {/* Editor Content */}
         <EditorContent 
           editor={editor}
@@ -570,37 +655,38 @@ export default function SimpleRichTextEditor({
                 </div>
               )}
  
-              {/* Rozmery obrázka */}
+              {/* Šírka obrázka */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 pl-1">
-                  Rozmery (voliteľné)
+                  Šírka (voliteľné)
                 </label>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={imageWidth}
-                      onChange={(e) => setImageWidth(e.target.value)}
-                      placeholder="Šírka (napr. 300px alebo 50%)"
-                      className="w-full text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={imageHeight}
-                      onChange={(e) => setImageHeight(e.target.value)}
-                      placeholder="Výška (napr. 200px)"
-                      className="w-full text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
+                <select
+                  value={imageWidth}
+                  onChange={(e) => setImageWidth(e.target.value)}
+                  className="w-full text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {IMAGE_WIDTHS.map((w) => <option key={w.value} value={w.value}>{w.label}</option>)}
+                </select>
               </div>
- 
+
+              {/* Odkaz na obrázku */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 pl-1">
+                  Odkaz po kliknutí na obrázok (voliteľné)
+                </label>
+                <input
+                  type="text"
+                  value={imageLink}
+                  onChange={(e) => setImageLink(e.target.value)}
+                  placeholder="https://www.partner.sk"
+                  className="w-full text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
               {/* Obtekanie */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 pl-1">
-                  Obtekanie textu
+                  Umiestnenie
                 </label>
                 <div className="flex gap-2 p-1 bg-gray-50 border border-gray-200 rounded-xl">
                   <button
@@ -623,7 +709,18 @@ export default function SimpleRichTextEditor({
                         : 'text-gray-500 hover:text-gray-900'
                     }`}
                   >
-                    Vľavo
+                    Vľavo, text vedľa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageFloat('center')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      imageFloat === 'center'
+                        ? 'bg-white shadow-sm text-blue-600 border border-gray-100'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    Na stred
                   </button>
                   <button
                     type="button"
@@ -634,7 +731,7 @@ export default function SimpleRichTextEditor({
                         : 'text-gray-500 hover:text-gray-900'
                     }`}
                   >
-                    Vpravo
+                    Vpravo, text vedľa
                   </button>
                 </div>
               </div>
@@ -645,48 +742,20 @@ export default function SimpleRichTextEditor({
                 type="button"
                 onClick={() => {
                   if (imageUrl) {
-                    editor.chain().focus().setImage({ 
-                      src: imageUrl,
-                    }).run();
-                    
-                    setTimeout(() => {
-                      const { state } = editor;
-                      const { tr } = state;
-                      const pos = state.selection.$anchor.pos;
-                      
-                      state.doc.nodesBetween(pos - 1, pos + 1, (node, nodePos) => {
-                        if (node.type.name === 'image') {
-                          const styles: string[] = [];
-                          
-                          if (imageWidth) styles.push(`width: ${imageWidth}`);
-                          if (imageHeight) styles.push(`height: ${imageHeight}`);
-                          if (imageFloat !== 'none') {
-                            styles.push(`float: ${imageFloat}`);
-                            styles.push(`margin: 0 ${imageFloat === 'left' ? '1rem 1rem 0' : '0 1rem 1rem'}`);
-                          }
-                          
-                          const className = imageFloat !== 'none' 
-                            ? `editor-image float-${imageFloat}` 
-                            : 'editor-image';
-                          
-                          tr.setNodeMarkup(nodePos, undefined, {
-                            ...node.attrs,
-                            class: className,
-                            style: styles.length > 0 ? styles.join('; ') : undefined,
-                            width: imageWidth || undefined,
-                            height: imageHeight || undefined,
-                          });
-                        }
-                      });
-                      
-                      editor.view.dispatch(tr);
-                    }, 10);
+                    const imageNode = {
+                      type: 'image',
+                      attrs: { src: imageUrl, align: imageFloat, width: imageWidth || null },
+                      ...(imageLink.trim()
+                        ? { marks: [{ type: 'link', attrs: { href: normalizeUrl(imageLink), target: '_blank' } }] }
+                        : {}),
+                    };
+                    editor.chain().focus().insertContent(imageNode).run();
                   }
                   setShowImageDialog(false);
                   setImageUrl('');
                   setImageFloat('none');
                   setImageWidth('');
-                  setImageHeight('');
+                  setImageLink('');
                 }}
                 disabled={!imageUrl}
                 className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
@@ -700,7 +769,7 @@ export default function SimpleRichTextEditor({
                   setImageUrl('');
                   setImageFloat('none');
                   setImageWidth('');
-                  setImageHeight('');
+                  setImageLink('');
                   setUploadMethod('url');
                   setUploadError(null);
                 }}

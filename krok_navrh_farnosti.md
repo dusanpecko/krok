@@ -821,3 +821,30 @@ Ak by mala byť skratka pre farnosti čo najskôr, poradie **F0 → F1 → F5 �
 | **Q1** | Má sa pri oprave § 6.4 vyriešiť aj **race condition vo variabilnom symbole** (`TODO.md` P1), keď sa ten súbor aj tak mení? | Áno – je to pár riadkov navyše oproti neskoršiemu návratu do tej istej funkcie. |
 | **Q3** | Koeficient **2 €/katolík** – platí rovnako pre všetky farnosti, alebo majú mestské/vidiecke inú sadzbu? | Rovnako pre všetky, jednotlivé predpisy sa dajú prepísať ručne. |
 | **Q4** | Má byť predpis a plnenie **viditeľné aj pre ostatné farnosti** (rebríček), alebo každá vidí len seba? | Každá len seba; súhrn má diecéza. Rebríček by mohol byť motivujúci, ale aj nepríjemný. |
+
+---
+
+## 10. Na ďalšie pokračovanie (poznámky 2026-09-30)
+
+### 10.1 Predpis – podiel pracujúcich katolíkov (doladiť)
+
+Dnes: predpis = **všetci katolíci × 2 € ročne** (≈ 931 000 € za diecézu, napr. Rajec 13 272 €). Treba doladiť, aby sa predpis počítal len z **pracujúcich / zárobkovo činných** katolíkov:
+
+- nový parameter v nastavení roka: **% pracujúcich** (napr. 45 %) → predpis = katolíci × % pracujúcich × koeficient,
+- rozhodnúť: jedno % pre celú diecézu, alebo podľa okresu / farnosti (zdroj: ŠÚ SR – ekonomicky aktívne obyvateľstvo, SODB 2021),
+- po zmene: „Prepočítať neupravené“ pre rok 2026 (ručne upravené predpisy ostanú),
+- zobraziť v predpise aj medzivýpočet (katolíci → pracujúci → predpis), v exporte XLSX tiež.
+
+Technicky: `parish_target_settings.working_share NUMERIC(5,4)` (+ príp. `parish_year_targets.working_share` ako snapshot) – migrácia pri doladení.
+
+### 10.2 F5 – verejné stránky farností: podklad `web_parochia`
+
+Pozastavený projekt **https://github.com/dusanpecko/web_parochia** (vetva `main`, prístup overený, zatiaľ nestiahnutý) poslúži ako pomôcka pre tvorbu stránok farností v Kroku:
+
+1. stiahnuť a zanalyzovať: dátový model, šablóny stránky farnosti, bohoslužby, oznamy/články, editor obsahu, čo sa dá prevziať,
+2. zosúladiť s modelom Kroku (§ 3.3 bohoslužby, § 3.8 kňazi, § 4.1 `parish_posts`, § 4.2 URL `/farnosti/[slug]`),
+3. navrhnúť, čo prevziať (komponenty, rozloženie, typy obsahu) a čo spraviť nanovo – doplniť do § 4 a naplánovať migráciu **035_parish_pages**.
+
+### 10.3 Testovanie F1b–F4 (pred pushom)
+
+Používateľ najprv sám otestuje a doladí, potom push a test Juliou. Na test: registrácia + onboarding (aj Google), admin farností (doplniť štatistiku Dolný Moštenec, Hvozdnica, Jasenové, Bánová a chýbajúce IČO), predpisy 2026 (vygenerované 2026-09-30), zóna farnosti cez „Prihlásiť sa za farnosť“.

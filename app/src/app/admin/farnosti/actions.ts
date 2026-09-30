@@ -52,7 +52,7 @@ export async function getParishesForAdmin(): Promise<ParishListItem[]> {
     admin.from('v_parish_population').select('parish_id, catholics').eq('year', STATS_YEAR),
     admin.from('parish_villages').select('parish_id'),
     admin.from('donors').select('parish_id').not('parish_id', 'is', null),
-    admin.from('v_parish_year_summary').select('parish_id, collected_amount').eq('year', year),
+    admin.from('v_parish_year_summary').select('parish_id, collected_amount, prescribed_amount').eq('year', year),
   ])
 
   const deaneryName = new Map((deaneries ?? []).map((d) => [d.id as string, d.name as string]))
@@ -65,6 +65,7 @@ export async function getParishesForAdmin(): Promise<ParishListItem[]> {
   const villagesCount = count(villages as { parish_id: string }[] | null)
   const donorsCount = count(donors as { parish_id: string }[] | null)
   const collected = new Map((summary ?? []).map((s) => [s.parish_id as string, Number(s.collected_amount)]))
+  const prescribed = new Map((summary ?? []).filter((s) => s.prescribed_amount != null).map((s) => [s.parish_id as string, Number(s.prescribed_amount)]))
 
   return (parishes ?? [])
     .map((p) => {
@@ -91,6 +92,7 @@ export async function getParishesForAdmin(): Promise<ParishListItem[]> {
         villages_count: villagesCount.get(p.id) ?? 0,
         donors_count: donorsCount.get(p.id) ?? 0,
         collected_this_year: collected.get(p.id) ?? 0,
+        prescribed_this_year: prescribed.get(p.id) ?? null,
         missing,
         updated_at: p.updated_at,
       } satisfies ParishListItem

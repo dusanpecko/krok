@@ -47,6 +47,7 @@ export interface ParishListItem {
   villages_count: number
   donors_count: number
   collected_this_year: number
+  prescribed_this_year: number | null
   missing: string[]
   updated_at: string | null
 }

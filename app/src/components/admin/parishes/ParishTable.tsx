@@ -3,10 +3,10 @@
 import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, AlertTriangle, ChevronRight, Loader2, X } from 'lucide-react'
+import { Search, Plus, AlertTriangle, ChevronRight, Loader2, X, Target } from 'lucide-react'
 import { createParish } from '@/app/admin/farnosti/actions'
 import { KIND_LABEL, type ParishKind, type ParishListItem } from '@/lib/parishes/types'
-import { btnPrimary, inputCls, Field, Notice } from '@/components/admin/projects/ui'
+import { btnPrimary, btnSecondary, inputCls, Field, Notice } from '@/components/admin/projects/ui'
 
 const eur = (n: number) => n.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -53,6 +53,9 @@ export default function ParishTable({ parishes, deaneries }: { parishes: ParishL
           <input type="checkbox" checked={onlyMissing} onChange={(e) => setOnlyMissing(e.target.checked)} className="w-4 h-4 rounded" />
           Len s chýbajúcimi údajmi
         </label>
+        <Link href="/admin/farnosti/predpisy" className={btnSecondary}>
+          <Target size={14} /> Predpisy
+        </Link>
         <button type="button" onClick={() => setCreating(true)} className={btnPrimary}>
           <Plus size={16} /> Nová
         </button>
@@ -71,7 +74,7 @@ export default function ParishTable({ parishes, deaneries }: { parishes: ParishL
               <th className="px-5 py-4 text-right">Katolíci</th>
               <th className="px-5 py-4 text-right">Obce</th>
               <th className="px-5 py-4 text-right">Darcovia</th>
-              <th className="px-5 py-4 text-right">Vybrané {new Date().getFullYear()}</th>
+              <th className="px-5 py-4 text-right">Vybrané / predpis {new Date().getFullYear()}</th>
               <th className="px-5 py-4">Chýba</th>
               <th className="px-3 py-4" />
             </tr>
@@ -94,7 +97,14 @@ export default function ParishTable({ parishes, deaneries }: { parishes: ParishL
                 <td className="px-5 py-3 text-right font-mono">{p.catholics?.toLocaleString('sk-SK') ?? '—'}</td>
                 <td className="px-5 py-3 text-right font-mono text-gray-500">{p.villages_count || '—'}</td>
                 <td className="px-5 py-3 text-right font-mono">{p.donors_count || '—'}</td>
-                <td className="px-5 py-3 text-right font-mono font-bold text-green-700">{p.collected_this_year ? eur(p.collected_this_year) : '—'}</td>
+                <td className="px-5 py-3 text-right font-mono">
+                  <span className="font-bold text-green-700">{p.collected_this_year ? eur(p.collected_this_year) : '—'}</span>
+                  {p.prescribed_this_year != null && (
+                    <div className="text-[10px] text-gray-400">
+                      z {eur(p.prescribed_this_year)} · {p.prescribed_this_year ? Math.round((100 * p.collected_this_year) / p.prescribed_this_year) : 0} %
+                    </div>
+                  )}
+                </td>
                 <td className="px-5 py-3">
                   {p.missing.length > 0 && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">

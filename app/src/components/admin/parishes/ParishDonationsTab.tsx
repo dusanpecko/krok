@@ -12,12 +12,12 @@ const ACTION_LABEL: Record<string, string> = {
   approve: 'Schválené',
   reject: 'Zamietnuté',
 }
-const ENTITY_LABEL: Record<string, string> = { parish: 'údaje', population: 'obce a štatistika', schedule: 'bohoslužby', clergy: 'kňazi' }
+const ENTITY_LABEL: Record<string, string> = { parish: 'údaje', population: 'obce a štatistika', schedule: 'bohoslužby', clergy: 'kňazi', target: 'predpis' }
 
 /** Úprava údajov farnosti ukladá zmeny ako { pole: [staré, nové] }; ostatné záznamy sú prosté hodnoty. */
 function describe(l: ParishChangeLogEntry): string {
   if (!l.changes) return ''
-  const isDiff = l.entity === 'parish' && l.action === 'admin_update'
+  const isDiff = (l.entity === 'parish' || l.entity === 'target') && l.action === 'admin_update'
   return Object.entries(l.changes)
     .map(([k, v]) => (isDiff && Array.isArray(v) && v.length === 2 ? `${k}: ${v[0] ?? '—'} → ${v[1] ?? '—'}` : `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`))
     .join(' · ')
@@ -31,7 +31,7 @@ export default function ParishDonationsTab({ summary, log, donorsCount }: { summ
       <div className={cardCls}>
         <SectionTitle
           title="Prínos farnosti do fondu"
-          description={`Dary darcov s touto farnosťou (farnosť v čase daru). Darcov s farnosťou teraz: ${donorsCount}. Predpis sa generuje vo fáze F3.`}
+          description={`Dary darcov s touto farnosťou (farnosť v čase daru). Darcov s farnosťou teraz: ${donorsCount}. Predpis na rok sa generuje v Farnosti → Predpisy.`}
         />
         <table className="w-full text-sm">
           <thead>

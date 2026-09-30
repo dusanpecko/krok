@@ -13,7 +13,7 @@ const routePermissionsMap: Record<string, string> = {
   '/admin/granty': 'view_grants',
   '/admin/roly': 'manage_roles',
   '/admin/projekty': 'manage_config',
-  '/admin/nastavenia/farnosti': 'manage_config',
+  '/admin/farnosti': 'manage_parishes',
   '/admin/nastavenia/dekanaty': 'manage_config',
   '/admin/exporty': 'view_donors',
 }

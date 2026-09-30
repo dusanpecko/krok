@@ -1,122 +1,164 @@
 'use client'
 
-import { useState } from 'react'
-import { Edit2, Trash2, Church, Search, Users2, Map } from 'lucide-react'
+import { useMemo, useState, useTransition } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Search, Plus, AlertTriangle, ChevronRight, Loader2, X } from 'lucide-react'
+import { createParish } from '@/app/admin/farnosti/actions'
+import { KIND_LABEL, type ParishKind, type ParishListItem } from '@/lib/parishes/types'
+import { btnPrimary, inputCls, Field, Notice } from '@/components/admin/projects/ui'
 
-interface Parish {
-  id: string
-  name: string
-  city?: string | null
-  postal_code?: string | null
-  deanery?: { name: string } | null
-  donors_count?: number
-}
+const eur = (n: number) => n.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-interface ParishTableProps {
-  parishes: Parish[]
-  onEdit: (parish: Parish) => void
-  onDelete: (id: string) => Promise<void>
-}
+export default function ParishTable({ parishes, deaneries }: { parishes: ParishListItem[]; deaneries: { id: string; name: string }[] }) {
+  const [q, setQ] = useState('')
+  const [deanery, setDeanery] = useState('all')
+  const [kind, setKind] = useState<'all' | ParishKind>('all')
+  const [onlyMissing, setOnlyMissing] = useState(false)
+  const [creating, setCreating] = useState(false)
 
-export default function ParishTable({ parishes, onEdit, onDelete }: ParishTableProps) {
-  const [search, setSearch] = useState('')
+  const filtered = useMemo(() => {
+    const fq = fold(q.trim())
+    return parishes.filter((p) => {
+      if (deanery !== 'all' && (deanery === 'none' ? p.deanery_id : p.deanery_id !== deanery)) return false
+      if (kind !== 'all' && p.kind !== kind) return false
+      if (onlyMissing && p.missing.length === 0) return false
+      if (!fq) return true
+      return [p.name, p.official_name, p.city, p.parish_code, p.administrator_name].some((v) => v && fold(v).includes(fq))
+    })
+  }, [parishes, q, deanery, kind, onlyMissing])
 
-  const filtered = parishes.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.city || '').toLowerCase().includes(search.toLowerCase()) ||
-    (p.deanery?.name || '').toLowerCase().includes(search.toLowerCase())
-  )
+  const totalCatholics = filtered.reduce((a, p) => a + (p.catholics ?? 0), 0)
+  const totalDonors = filtered.reduce((a, p) => a + p.donors_count, 0)
 
   return (
-    <div className="space-y-6">
-      <div className="relative group max-w-md">
-        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-        <input
-          type="text"
-          placeholder="Hľadať farnosť alebo dekanát..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all shadow-sm"
-        />
+    <div className="space-y-4">
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-3 lg:items-center">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hľadať názov, obec, kód, farára…" className={`${inputCls} pl-10`} />
+        </div>
+        <select value={deanery} onChange={(e) => setDeanery(e.target.value)} className={`${inputCls} lg:w-56 cursor-pointer`}>
+          <option value="all">Všetky dekanáty</option>
+          {deaneries.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+          <option value="none">Bez dekanátu</option>
+        </select>
+        <select value={kind} onChange={(e) => setKind(e.target.value as 'all' | ParishKind)} className={`${inputCls} lg:w-48 cursor-pointer`}>
+          <option value="all">Farnosti aj duchovné správy</option>
+          <option value="parish">Farnosti</option>
+          <option value="chaplaincy">Duchovné správy</option>
+        </select>
+        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 whitespace-nowrap cursor-pointer">
+          <input type="checkbox" checked={onlyMissing} onChange={(e) => setOnlyMissing(e.target.checked)} className="w-4 h-4 rounded" />
+          Len s chýbajúcimi údajmi
+        </label>
+        <button type="button" onClick={() => setCreating(true)} className={btnPrimary}>
+          <Plus size={16} /> Nová
+        </button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
+      <p className="text-sm text-gray-500 font-mono px-2">
+        Zobrazené: <span className="text-gray-900">{filtered.length}</span> z {parishes.length} · katolíci {totalCatholics.toLocaleString('sk-SK')} · darcovia {totalDonors}
+      </p>
+
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-x-auto">
+        <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-100">
-              <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Farnosť</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Dekanát</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Lokalita</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Darcovia</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Akcie</th>
+            <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <th className="px-5 py-4">Farnosť</th>
+              <th className="px-5 py-4">Dekanát</th>
+              <th className="px-5 py-4 text-right">Katolíci</th>
+              <th className="px-5 py-4 text-right">Obce</th>
+              <th className="px-5 py-4 text-right">Darcovia</th>
+              <th className="px-5 py-4 text-right">Vybrané {new Date().getFullYear()}</th>
+              <th className="px-5 py-4">Chýba</th>
+              <th className="px-3 py-4" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {filtered.map(parish => (
-              <tr key={parish.id} className="hover:bg-blue-50/20 transition-colors group">
-                <td className="px-8 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0">
-                      <Church size={16} />
-                    </div>
-                    <span className="font-bold text-gray-900 leading-tight">{parish.name}</span>
+            {filtered.map((p) => (
+              <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
+                <td className="px-5 py-3">
+                  <Link href={`/admin/farnosti/${p.id}`} className="font-bold text-gray-900 hover:text-blue-600">
+                    {p.official_name ?? p.name}
+                  </Link>
+                  <div className="text-xs text-gray-400 flex gap-2 flex-wrap">
+                    {p.kind !== 'parish' && <span className="font-bold text-purple-600">{KIND_LABEL[p.kind]}</span>}
+                    {p.parish_code && <span className="font-mono">kód {p.parish_code}</span>}
+                    {p.administrator_name && <span>{p.administrator_name}</span>}
+                    {!p.is_active && <span className="font-bold text-red-500">neaktívna</span>}
                   </div>
                 </td>
-                <td className="px-6 py-5">
-                  {parish.deanery ? (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Map size={14} className="text-gray-400 shrink-0" />
-                      {parish.deanery.name}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-gray-300 italic">–</span>
+                <td className="px-5 py-3 text-gray-600">{p.deanery_name ?? '—'}</td>
+                <td className="px-5 py-3 text-right font-mono">{p.catholics?.toLocaleString('sk-SK') ?? '—'}</td>
+                <td className="px-5 py-3 text-right font-mono text-gray-500">{p.villages_count || '—'}</td>
+                <td className="px-5 py-3 text-right font-mono">{p.donors_count || '—'}</td>
+                <td className="px-5 py-3 text-right font-mono font-bold text-green-700">{p.collected_this_year ? eur(p.collected_this_year) : '—'}</td>
+                <td className="px-5 py-3">
+                  {p.missing.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
+                      <AlertTriangle size={11} /> {p.missing.join(', ')}
+                    </span>
                   )}
                 </td>
-                <td className="px-6 py-5">
-                  <span className="text-sm text-gray-500">
-                    {[parish.city, parish.postal_code].filter(Boolean).join(' ') || '–'}
-                  </span>
-                </td>
-                <td className="px-6 py-5 text-center">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full">
-                    <Users2 size={12} className="text-gray-400" />
-                    <span className="text-xs font-bold font-mono text-gray-600">{parish.donors_count || 0}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-5 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => onEdit(parish)}
-                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-white rounded-lg transition-all border border-transparent hover:border-blue-100"
-                      title="Upraviť"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => onDelete(parish.id)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-white rounded-lg transition-all border border-transparent hover:border-red-100"
-                      title="Zmazať"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                <td className="px-3 py-3">
+                  <Link href={`/admin/farnosti/${p.id}`} className="text-gray-300 hover:text-blue-600"><ChevronRight size={18} /></Link>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-8 py-20 text-center text-gray-400 italic text-sm">
-                  Nenašli sa žiadne farnosti.
-                </td>
-              </tr>
+              <tr><td colSpan={8} className="px-5 py-12 text-center text-gray-400">Nič sa nenašlo.</td></tr>
             )}
           </tbody>
         </table>
-        <div className="px-8 py-3 border-t border-gray-50 bg-gray-50/30">
-          <p className="text-xs text-gray-400 font-mono">
-            Zobrazené: <span className="font-bold text-gray-600">{filtered.length}</span> z <span className="font-bold text-gray-600">{parishes.length}</span> farností
-          </p>
+      </div>
+
+      {creating && <CreateParishDialog deaneries={deaneries} onClose={() => setCreating(false)} />}
+    </div>
+  )
+}
+
+function CreateParishDialog({ deaneries, onClose }: { deaneries: { id: string; name: string }[]; onClose: () => void }) {
+  const router = useRouter()
+  const [name, setName] = useState('Farnosť ')
+  const [kind, setKind] = useState<ParishKind>('parish')
+  const [deaneryId, setDeaneryId] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  const submit = () =>
+    startTransition(async () => {
+      const res = await createParish({ name, kind, deanery_id: deaneryId || null })
+      if (res.success) router.push(`/admin/farnosti/${res.id}`)
+      else setError(res.error)
+    })
+
+  return (
+    <div className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-black text-gray-900">Nová farnosť / duchovná správa</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={20} /></button>
         </div>
+        {error && <Notice kind="error">{error}</Notice>}
+        <Field label="Názov"><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} autoFocus /></Field>
+        <Field label="Typ">
+          <select value={kind} onChange={(e) => setKind(e.target.value as ParishKind)} className={inputCls}>
+            <option value="parish">Farnosť</option>
+            <option value="chaplaincy">Duchovná správa</option>
+            <option value="other">Iné</option>
+          </select>
+        </Field>
+        <Field label="Dekanát">
+          <select value={deaneryId} onChange={(e) => setDeaneryId(e.target.value)} className={inputCls}>
+            <option value="">—</option>
+            {deaneries.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </Field>
+        <button onClick={submit} disabled={pending} className={`${btnPrimary} w-full`}>
+          {pending && <Loader2 size={16} className="animate-spin" />} Založiť a doplniť údaje
+        </button>
       </div>
     </div>
   )

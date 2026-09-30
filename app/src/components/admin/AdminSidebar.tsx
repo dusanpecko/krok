@@ -46,6 +46,7 @@ const mainLinks = [
   { href: '/admin/platby', label: 'Online platby', icon: CreditCard, permission: 'view_bank' },
   { href: '/admin/granty', label: 'Granty', icon: FolderHeart, permission: 'view_grants' },
   { href: '/admin/projekty', label: 'Výzvy a projekty', icon: Megaphone, permission: 'manage_projects' },
+  { href: '/admin/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_parishes' },
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
   { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
   { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },
@@ -53,7 +54,6 @@ const mainLinks = [
 ]
 
 const settingsLinks = [
-  { href: '/admin/nastavenia/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_config' },
   { href: '/admin/nastavenia/dekanaty', label: 'Dekanáty', icon: Map, permission: 'manage_config' },
   { href: '/admin/import', label: 'Import výpisu', icon: FileUp, permission: 'import_bank' },
   { href: '/admin/roly', label: 'Správa rolí', icon: Users, permission: 'manage_roles' },

@@ -23,7 +23,7 @@ const sortKey = (name: string) => name.replace(/^Farnosť\s+/i, '').normalize('N
 /** Farnosti (bez pseudo-farností, zoradené podľa mena bez predpony „Farnosť“) a verejné projekty. */
 export async function loadDonorChoiceOptions(admin: SupabaseClient): Promise<{ parishes: ChoiceOption[]; projects: ChoiceOption[] }> {
   const [{ data: parishes }, { data: projects }] = await Promise.all([
-    admin.from('parishes').select('id, name'),
+    admin.from('parishes').select('id, name').eq('is_active', true),
     admin.from('projects').select('id, name').eq('visible_on_web', true).order('name'),
   ])
   return {
@@ -39,7 +39,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /** Overí farnosť od klienta: existuje a nie je pseudo-farnosť. `none` / prázdne → null. */
 export async function validateParishId(admin: SupabaseClient, value: unknown): Promise<string | null> {
   if (typeof value !== 'string' || !UUID_RE.test(value)) return null
-  const { data } = await admin.from('parishes').select('id, name').eq('id', value).maybeSingle()
+  const { data } = await admin.from('parishes').select('id, name').eq('id', value).eq('is_active', true).maybeSingle()
   if (!data || PSEUDO_PARISH_NAMES.includes(data.name as string)) return null
   return data.id as string
 }

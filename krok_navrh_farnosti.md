@@ -1,6 +1,6 @@
 # Návrh: Databáza farností (profil, bohoslužby, štatistika, predpis, vlastná stránka)
 
-Stav: **návrh po treťom kole rozhodnutí (2026-09-30)**; **F0, F1 a F1b hotové** (2026-09-30): register 123 farností a duchovných správ importovaný (schematizmus dcza.sk + CSV), F1b e2e overená. Ďalej F2 (admin) / F3 (predpis). Nadväzuje na `krok_navrh_vyzvy.md` a `krok_databaza_struktura.md`.
+Stav: **návrh po treťom kole rozhodnutí (2026-09-30)**; **F0, F1, F1b a F2 hotové** (2026-09-30): register 123 farností a duchovných správ importovaný (schematizmus dcza.sk + CSV), F1b e2e overená. Ďalej F3 (predpis). Nadväzuje na `krok_navrh_vyzvy.md` a `krok_databaza_struktura.md`.
 Predpokladané migrácie: `supabase/034_parishes_extended.sql` + `035_parish_pages.sql` (+ import skript). *(Čísla 026–033 medzitým obsadili banka, newsletter, darcovia a F1b (032 sekvencia VS, 033 onboarding).)*
 
 Cieľ modulu:
@@ -772,7 +772,7 @@ Skript `scripts/import-parishes.ts`, dry-run ako default (vzor: XML import):
 | **F0** ✅ | CSV `data/farnosti2.csv` + schematizmus dcza.sk (`scripts/fetch-schematizmus.ts` → `data/schematizmus.json`), dry-run `scripts/import-parishes.ts` | 0,5–1 deň |
 | **F1** ✅ | Migrácia **034** (tabuľky, RLS, pohľady, `donations.parish_id` + trigger), import `--apply`: 123 záznamov (114 farností + 9 duchovných správ), 208 obcí, 232 kňazov, pseudo-farnosti zrušené, 9 796 darov so snapshotom farnosti | 2 dni |
 | **F1b** ✅ | **Výber farnosti a projektu v registrácii a profile** (§ 6.3) + **oprava hľadania darcu cez `auth_user_id`** (§ 6.4) + **VS zo sekvencie** (O23) – hotové 2026-09-30: migrácie 032 (`next_donor_variable_symbol`), 033 (`donors.onboarding_completed_at`), `/profil/vitajte`, `lib/parishes/choices.ts`, `lib/donors/vs.ts` | 0,5–1 deň |
-| **F2** | Admin `/admin/farnosti` – zoznam + záložky 1–3 | 2–3 dni |
+| **F2** ✅ | Admin `/admin/farnosti` – zoznam (filtre dekanát / typ / chýbajúce údaje) + detail so záložkami Základné údaje, Obce a štatistika, Bohoslužby (cez rok / letný), Kňazi, Dary a história; oprávnenie `manage_parishes`; `/admin/nastavenia/farnosti` presmeruje | 2–3 dni |
 | **F3** | Predpis: `parish_target_settings`, generovanie, história, export | 1–2 dni |
 | **F4** | Zóna `/moja-farnost` + pozvánky (admin účet + editori) + schvaľovacia fronta chránených polí + audit | 3–4 dni |
 | **F5** | Migrácia 027 + verejné `/farnosti/[slug]` + oznamy a články + SEO | 3–4 dni |

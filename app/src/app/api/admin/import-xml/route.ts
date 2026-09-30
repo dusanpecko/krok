@@ -5,6 +5,7 @@ import { requirePermission, UnauthorizedError, ForbiddenError } from '@/lib/auth
 import { isMolliePayout, MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
 import {
   createLegacyPayerResolver,
+  findDonorByVsInText,
   getAnonymousDonorId,
   isHistoricalPayment,
   legacyProjectForPayment,
@@ -156,9 +157,13 @@ export async function POST(request: Request) {
     }
 
     // 5. Pre-fetch all donors to do VS mapping in memory (faster than N queries)
-    const { data: donors } = await supabase.from('donors').select('id, variable_symbol')
+    const { data: donors } = await supabase.from('donors').select('id, variable_symbol, alt_variable_symbols')
     const donorVsMap = new Map<string, string>()
     if (donors) {
+      // Ďalšie VS (zo zlúčených kariet) – hlavný VS má prednosť
+      donors.forEach(d => {
+        for (const alt of (d.alt_variable_symbols as string[] | null) ?? []) if (alt) donorVsMap.set(alt, d.id)
+      })
       donors.forEach(d => {
         if (d.variable_symbol) donorVsMap.set(d.variable_symbol, d.id)
       })
@@ -285,6 +290,16 @@ export async function POST(request: Request) {
             if (isMatched) category = 'donation'
          } else if (donorVsMap.has(vs)) {
             matchedDonorId = donorVsMap.get(vs)
+            isMatched = true
+            category = 'donation'
+         }
+      }
+
+      // Bez VS v poli VS → VS darcu napísaný v popise (napr. „Krok, 11770378“)
+      if (!isMatched && direction === 'credit' && category !== MOLLIE_PAYOUT_CATEGORY) {
+         const byText = findDonorByVsInText(`${ustrd} ${counterName ?? ""}`, donorVsMap, projectLegacyVsMap)
+         if (byText) {
+            matchedDonorId = byText
             isMatched = true
             category = 'donation'
          }

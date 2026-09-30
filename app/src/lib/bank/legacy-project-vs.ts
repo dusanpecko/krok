@@ -57,6 +57,27 @@ export function legacyProjectForPayment(
   return pid
 }
 
+/**
+ * VS darcu napísaný v popise platby namiesto poľa VS (napr. „Krok, 11770378“).
+ * Hľadá čísla z radu VS darcov (1177xxxx); vráti darcu len pri jednoznačnej zhode.
+ * VS výziev zo starého webu sa ignorujú (tie neurčujú darcu).
+ */
+export function findDonorByVsInText(
+  text: string | null | undefined,
+  donorVsMap: Map<string, string>,
+  projectLegacyVsMap: Map<string, string>
+): string | null {
+  if (!text) return null
+  const ids = new Set<string>()
+  for (const m of text.matchAll(/(?<!\d)0*(1177\d{4})(?!\d)/g)) {
+    const vs = m[1]
+    if (projectLegacyVsMap.has(vs)) continue
+    const id = donorVsMap.get(vs)
+    if (id) ids.add(id)
+  }
+  return ids.size === 1 ? [...ids][0] : null
+}
+
 /** Mapa normalizovaný legacy VS → project_id. */
 export async function loadProjectLegacyVsMap(admin: SupabaseClient): Promise<Map<string, string>> {
   const map = new Map<string, string>()
@@ -183,6 +204,12 @@ export async function loadPseudoDonorIds(admin: SupabaseClient, projectLegacyVsM
 }
 
 /**
+ * Účty, z ktorých platí veľa rôznych ľudí (Slovenská pošta – inkaso a poštové poukazy).
+ * Pravidlo IBAN sa na ne nepoužíva – inak by sa platby rôznych darcov spárovali s jedným.
+ */
+export const SHARED_PAYER_IBANS = new Set(['SK7502000080100138303012', 'SK6902000020140015805012'])
+
+/**
  * „Pravidlo IBAN“: mapa IBAN → darca z donors.iban a z histórie spárovaných platieb
  * (ručné spárovanie tak funguje ako pravidlo pre ďalšie platby z toho istého účtu).
  * null = nejednoznačné (z účtu platili rôzni darcovia, napr. zdieľaný rodinný účet) – nepárovať.
@@ -201,7 +228,7 @@ export async function loadIbanDonorMap(
     else if (prev !== donorId) map.set(iban, null)
   }
 
-  const raw = [...new Set(rawIbans.filter((x): x is string => !!x && !!normalizeIban(x)))]
+  const raw = [...new Set(rawIbans.filter((x): x is string => !!x && !!normalizeIban(x) && !SHARED_PAYER_IBANS.has(normalizeIban(x))))]
   const normalized = [...new Set(raw.map(normalizeIban))]
   if (normalized.length === 0) return map
 

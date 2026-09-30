@@ -7,7 +7,13 @@ import { sanitizeSearchTerm, sanitizeFilterValue } from '@/lib/search'
 import { runFioSync } from '@/lib/bank/fio-sync'
 import { MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
 import { computeProjectHint, type HintProject } from '@/lib/bank/project-hint'
-import { loadProjectLegacyVsMap, loadPseudoDonorIds, normalizeIban } from '@/lib/bank/legacy-project-vs'
+import { loadProjectLegacyVsMap, loadPseudoDonorIds, normalizeIban, SHARED_PAYER_IBANS } from '@/lib/bank/legacy-project-vs'
+import { extractPdfText, parsePostStatementText, splitPostAddress, splitPostName } from '@/lib/bank/post-statement'
+
+/** Rozúčtovaná hromadná platba (inkaso pošty) – dary sú v donations.source_bank_transaction_id */
+const POST_COLLECTION_CATEGORY = 'post_collection'
+/** Účet, z ktorého chodí inkaso Slovenskej pošty */
+const POST_COLLECTION_IBAN = 'SK7502000080100138303012'
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -76,7 +82,8 @@ export async function getTransactions(params: {
     .select(`
       *,
       donors ( id, first_name, last_name, vs:variable_symbol ),
-      donations ( id, project_id )
+      donations!donations_bank_transaction_id_fkey ( id, project_id ),
+      split_donations:donations!donations_source_bank_transaction_id_fkey ( id, amount, donors ( first_name, last_name ) )
     `, { count: 'exact' })
 
   // 1. Dátumy (Rok a voliteľne mesiac)
@@ -134,7 +141,7 @@ export async function getTransactions(params: {
     // donations je 1:1 (unikátny bank_transaction_id) – PostgREST vracia objekt, starší tvar pole
     const d = Array.isArray(tx.donations) ? tx.donations[0] : tx.donations
     const project_hint =
-      tx.direction === 'credit' && tx.category !== MOLLIE_PAYOUT_CATEGORY
+      tx.direction === 'credit' && tx.category !== MOLLIE_PAYOUT_CATEGORY && tx.category !== POST_COLLECTION_CATEGORY
         ? computeProjectHint(tx, hintProjects, d?.project_id ?? null)
         : null
     return { ...tx, donation_id: d?.id ?? null, project_hint }
@@ -237,6 +244,13 @@ export async function matchTransaction(
     return { success: false, error: 'Iba prichádzajúce platby môžu byť spárované.' }
   }
 
+  if (tx.category === POST_COLLECTION_CATEGORY) {
+    return {
+      success: false,
+      error: 'Platba je rozúčtovaná na viacerých darcov (inkaso pošty). Ak ju chcete zmeniť, najprv zrušte rozúčtovanie.',
+    }
+  }
+
   if (tx.category === MOLLIE_PAYOUT_CATEGORY) {
     return {
       success: false,
@@ -277,7 +291,7 @@ export async function matchTransaction(
   // Pravidlo IBAN: zapamätáme účet darcovi, aby sa ďalšie platby z neho spárovali automaticky
   // (zástupných / anonymných darcov vynecháme)
   const iban = normalizeIban(tx.counterparty_iban)
-  if (iban) {
+  if (iban && !SHARED_PAYER_IBANS.has(iban)) {
     const pseudo = await loadPseudoDonorIds(supabaseAdmin, await loadProjectLegacyVsMap(supabaseAdmin))
     if (!pseudo.has(donorId)) {
       await supabaseAdmin.from('donors').update({ iban }).eq('id', donorId).is('iban', null)
@@ -304,13 +318,17 @@ export async function unmatchTransaction(transactionId: string) {
     .delete()
     .eq('bank_transaction_id', transactionId)
 
+  // Rozúčtovaná hromadná platba (pošta) – zmažeme aj dary z rozúčtovania
+  await supabaseAdmin.from('donations').delete().eq('source_bank_transaction_id', transactionId)
+
   // 2. Odober asociáciu z tabulky bank_transactions
   const { error: matchError } = await supabaseAdmin
     .from('bank_transactions')
     .update({
       matched: false,
       donor_id: null,
-      category: 'unmatched'
+      category: 'unmatched',
+      split_fee: null
     })
     .eq('id', transactionId)
 
@@ -351,6 +369,8 @@ export async function bulkMatchAnonymous(params: {
     .eq('matched', false)
     .eq('direction', 'credit')
     .neq('category', MOLLIE_PAYOUT_CATEGORY) // výplaty z Mollie sa nepárujú
+    // inkaso pošty sa rozúčtováva podľa PDF, nie na anonymného darcu
+    .or(`counterparty_iban.is.null,counterparty_iban.neq.${POST_COLLECTION_IBAN}`)
     .gte('booking_date', startDate)
     .lte('booking_date', endDate)
 
@@ -694,3 +714,196 @@ export async function syncFioTransactions(year?: number) {
 }
 
 
+
+
+// ============================================================
+// Rozúčtovanie inkasa Slovenskej pošty podľa PDF „Opis úhrad k prevodu“
+// ============================================================
+
+export interface PostSplitCandidate {
+  id: string
+  name: string
+  variable_symbol: string | null
+  city: string | null
+  reason: 'ecp' | 'name'
+}
+
+export interface PostSplitPreviewRow {
+  ecp: string
+  name: string
+  address: string
+  amount: number
+  candidates: PostSplitCandidate[]
+  /** Predvolená voľba: id darcu alebo 'new' */
+  suggested: string
+}
+
+export type PostSplitPreview =
+  | {
+      success: true
+      rows: PostSplitPreviewRow[]
+      total: number
+      fee: number | null
+      net: number | null
+      period: string | null
+      txAmount: number
+      /** net z PDF sedí so sumou platby v banke */
+      amountMatches: boolean
+    }
+  | { success: false; error: string }
+
+function foldName(s: string) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 1).sort().join(' ')
+}
+
+/** Načíta PDF, rozoberie riadky a ku každému navrhne darcu (EČP → meno bez diakritiky). */
+export async function previewPostSplit(transactionId: string, formData: FormData): Promise<PostSplitPreview> {
+  await requirePermission('view_bank')
+  const file = formData.get('file')
+  if (!(file instanceof File) || file.size === 0) return { success: false, error: 'Vyberte PDF súbor.' }
+  if (file.size > 5 * 1024 * 1024) return { success: false, error: 'PDF je príliš veľké (max. 5 MB).' }
+
+  const { data: tx } = await supabaseAdmin.from('bank_transactions').select('id, amount, direction, matched, category').eq('id', transactionId).single()
+  if (!tx || tx.direction !== 'credit') return { success: false, error: 'Platba sa nenašla.' }
+  if (tx.matched) return { success: false, error: 'Platba je už spárovaná alebo rozúčtovaná. Najprv zrušte párovanie.' }
+
+  let text: string
+  try {
+    text = await extractPdfText(await file.arrayBuffer())
+  } catch (e) {
+    console.error('[banka] previewPostSplit PDF:', e)
+    return { success: false, error: 'PDF sa nepodarilo prečítať.' }
+  }
+  const st = parsePostStatementText(text)
+  if (st.rows.length === 0) return { success: false, error: 'V PDF sa nenašli žiadne úhrady (očakáva sa „Opis úhrad k prevodu“ zo Slovenskej pošty).' }
+
+  const ecps = st.rows.map((r) => r.ecp)
+  const { data: byEcp } = await supabaseAdmin.from('donors').select('id, first_name, last_name, variable_symbol, city, post_ecp').in('post_ecp', ecps)
+  const ecpMap = new Map((byEcp ?? []).map((d) => [d.post_ecp as string, d]))
+
+  const rows: PostSplitPreviewRow[] = []
+  for (const r of st.rows) {
+    const candidates: PostSplitCandidate[] = []
+    const e = ecpMap.get(r.ecp)
+    if (e) candidates.push({ id: e.id, name: `${e.first_name} ${e.last_name}`, variable_symbol: e.variable_symbol, city: e.city, reason: 'ecp' })
+
+    const { first, last } = splitPostName(r.name)
+    const { data: found } = await supabaseAdmin.rpc('search_donors_unaccent', { search_query: `${last} ${first}`.trim() })
+    const key = foldName(`${first} ${last}`)
+    for (const d of (found ?? []) as { id: string; first_name: string; last_name: string; variable_symbol: string | null; city: string | null }[]) {
+      if (candidates.some((c) => c.id === d.id)) continue
+      if (foldName(`${d.first_name} ${d.last_name}`) !== key) continue
+      candidates.push({ id: d.id, name: `${d.first_name} ${d.last_name}`, variable_symbol: d.variable_symbol, city: d.city, reason: 'name' })
+    }
+
+    // Návrh: EČP, inak jediná zhoda mena (pri viacerých uprednostníme rovnaké mesto), inak nový darca
+    const { city } = splitPostAddress(r.address)
+    const byName = candidates.filter((c) => c.reason === 'name')
+    const sameCity = byName.filter((c) => c.city && city && foldName(c.city) === foldName(city))
+    const suggested = e ? e.id : byName.length === 1 ? byName[0].id : sameCity.length === 1 ? sameCity[0].id : 'new'
+
+    rows.push({ ...r, candidates, suggested })
+  }
+
+  const total = Math.round(st.rows.reduce((a, r) => a + r.amount, 0) * 100) / 100
+  const net = st.net ?? (st.fee != null ? Math.round((total - st.fee) * 100) / 100 : null)
+  return {
+    success: true,
+    rows,
+    total,
+    fee: st.fee,
+    net,
+    period: st.period,
+    txAmount: Number(tx.amount),
+    amountMatches: net != null && Math.abs(net - Number(tx.amount)) < 0.005,
+  }
+}
+
+/** Uloží rozúčtovanie: dary jednotlivým darcom (prípadne noví darcovia), EČP k darcom, platba = post_collection. */
+export async function savePostSplit(
+  transactionId: string,
+  rows: { ecp: string; name: string; address: string; amount: number; donorId: string }[]
+): Promise<{ success: true; count: number; created: number } | { success: false; error: string }> {
+  await requirePermission('view_bank')
+  const { data: tx } = await supabaseAdmin.from('bank_transactions').select('id, amount, booking_date, direction, matched').eq('id', transactionId).single()
+  if (!tx || tx.direction !== 'credit') return { success: false, error: 'Platba sa nenašla.' }
+  if (tx.matched) return { success: false, error: 'Platba je už spárovaná alebo rozúčtovaná.' }
+  if (!rows.length) return { success: false, error: 'Nie sú žiadne riadky na uloženie.' }
+  if (rows.some((r) => !(Number(r.amount) > 0) || !/^\d{10}$/.test(r.ecp))) return { success: false, error: 'Neplatný riadok rozúčtovania.' }
+
+  let created = 0
+  let nextVs: number | null = null
+  const donorIds: string[] = []
+
+  for (const r of rows) {
+    let donorId = r.donorId
+    if (donorId === 'new') {
+      if (nextVs === null) nextVs = Number(await generateNextDonorVs())
+      else nextVs += 1
+      const { first, last, titleBefore } = splitPostName(r.name)
+      const { city, street } = splitPostAddress(r.address)
+      const { data: d, error } = await supabaseAdmin
+        .from('donors')
+        .insert({
+          first_name: first,
+          last_name: last,
+          title_before: titleBefore,
+          city,
+          street,
+          variable_symbol: String(nextVs),
+          post_ecp: r.ecp,
+          donor_type: 'individual',
+          status: 'active',
+          confirmation_method: 'post',
+          notes: `Založený z rozúčtovania inkasa Slovenskej pošty (EČP ${r.ecp}).`,
+        })
+        .select('id')
+        .single()
+      if (error || !d) {
+        console.error('[banka] savePostSplit create donor:', error?.message)
+        return { success: false, error: `Nepodarilo sa založiť darcu ${r.name}.` }
+      }
+      donorId = d.id
+      created++
+    } else {
+      // EČP si darca zapamätá – ďalšie mesiace sa navrhne automaticky (ak ho nemá iný darca)
+      const { data: other } = await supabaseAdmin.from('donors').select('id').eq('post_ecp', r.ecp).neq('id', donorId).maybeSingle()
+      if (!other) await supabaseAdmin.from('donors').update({ post_ecp: r.ecp }).eq('id', donorId)
+    }
+    donorIds.push(donorId)
+  }
+
+  const { error: donErr } = await supabaseAdmin.from('donations').insert(
+    rows.map((r, i) => ({
+      source_bank_transaction_id: tx.id,
+      donor_id: donorIds[i],
+      amount: r.amount,
+      donation_date: tx.booking_date,
+      payment_method: 'bank_transfer',
+      matched: true,
+    }))
+  )
+  if (donErr) {
+    console.error('[banka] savePostSplit donations:', donErr.message)
+    return { success: false, error: 'Zápis darov zlyhal.' }
+  }
+
+  const sum = rows.reduce((a, r) => a + Number(r.amount), 0)
+  await supabaseAdmin
+    .from('bank_transactions')
+    .update({ matched: true, donor_id: null, category: POST_COLLECTION_CATEGORY, split_fee: Math.round((sum - Number(tx.amount)) * 100) / 100 })
+    .eq('id', tx.id)
+
+  revalidatePath('/admin/banka')
+  revalidatePath('/admin/darcovia')
+  return { success: true, count: rows.length, created }
+}
+
+async function generateNextDonorVs(): Promise<string> {
+  const { data } = await supabaseAdmin.from('donors').select('variable_symbol').not('variable_symbol', 'is', null)
+  const max = (data ?? []).reduce((m: number, d: { variable_symbol: string | null }) => {
+    const n = parseInt(d.variable_symbol || '0', 10)
+    return n > m ? n : m
+  }, 11771451)
+  return String(max + 1)
+}

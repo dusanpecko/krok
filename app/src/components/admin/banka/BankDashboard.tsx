@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { CalendarDays, Search, Filter, Loader2, CheckCircle2, Sparkles, RefreshCw, ArrowDownUp } from 'lucide-react'
 import TransactionList from './TransactionList'
 import MatchDonorDialog from './MatchDonorDialog'
+import PostSplitDialog from './PostSplitDialog'
 import SuggestedMatchesDialog from './SuggestedMatchesDialog'
-import { matchTransaction, bulkMatchAnonymous, syncFioTransactions, setTransactionProject } from '@/app/admin/banka/actions'
+import { matchTransaction, bulkMatchAnonymous, syncFioTransactions, setTransactionProject, unmatchTransaction } from '@/app/admin/banka/actions'
 
 interface BankDashboardProps {
   years: number[]
@@ -86,6 +87,20 @@ export default function BankDashboard(props: BankDashboardProps) {
           router.refresh()
        }
     })
+  }
+
+  // Rozúčtovanie inkasa pošty podľa PDF
+  const [splitTx, setSplitTx] = useState<any>(null)
+  const handleUnsplit = async (tx: any) => {
+    if (!confirm('Zrušiť rozúčtovanie? Dary jednotlivým darcom z tejto platby sa zmažú (darcovia ostanú).')) return
+    const res = await unmatchTransaction(tx.id)
+    if (res.success) {
+      setSuccessMsg('Rozúčtovanie bolo zrušené.')
+      setTimeout(() => setSuccessMsg(null), 3000)
+      startTransition(() => router.refresh())
+    } else {
+      alert(res.error)
+    }
   }
 
   // Ručná oprava výzvy pri spárovanej platbe
@@ -314,6 +329,8 @@ export default function BankDashboard(props: BankDashboardProps) {
          onPairClick={(tx) => setPairingTx(tx)}
          onQuickMatchAnon={handleQuickMatchAnon}
          onProjectChange={handleProjectChange}
+         onPostSplit={(tx) => setSplitTx(tx)}
+         onUnsplit={handleUnsplit}
          savingProjectTxId={savingProjectTxId}
       />
 
@@ -340,6 +357,20 @@ export default function BankDashboard(props: BankDashboardProps) {
              Ďalej
           </button>
         </div>
+      )}
+
+      {/* ROZÚČTOVANIE INKASA POŠTY */}
+      {splitTx && (
+        <PostSplitDialog
+          transaction={splitTx}
+          onClose={() => setSplitTx(null)}
+          onSuccess={(msg) => {
+            setSplitTx(null)
+            setSuccessMsg(msg)
+            setTimeout(() => setSuccessMsg(null), 5000)
+            startTransition(() => router.refresh())
+          }}
+        />
       )}
 
       {/* MATCHING MODAL */}

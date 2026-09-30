@@ -9,6 +9,10 @@ interface TransactionListProps {
   onPairClick: (tx: any) => void
   onQuickMatchAnon: (tx: any) => void
   onProjectChange: (tx: any, projectId: string | null) => void
+  /** Rozúčtovanie hromadnej platby (inkaso pošty) podľa PDF */
+  onPostSplit: (tx: any) => void
+  /** Zrušenie rozúčtovania */
+  onUnsplit: (tx: any) => void
   /** id transakcie, pri ktorej práve prebieha zmena výzvy */
   savingProjectTxId?: string | null
 }
@@ -83,7 +87,10 @@ function ProjectCell({ tx, projects, onProjectChange, saving }: {
   )
 }
 
-export default function TransactionList({ transactions, projects, onPairClick, onQuickMatchAnon, onProjectChange, savingProjectTxId }: TransactionListProps) {
+/** Hromadné platby Slovenskej pošty (inkaso) – rozúčtovanie podľa PDF */
+const isPostPayment = (tx: any) => /po[sš]ta/i.test(tx.counterparty_name || '')
+
+export default function TransactionList({ transactions, projects, onPairClick, onQuickMatchAnon, onProjectChange, onPostSplit, onUnsplit, savingProjectTxId }: TransactionListProps) {
   if (transactions.length === 0) {
     return (
       <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-sm">
@@ -171,7 +178,24 @@ export default function TransactionList({ transactions, projects, onPairClick, o
                 </td>
 
                 <td className="px-6 py-4 text-right">
-                  {tx.category === 'mollie_payout' ? (
+                  {tx.category === 'post_collection' ? (
+                     <div className="flex flex-col items-end">
+                       <span
+                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 text-xs font-bold"
+                         title={(tx.split_donations ?? []).map((d: any) => `${d.donors?.first_name ?? ''} ${d.donors?.last_name ?? ''} – ${Number(d.amount).toFixed(2)} €`).join('\n')}
+                       >
+                         <CheckCircle2 size={14} /> Rozúčtované ({(tx.split_donations ?? []).length} darcov)
+                       </span>
+                       {tx.split_fee != null && Number(tx.split_fee) !== 0 && (
+                         <span className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-wide">
+                           Odmena pošty {Number(tx.split_fee).toFixed(2)} €
+                         </span>
+                       )}
+                       <button onClick={() => onUnsplit(tx)} className="mt-2 text-[10px] text-red-600 font-bold hover:underline">
+                         Zrušiť rozúčtovanie
+                       </button>
+                     </div>
+                  ) : tx.category === 'mollie_payout' ? (
                      <div className="flex flex-col items-end">
                        <span
                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-bold"
@@ -203,6 +227,15 @@ export default function TransactionList({ transactions, projects, onPairClick, o
                   ) : (
                      isCredit ? (
                        <div className="flex flex-col gap-2 items-end">
+                          {isPostPayment(tx) && (
+                            <button
+                              onClick={() => onPostSplit(tx)}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-700 text-sm font-bold transition-colors shadow-sm w-full justify-center"
+                              title="Inkaso pošty – rozdeliť na darcov podľa PDF „Opis úhrad k prevodu“"
+                            >
+                              Rozúčtovať podľa PDF
+                            </button>
+                          )}
                           <button 
                             onClick={() => onPairClick(tx)}
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-bold transition-colors shadow-sm w-full justify-center"

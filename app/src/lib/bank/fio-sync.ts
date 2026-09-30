@@ -4,6 +4,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { isMolliePayout, MOLLIE_PAYOUT_CATEGORY } from '@/lib/bank/mollie-payout'
 import {
   createLegacyPayerResolver,
+  findDonorByVsInText,
   getAnonymousDonorId,
   isHistoricalPayment,
   legacyProjectForPayment,
@@ -254,9 +255,13 @@ export async function runFioSync(range?: FioSyncRange): Promise<FioSyncResult> {
     }
 
     // 5. Načítame darcov a projekty pre in-memory párovanie (presne ako v XML importe)
-    const { data: donors } = await supabaseAdmin.from('donors').select('id, variable_symbol')
+    const { data: donors } = await supabaseAdmin.from('donors').select('id, variable_symbol, alt_variable_symbols')
     const donorVsMap = new Map<string, string>()
     if (donors) {
+      // Ďalšie VS (zo zlúčených kariet) – hlavný VS má prednosť
+      donors.forEach(d => {
+        for (const alt of (d.alt_variable_symbols as string[] | null) ?? []) if (alt) donorVsMap.set(alt, d.id)
+      })
       donors.forEach(d => {
         if (d.variable_symbol) donorVsMap.set(d.variable_symbol, d.id)
       })
@@ -367,6 +372,16 @@ export async function runFioSync(range?: FioSyncRange): Promise<FioSyncResult> {
           if (isMatched) category = 'donation'
         } else if (donorVsMap.has(vs)) {
           matchedDonorId = donorVsMap.get(vs)
+          isMatched = true
+          category = 'donation'
+        }
+      }
+
+      // Bez VS v poli VS → VS darcu napísaný v popise (napr. „Krok, 11770378“)
+      if (!isMatched && direction === 'credit' && category !== MOLLIE_PAYOUT_CATEGORY) {
+        const byText = findDonorByVsInText(`${remittanceInfo ?? ""} ${counterName ?? ""}`, donorVsMap, projectLegacyVsMap)
+        if (byText) {
+          matchedDonorId = byText
           isMatched = true
           category = 'donation'
         }

@@ -1,5 +1,8 @@
 /** Formátovanie pre verejné stránky farností – bez serverových závislostí. */
 
+/** Texty v sekcii Sviatosti, ktoré nie sú sviatosťou – zobrazia sa za oddeľovačom (migrácia 037). */
+export const NON_SACRAMENT_TYPES = ['pohreb']
+
 const MONTHS_GEN = ['januára', 'februára', 'marca', 'apríla', 'mája', 'júna', 'júla', 'augusta', 'septembra', 'októbra', 'novembra', 'decembra']
 
 /** „2026-09-14“ → „14. septembra“ (hody a poklona sa slávia každý rok – bez roku). */

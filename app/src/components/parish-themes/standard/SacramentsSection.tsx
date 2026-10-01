@@ -3,15 +3,16 @@
 import { useState } from 'react'
 import { BookOpen, Cross, Droplets, Flame, HandHeart, HeartHandshake, KeyRound, Wheat, type LucideIcon } from 'lucide-react'
 import type { PublicSacrament } from '@/lib/parishes/public'
+import { NON_SACRAMENT_TYPES } from '@/lib/parishes/format'
 
 const ICONS: Record<string, LucideIcon> = {
   krst: Droplets,
-  'prve-sv-prijimanie': Wheat,
+  eucharistia: Wheat,
   birmovka: Flame,
   manzelstvo: HeartHandshake,
   pomazanie: HandHeart,
   pohreb: Cross,
-  spoved: KeyRound,
+  zmierenie: KeyRound,
 }
 
 /** Sviatosti ako dlaždice s ikonou; po kliknutí sa pod nimi rozbalí text. */
@@ -19,29 +20,40 @@ export default function SacramentsSection({ sacraments }: { sacraments: PublicSa
   const [open, setOpen] = useState<string | null>(null)
   const current = sacraments.find((s) => s.type === open)
 
+  const tile = (s: PublicSacrament) => {
+    const Icon = ICONS[s.type] ?? BookOpen
+    const active = s.type === open
+    return (
+      <button
+        key={s.type}
+        type="button"
+        onClick={() => setOpen(active ? null : s.type)}
+        aria-expanded={active}
+        className={`w-[calc(50%-6px)] sm:w-32 flex flex-col items-center gap-3 p-4 rounded-2xl border text-center cursor-pointer transition-colors ${
+          active ? 'bg-gold/15 border-gold text-gold-bright' : 'bg-white/[0.04] border-white/10 hover:border-gold/40 hover:text-gold-bright'
+        }`}
+      >
+        <span className={`w-14 h-14 rounded-full flex items-center justify-center border ${active ? 'border-gold bg-gold/10' : 'border-gold/30 bg-white/5'} text-gold`}>
+          <Icon size={26} strokeWidth={1.6} />
+        </span>
+        <span className="text-sm font-extrabold leading-tight">{s.title}</span>
+      </button>
+    )
+  }
+  const sacr = sacraments.filter((s) => !NON_SACRAMENT_TYPES.includes(s.type))
+  const other = sacraments.filter((s) => NON_SACRAMENT_TYPES.includes(s.type))
+
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        {sacraments.map((s) => {
-          const Icon = ICONS[s.type] ?? BookOpen
-          const active = s.type === open
-          return (
-            <button
-              key={s.type}
-              type="button"
-              onClick={() => setOpen(active ? null : s.type)}
-              aria-expanded={active}
-              className={`flex flex-col items-center gap-3 p-4 rounded-2xl border text-center cursor-pointer transition-colors ${
-                active ? 'bg-gold/15 border-gold text-gold-bright' : 'bg-white/[0.04] border-white/10 hover:border-gold/40 hover:text-gold-bright'
-              }`}
-            >
-              <span className={`w-14 h-14 rounded-full flex items-center justify-center border ${active ? 'border-gold bg-gold/10' : 'border-gold/30 bg-white/5'} text-gold`}>
-                <Icon size={26} strokeWidth={1.6} />
-              </span>
-              <span className="text-sm font-extrabold leading-tight">{s.title}</span>
-            </button>
-          )
-        })}
+      <div className="flex flex-wrap gap-3">
+        {sacr.map(tile)}
+        {sacr.length > 0 && other.length > 0 && (
+          <>
+            <span aria-hidden className="hidden sm:block w-px self-stretch bg-white/15 mx-2" />
+            <span aria-hidden className="basis-full h-px bg-white/10 sm:hidden" />
+          </>
+        )}
+        {other.map(tile)}
       </div>
       {current && (
         <div className="mt-4 bg-white/[0.04] border border-gold/30 rounded-2xl p-6">

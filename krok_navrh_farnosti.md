@@ -1,7 +1,58 @@
 # Návrh: Databáza farností (profil, bohoslužby, štatistika, predpis, vlastná stránka)
 
-Stav: **návrh po treťom kole rozhodnutí (2026-09-30)**; **F0, F1, F1b, F2, F3 a F4 hotové** (2026-09-30): register 123 farností a duchovných správ importovaný (schematizmus dcza.sk + CSV), F1b e2e overená. Ďalej F5 (verejná stránka farnosti + oznamy a články). Nadväzuje na `krok_navrh_vyzvy.md` a `krok_databaza_struktura.md`.
-Predpokladané migrácie: `supabase/034_parishes_extended.sql` + `035_parish_pages.sql` (+ import skript). *(Čísla 026–033 medzitým obsadili banka, newsletter, darcovia a F1b (032 sekvencia VS, 033 onboarding).)*
+Stav k **2026-10-01**: fázy **F0–F4 hotové** (lokálne commitnuté, používateľ otestoval – „zatiaľ všetko funguje“, push po doladení). Ďalej **F5 – verejné stránky farností** (§ 4, podklad `web_parochia` v § 11). Nadväzuje na `krok_navrh_vyzvy.md` a `krok_databaza_struktura.md`.
+Migrácie: **032** (sekvencia VS), **033** (onboarding darcu), **034** (register farností) – v produkčnej DB ✅; **035_parish_pages** (F5) ⬜. *(Pôvodne plánované čísla 026/027 obsadili banka, newsletter a darcovia.)*
+
+Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~ = vyriešené / zodpovedané.
+
+## Checklist modulu
+
+**Dáta a model (F0, F1)**
+- [x] Zdroj dát: CSV `data/farnosti2.csv` + oficiálny schematizmus dcza.sk (`scripts/fetch-schematizmus.ts`) – § 2, § 7
+- [x] Import `scripts/import-parishes.ts` (dry-run / `--apply`): 123 záznamov (114 farností + 9 duchovných správ), 208 obcí, 232 kňazov, IČO 115, IBAN 109 – § 7, § 8.2
+- [x] Migrácia 034: rozšírené `parishes`, obce + štatistika, bohoslužby (2 režimy × bežné/prvý piatok), kňazi, predpisy, prístupy, návrhy, audit, RLS – § 3
+- [x] Pseudo-farnosti zrušené (Lectio, Dve percentá → projekt aj pri daroch; Charita len `donor_projects`; Rodinkovo bez projektu) – § 2, O19, O22
+- [x] Snapshot farnosti na dare `donations.parish_id` + trigger (namiesto 5 miest v kóde) + backfill – § 3.5
+- [x] Bezpečnosť: `parishes` pre anon/authenticated len bezpečné stĺpce (predtým `SELECT *` pre každého) – § 4.2, § 5.3
+- [ ] Doplniť chýbajúcu štatistiku (Dolný Moštenec, Hvozdnica, Jasenové, Žilina-Bánová) a IČO (Rosina, Hvozdnica, duchovné správy) – ručne v admine
+- [ ] Overiť IČO pri Makove a sv. Barbore (v CSV dve rôzne) – poznámka pri farnosti
+- [ ] Odstrániť textový stĺpec `parishes.deanery` (dnes duplikuje `deanery_id`) – § 3.1
+
+**Darca (F1b)**
+- [x] Povinný výber farnosti (aj „nepatrím do farnosti“) + projekt pri registrácii – § 6.3, O20
+- [x] Onboarding `/profil/vitajte` (aj po Google registrácii) – § 6.3
+- [x] Zmena farnosti a projektu v profile – § 6.3
+- [x] Darca sa hľadá cez `auth_user_id`, zmena e-mailu nezaloží druhý profil – § 6.4, O21
+- [x] VS nových darcov z DB sekvencie (race condition) – O23
+- [ ] Riadok „Dary bez farnosti (na projekt)“ v prehľadoch za diecézu – § 2
+
+**Admin diecézy (F2, F3, F4)**
+- [x] `/admin/farnosti` – zoznam (hľadanie, dekanát, typ, chýbajúce údaje, plnenie) – § 6.1
+- [x] Detail: Základné údaje, Obce a štatistika, Bohoslužby, Kňazi, Dary a história, Prístupy a návrhy – § 6.1
+- [x] Predpisy na rok `/admin/farnosti/predpisy` (generovanie, prepočet, ručná úprava s dôvodom, export XLSX) – § 3.4; **predpisy 2026 vygenerované** (110 farností, 930 982 €)
+- [ ] Predpis podľa **podielu pracujúcich katolíkov** – § 10.1
+- [x] Prístupy farnosti (existujúci účet / pozvánka) + fronta `/admin/farnosti/schvalovanie` – § 3.6, § 5.1
+- [x] „Prihlásiť sa za farnosť“ – náhľad zóny farnosti z adminu
+- [ ] Filtre zoznamu: okres, „neaktualizované > 12 mes.“, „bez prístupu“, „čaká na schválenie“ – § 6.1
+- [ ] Graf histórie plnenia (dnes tabuľka) a menný zoznam darcov farnosti v admine (`view_donors`) – § 6.1
+- [ ] E-mail referentovi pri novom návrhu zmeny – § 3.6
+- [ ] Obrazovky len na čítanie pre `view_parishes` (kúria, kontrolór) – § 5.2
+- [ ] Slovenská šablóna pozvánky v Supabase Auth + povolené redirect URL `/auth/callback` – pred prvou pozvánkou
+
+**Zóna farnosti (F4)**
+- [x] `/moja-farnost`: prehľad plnenia bez mien, bohoslužby a prezentácia naživo, úradné údaje a štatistika návrhom, kontakt kňaza – § 6.2
+- [ ] Foto farnosti a kňazov (upload) – § 3.8, § 6.2
+- [ ] Materiály: letáky, QR kód a VS (pay-by-square) – § 6.2
+- [ ] Pilot – rozposlať prístupy prvým 5–8 farnostiam – § 8.1, O16
+
+**Verejné stránky (F5, F6)**
+- [ ] Migrácia 035: `parish_posts` (oznamy, články, PDF príloha) – § 4.1
+- [ ] `/farnosti` (zoznam + hľadanie podľa obce) a `/farnosti/[slug]` (bohoslužby, kňazi, kontakt, mapa, sviatky, oznamy) – § 4.2
+- [ ] Oznamy a články v zóne farnosti (TipTap) + stiahnutie z webu diecézou – § 4.3
+- [ ] SEO: sitemap, OG, schema.org `Church` / `Event` – § 4.2
+- [ ] Zásady ochrany OÚ – obsah od farností – § 5.4
+- [ ] Subdomény `<farnost>.mojkrok.sk` (301) – § 4.4, F6
+- [ ] Rozhodnúť W1–W6 (rozsah F5 podľa podkladu `web_parochia`) – § 11
 
 Cieľ modulu:
 
@@ -15,7 +66,7 @@ Cieľ modulu:
 
 ---
 
-## 0. Rozhodnutia z 2026-09-28
+## 0. Rozhodnutia (2026-09-28 až 2026-09-30)
 
 | # | Otázka | **Rozhodnutie** |
 |---|---|---|
@@ -49,7 +100,7 @@ Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou*
 
 ---
 
-## 1. Čo už v Kroku existuje (audit k 2026-09-28)
+## 1. Čo už v Kroku existovalo (audit k 2026-09-28) – *historický stav pred implementáciou*
 
 Zistené priamo z produkčnej DB a kódu:
 
@@ -69,7 +120,7 @@ Zistené priamo z produkčnej DB a kódu:
 
 ---
 
-## 2. Zdrojové dáta – CSV `farnosti2.csv`
+## 2. Zdrojové dáta – CSV `farnosti2.csv` ✅
 
 Export z FileMakeru. Jeden riadok = farnosť, za ňou riadky filiálok (prázdne polia farnosti + blok štatistiky).
 
@@ -94,20 +145,20 @@ Export z FileMakeru. Jeden riadok = farnosť, za ňou riadky filiálok (prázdne
 | +14 | **Spovedanie** – 14 časových polí | `17.00-17.30hod`, `30 minút pred sv. omšou` – zjavne 7 dní × 2 režimy |
 | +4 | **Štatistika**: obec, obyvatelia, katolíci, % | `"Lysica","871","780","89,55"` |
 
-14 stĺpcov spovedania sedí s rozhodnutím O11 (dva režimy × 7 dní) – **potvrdiť pri importe**.
+~~14 stĺpcov spovedania sedí s rozhodnutím O11 (dva režimy × 7 dní) – potvrdiť pri importe.~~ ✅ Potvrdené ako 7 dní bežné + 7 dní prvopiatkové (O12); spovedanie malo vyplnené len niekoľko farností.
 
-### Problémy v dátach (import potrebuje ručnú kontrolu)
+### Problémy v dátach – všetky vyriešené pri importe ✅
 
-- **Testovacie záznamy**: `Farnosť VZOR`, `Farnosť test`, `Majer`, `Mokrade`, `Dekanát`.
-- **Placeholder `xxx`** v DIČ a webe (~40 % riadkov) → `NULL`.
-- **Duplicita**: `Makov` dvakrát (dekanát `Turzovka`, IČO 31925308 vs. dekanát `Tka`, IČO 31926835).
-- **Posunuté riadky štatistiky**: záznam `Trnové` má pod sebou obce `Turany, Krpeľany, Nolčovo…` – patria inej farnosti. Automatické priradenie by vyrobilo nezmysly.
-- **Nekonzistentné dekanáty**: `Tka` vs `Turzovka`, `PB`, `KNM`, `Krásno ` (s medzerou) → mapovací slovník.
-- **Percentá** s chybami plávajúcej čiarky (`80,819999999999993`) – neimportovať, počítať z `katolíci / obyvatelia`.
-- **Duchovné správy** bez IČO a štatistiky → `kind = 'chaplaincy'`.
-- Súbor je **poškodený na úrovni riadkov** – niektoré záznamy zlepené (`…"88,83""Púchov","2020617588"…`).
+- ~~**Testovacie záznamy**: `Farnosť VZOR`, `Farnosť test`, `Majer`, `Mokrade`, `Dekanát`.~~ ✅
+- ~~**Placeholder `xxx`** v DIČ a webe (~40 % riadkov) → `NULL`.~~ ✅
+- ~~**Duplicita**: `Makov` dvakrát (dekanát `Turzovka`, IČO 31925308 vs. dekanát `Tka`, IČO 31926835).~~ ✅
+- ~~**Posunuté riadky štatistiky**: záznam `Trnové` má pod sebou obce `Turany, Krpeľany, Nolčovo…` – patria inej farnosti. Automatické priradenie by vyrobilo nezmysly.~~ ✅
+- ~~**Nekonzistentné dekanáty**: `Tka` vs `Turzovka`, `PB`, `KNM`, `Krásno ` (s medzerou) → mapovací slovník.~~ ✅
+- ~~**Percentá** s chybami plávajúcej čiarky (`80,819999999999993`) – neimportovať, počítať z `katolíci / obyvatelia`.~~ ✅
+- ~~**Duchovné správy** bez IČO a štatistiky → `kind = 'chaplaincy'`.~~ ✅
+- ~~Súbor je **poškodený na úrovni riadkov** – niektoré záznamy zlepené (`…"88,83""Púchov","2020617588"…`).~~ ✅
 
-### Zistenia na strane DB (nie CSV)
+### Zistenia na strane DB (nie CSV) ✅
 
 Pri kontrole produkčných dát vyšli najavo dve veci, ktoré import aj výpočet plnenia priamo ovplyvnia:
 
@@ -161,15 +212,17 @@ DELETE FROM parishes WHERE name IN ('Lectio divina','Dve percenta','Charita','Ro
 
 Krok 4 musí ísť **až nakoniec**, inak sa fiktívna farnosť zapečie do snapshotu na 379 daroch.
 
-Darca si potom projekt **vie zmeniť sám v profile** („Podporujem projekt: …“), ale prednastavený ho dostane – nezačína od nuly. V admin prehľade pribudne riadok **„Dary bez farnosti (na projekt)“**, aby súčty za diecézu sedeli a týchto 9 678,58 € nezmizlo z dohľadu.
+✅ Darca si potom projekt **vie zmeniť sám v profile** („Podporujem projekt: …“), ale prednastavený ho dostane – nezačína od nuly. ⬜ V admin prehľade pribudne riadok **„Dary bez farnosti (na projekt)“**, aby súčty za diecézu sedeli a týchto 9 678,58 € nezmizlo z dohľadu.
 
-> **Akcia (stále otvorená k 2026-09-30):** uložiť CSV do `data/farnosti2.csv` (dnes nie je v repe) a vypýtať čistý export vrátane hlavičky stĺpcov. Bez neho sa F0/F1 nedá začať.
+✅ **Vykonané 2026-09-30** (import `--apply`): Lectio divina 127 darov → projekt, Dve percentá 15 darov → projekt, Charita len `donor_projects` (O22), všetky 4 pseudo-farnosti zmazané, 11 darcov „bez farnosti“, backfill `donations.parish_id` až potom.
+
+> ~~**Akcia:** uložiť CSV do `data/farnosti2.csv` a vypýtať čistý export vrátane hlavičky stĺpcov.~~ ✅ CSV dodané 2026-09-30; hlavným zdrojom sa stal oficiálny schematizmus dcza.sk, CSV dopĺňa úradné údaje.
 
 ---
 
-## 3. Dátový model – migrácia 026
+## 3. Dátový model – migrácia 034 ✅
 
-### 3.1 Rozšírenie `parishes`
+### 3.1 Rozšírenie `parishes` ✅
 
 ```sql
 CREATE TYPE parish_kind AS ENUM ('parish', 'chaplaincy', 'other');
@@ -207,9 +260,9 @@ ALTER TABLE parishes
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 ```
 
-Plus: doplniť `deanery_id` všetkým 83 farnostiam a nakoniec **dropnúť textový `deanery`**.
+Plus: ~~doplniť `deanery_id` všetkým 83 farnostiam~~ ✅ (všetkým okrem „Duchovnej starostlivosti v zdravotníctve“, ktorá dekanát nemá) a nakoniec ⬜ **dropnúť textový `deanery`**.
 
-### 3.2 Filiálky a štatistika veriacich
+### 3.2 Filiálky a štatistika veriacich ✅
 
 Štruktúra (obce) a čísla (ročné) oddelene, aby sa dala viesť história:
 
@@ -254,7 +307,7 @@ GROUP BY v.parish_id, s.year;
 
 Dáta z CSV → rok **2021**, `source = 'SODB 2021'`. **Zapisuje len diecéza** (O5); farnosť vie podať návrh (§ 3.6).
 
-### 3.3 Bohoslužby a spovedanie – dva režimy
+### 3.3 Bohoslužby a spovedanie – dva režimy ✅ *(zobrazenie na verejnej stránke ⬜ F5)*
 
 ```sql
 CREATE TYPE parish_service_type AS ENUM ('mass','confession','adoration','devotion','other');
@@ -301,7 +354,7 @@ Prečo dva riadky v `parish_schedules` a nie stĺpec `season` priamo na položk�
 
 Zobrazovacie pravidlo na verejnej stránke: *ak dnešný dátum spadá do platnosti letného rozvrhu a ten je aktívny → zobraz letný, inak „cez rok“.* Vždy sa ukáže aj prepínač na druhý režim; prvopiatkové spovedanie sa zobrazí ako samostatný blok pod bežným.
 
-### 3.4 Predpis na rok (katolíci × koeficient)
+### 3.4 Predpis na rok (katolíci × koeficient) ✅ *(podiel pracujúcich ⬜ § 10.1)*
 
 Koeficient je **diecézne nastavenie na rok**, nie hodnota na farnosť:
 
@@ -338,7 +391,7 @@ Keďže štatistika sa mení len pri sčítaní (O17), predpis sa medzi rokmi zm
 
 **História:** roky 2019–2025 predpis nemajú (O4). Zobrazia sa len so skutočnosťou (vybrané, počet darcov), stĺpec „predpis“ ostane prázdny. Ak diecéza neskôr čísla dohľadá, dajú sa doplniť ručne.
 
-### 3.5 Snapshot farnosti na dare (O2)
+### 3.5 Snapshot farnosti na dare (O2) ✅
 
 Aby zmena farnosti darcu neprepísala históriu:
 
@@ -387,7 +440,7 @@ REVOKE ALL ON v_parish_year_summary FROM anon;
 
 `REVOKE FROM anon` je nutné – rovnako ako pri `v_donor_summary` po migrácii 011, inak by finančná štatistika všetkých farností unikala cez anon kľúč.
 
-### 3.6 Schvaľovanie – len chránené údaje (O5, O6)
+### 3.6 Schvaľovanie – len chránené údaje (O5, O6) ✅ *(e-mail referentovi ⬜)*
 
 Farnosť pracuje **priamo na živých dátach**. Cez schválenie prejde len úzky okruh polí, ktoré určujú identitu farnosti a účtovné údaje:
 
@@ -448,7 +501,7 @@ Diecéza dostane v admine badge **„Na schválenie (3)“** a diff starý → n
 
 Audit log (`parish_change_log`, nižšie) zaznamenáva **aj nechránené zmeny** – diecéza tak vidí, kto prepísal bohoslužby alebo publikoval oznam, aj keď to nič neschvaľovalo.
 
-### 3.7 Prístup k farnosti – admin účet stránky (O7)
+### 3.7 Prístup k farnosti – admin účet stránky (O7) ✅
 
 ```sql
 CREATE TYPE parish_user_role AS ENUM ('admin','editor');
@@ -481,7 +534,7 @@ Rolu `editor` necháme v modeli pripravenú (stĺpec aj enum), ale v UI ju zatia
 
 Join tabuľka, nie stĺpec v `user_roles`: jeden kňaz môže spravovať dve farnosti a pri preložení sa len zmaže riadok – dáta farnosti zostanú a diecéza priradí nový admin účet.
 
-### 3.8 Kňazi vo farnosti (O18)
+### 3.8 Kňazi vo farnosti (O18) 🟡 *(dáta a kontakt ✅, foto ⬜, verejné zobrazenie ⬜ F5)*
 
 Na verejnej stránke má byť kontakt na kňaza aj zoznam kňazov pôsobiacich vo farnosti. Jedno textové pole `administrator_name` na to nestačí – vo väčších farnostiach je farár, kaplán aj výpomocný duchovný.
 
@@ -512,9 +565,9 @@ GDPR: telefón a e-mail kňaza sú osobné údaje. Preto `is_public` per osoba, 
 
 ---
 
-## 4. Verejná stránka farnosti – migrácia 027
+## 4. Verejná stránka farnosti – migrácia 035 ⬜ (F5)
 
-### 4.1 Oznamy a články
+### 4.1 Oznamy a články ⬜
 
 ```sql
 CREATE TYPE parish_post_type AS ENUM ('announcement','article');   -- oznamy / článok
@@ -542,7 +595,7 @@ CREATE TABLE parish_posts (
 
 Znovupoužijeme `SimpleRichTextEditor` a B2 upload z modulu aktualít – nová je len väzba na farnosť a práva.
 
-### 4.2 Stránky
+### 4.2 Stránky ⬜ *(column GRANT na `parishes` už hotový ✅)*
 
 | URL | Obsah |
 |---|---|
@@ -555,7 +608,7 @@ SEO je hlavná hodnota: dopyt „sv. omše <obec>“ je stály a farnosti bez we
 
 Verejné čítanie **len cez RPC / `security definer` funkciu s vybraným zoznamom stĺpcov** – nikdy `SELECT *` pre `anon` na `parishes` (obsahuje IBAN, IČO, meno správcu, internú poznámku).
 
-### 4.3 Zodpovednosť za obsah
+### 4.3 Zodpovednosť za obsah ⬜ *(audit `parish_change_log` ✅)*
 
 Oznamy a články idú na web **bez schvaľovania** (O6) – týždenné oznamy publikované v sobotu večer by inak čakali na diecézu cez víkend. Kontrola je preto následná, nie predbežná:
 
@@ -563,7 +616,7 @@ Oznamy a články idú na web **bez schvaľovania** (O6) – týždenné oznamy 
 - `visible_on_web` na farnosti ako hlavný vypínač celej stránky,
 - audit, kto čo publikoval (`created_by` + `parish_change_log`).
 
-### 4.4 Vlastná subdoména farnosti – `zilina.mojkrok.sk` (O13)
+### 4.4 Vlastná subdoména farnosti – `zilina.mojkrok.sk` (O13) ⬜ (F6)
 
 Áno, dá sa. Tri veci, ktoré na to treba:
 
@@ -586,9 +639,9 @@ Ak by diecéza neskôr chcela, aby farnosť mohla nasmerovať **vlastnú doménu
 
 ---
 
-## 5. Prístup a bezpečnosť
+## 5. Prístup a bezpečnosť 🟡
 
-### 5.1 Ako sa kňaz dostane k svojej farnosti
+### 5.1 Ako sa kňaz dostane k svojej farnosti ✅
 
 Odporúčaný tok – **pozvánka od diecézy**, nie automatické párovanie e-mailu:
 
@@ -600,7 +653,7 @@ Odporúčaný tok – **pozvánka od diecézy**, nie automatické párovanie e-m
 
 Prečo nie „kto sa prihlási farskou adresou, dostane farnosť“: e-maily sa v CSV opakujú (`makov@fara.sk` aj `makov@dcza.sk`), veľa farností má gmail a kto by si zaregistroval adresu na doméne `fara.sk`, dostal by cudzie dáta.
 
-### 5.2 Roly a oprávnenia
+### 5.2 Roly a oprávnenia ✅ *(obrazovky pre `view_parishes` ⬜)*
 
 | ID | Význam | Komu |
 |---|---|---|
@@ -610,7 +663,7 @@ Prečo nie „kto sa prihlási farskou adresou, dostane farnosť“: e-maily sa 
 
 V `src/lib/auth.ts` pribudne `requireParishAccess(parishId)` – overí `parish_users` service-role klientom (rovnaký vzor ako `getUserAccess`).
 
-### 5.3 RLS
+### 5.3 RLS ✅
 
 ```sql
 CREATE OR REPLACE FUNCTION is_parish_member(p_parish UUID)
@@ -623,7 +676,7 @@ $$;
 Policy pre `parish_*` tabuľky: `is_app_admin() OR is_parish_member(parish_id)`.
 `SET search_path` je povinné podľa hardeningu z migrácie 012.
 
-### 5.4 GDPR
+### 5.4 GDPR 🟡 *(mená darcov skryté ✅, `is_public` kňazov ✅, zásady OÚ ⬜)*
 
 - **Kňaz nevidí mená darcov** (O3) – zóna farnosti pracuje výhradne s agregátmi z `v_parish_year_summary`. Menný zoznam zostáva za oprávnením `view_donors`, ktoré farnosť nedostane.
 - **Sumy sa nemaskujú** (O15) – farnosť vidí reálny počet darcov aj reálnu sumu, aj keď je darca jeden. Rozhodnutie v prospech transparentnosti; keďže mená sa nezobrazujú (O3), farár sa z čísla nedozvie, kto to je, iba ak by mal jediného darcu a vedel o ňom.
@@ -632,9 +685,9 @@ Policy pre `parish_*` tabuľky: `is_app_admin() OR is_parish_member(parish_id)`.
 
 ---
 
-## 6. Obrazovky
+## 6. Obrazovky 🟡
 
-### 6.1 Admin diecézy – `/admin/farnosti`
+### 6.1 Admin diecézy – `/admin/farnosti` ✅ *(doplnkové filtre, graf a záložka Oznamy ⬜)*
 
 Presun z `/admin/nastavenia/farnosti` do hlavnej navigácie (ako pri výzvach).
 
@@ -652,7 +705,7 @@ Presun z `/admin/nastavenia/farnosti` do hlavnej navigácie (ako pri výzvach).
 - **Predpisy na rok** (samostatná obrazovka): koeficient, „Vygenerovať pre všetky farnosti“, ručné úpravy, export XLSX.
 - **Na schválenie**: fronta návrhov zo všetkých farností s diffom.
 
-### 6.2 Zóna farnosti – `/moja-farnost`
+### 6.2 Zóna farnosti – `/moja-farnost` ✅ *(foto, materiály, oznamy/články ⬜)*
 
 **Mimo `/admin`**, vlastný jednoduchý layout. Middleware vyžaduje riadok v `parish_users`.
 
@@ -667,7 +720,7 @@ Presun z `/admin/nastavenia/farnosti` do hlavnej navigácie (ako pri výzvach).
 
 Pri chránených poliach a štatistike je vidieť stav návrhu: `Čaká na schválenie` / `Schválené` / `Zamietnuté + dôvod`.
 
-### 6.3 Výber farnosti v profile darcu – chýbajúci článok reťazca
+### 6.3 Výber farnosti v profile darcu – chýbajúci článok reťazca ✅
 
 Pri kontrole kódu vyšlo najavo, že **darca si dnes farnosť prakticky nevie nastaviť**. Celý modul predpisu a plnenia pritom stojí na `donors.parish_id`, takže bez opravy budú čísla za farnosti zamrznuté na stave z importu FileMakeru.
 
@@ -724,7 +777,7 @@ Keďže časť darcov podporuje projekt namiesto farnosti (O19), select farnosti
 
 **Táto oprava je predpokladom pre fázu F3** – bez nej sa predpis počíta nad dátami, ktoré darca nevie aktualizovať.
 
-### 6.4 Zmena e-mailu darcu (O21)
+### 6.4 Zmena e-mailu darcu (O21) ✅
 
 Dnes je celý profil postavený na e-maile a zmena adresy v Supabase Auth by narobila škodu:
 
@@ -748,7 +801,7 @@ Pri tejto úprave stojí za zmienku, že `getCurrentDonor()` si generuje variabi
 
 ---
 
-## 7. Import dát
+## 7. Import dát ✅
 
 Skript `scripts/import-parishes.ts`, dry-run ako default (vzor: XML import):
 
@@ -775,10 +828,10 @@ Skript `scripts/import-parishes.ts`, dry-run ako default (vzor: XML import):
 | **F2** ✅ | Admin `/admin/farnosti` – zoznam (filtre dekanát / typ / chýbajúce údaje) + detail so záložkami Základné údaje, Obce a štatistika, Bohoslužby (cez rok / letný), Kňazi, Dary a história; oprávnenie `manage_parishes`; `/admin/nastavenia/farnosti` presmeruje | 2–3 dni |
 | **F3** ✅ | `/admin/farnosti/predpisy`: nastavenie roka (koeficient, rok štatistiky, zaokrúhlenie), „Vygenerovať chýbajúce“ / „Prepočítať neupravené“, ručná úprava s povinným dôvodom (audit), plnenie v zozname aj detaile, export XLSX. Pri 2 €/katolík = 110 farností, ≈ 931 000 € (4 bez štatistiky) | 1–2 dni |
 | **F4** ✅ | `/moja-farnost` (prehľad plnenia bez mien, bohoslužby a prezentácia naživo, úradné údaje a štatistika len návrhom, vlastný kontakt kňaza), admin záložka „Prístupy a návrhy“ (pridelenie existujúcemu účtu alebo pozvánka Supabase), fronta `/admin/farnosti/schvalovanie` so schválením / zamietnutím s dôvodom, audit; post-login posiela účet farnosti na `/moja-farnost`. Chránené polia: `lib/parishes/fields.ts` | 3–4 dni |
-| **F5** | Migrácia 027 + verejné `/farnosti/[slug]` + oznamy a články + SEO | 3–4 dni |
-| **F6** | Subdomény `<farnost>.mojkrok.sk` (wildcard DNS + middleware + 301) | 0,5 dňa *(až po sprevádzkovaní `mojkrok.sk`)* |
+| **F5** ⬜ | Migrácia **035** + verejné `/farnosti` a `/farnosti/[slug]` + oznamy a články + SEO (podklad § 11) | 3–4 dni |
+| **F6** ⬜ | Subdomény `<farnost>.mojkrok.sk` (wildcard DNS + middleware + 301) | 0,5 dňa *(až po sprevádzkovaní `mojkrok.sk`)* |
 
-### 8.1 Pilot – ktoré farnosti osloviť najskôr (O16)
+### 8.1 Pilot – ktoré farnosti osloviť najskôr (O16) ⬜
 
 Podľa darov za roky 2025–2026 sú najaktívnejšie farnosti tieto (počet darcov / suma 2025 / suma 2026):
 
@@ -801,7 +854,7 @@ Ak by mala byť skratka pre farnosti čo najskôr, poradie **F0 → F1 → F5 �
 
 ---
 
-## 8.2 Výsledok importu (2026-09-30)
+### 8.2 Výsledok importu (2026-09-30) ✅
 
 - **Hlavný zdroj = schematizmus dcza.sk** (oficiálny zoznam 123 záznamov, kontakty, PSČ, kňazi, výročná poklona); CSV dopĺňa IČO, DIČ, účet → IBAN, kód farnosti, okres, obce so SODB 2021, spovedanie.
 - Existujúce názvy farností v DB sa nemenili (darcovia ich poznajú); oficiálny názov je v `official_name`.
@@ -812,21 +865,21 @@ Ak by mala byť skratka pre farnosti čo najskôr, poradie **F0 → F1 → F5 �
 - Pseudo-farnosti: Lectio divina (127 darov → projekt), Dve percentá (15 darov → projekt), Charita (len `donor_projects`, O22), Rodinkovo (bez projektu) – zmazané, 11 darcov je „bez farnosti“.
 - Bezpečnosť: `parishes` pre anon/authenticated len bezpečné stĺpce (column GRANT) – predtým `SELECT *` pre každého.
 
-## 9. Zostávajúce otázky
+## 9. Zostávajúce otázky – ~~všetky zodpovedané~~ (O23–O25) ✅
 
 | # | Otázka | Návrh |
 |---|---|---|
 *(Prečíslované – predchádzajúce kolá otázok sú zodpovedané v sekcii 0.)*
 
-| **Q1** | Má sa pri oprave § 6.4 vyriešiť aj **race condition vo variabilnom symbole** (`TODO.md` P1), keď sa ten súbor aj tak mení? | Áno – je to pár riadkov navyše oproti neskoršiemu návratu do tej istej funkcie. |
-| **Q3** | Koeficient **2 €/katolík** – platí rovnako pre všetky farnosti, alebo majú mestské/vidiecke inú sadzbu? | Rovnako pre všetky, jednotlivé predpisy sa dajú prepísať ručne. |
-| **Q4** | Má byť predpis a plnenie **viditeľné aj pre ostatné farnosti** (rebríček), alebo každá vidí len seba? | Každá len seba; súhrn má diecéza. Rebríček by mohol byť motivujúci, ale aj nepríjemný. |
+| ~~**Q1**~~ | ~~Má sa pri oprave § 6.4 vyriešiť aj **race condition vo variabilnom symbole** (`TODO.md` P1), keď sa ten súbor aj tak mení?~~ | ✅ O23 |
+| ~~**Q3**~~ | ~~Koeficient **2 €/katolík** – platí rovnako pre všetky farnosti, alebo majú mestské/vidiecke inú sadzbu?~~ | ✅ O24 |
+| ~~**Q4**~~ | ~~Má byť predpis a plnenie **viditeľné aj pre ostatné farnosti** (rebríček), alebo každá vidí len seba?~~ | ✅ O25 |
 
 ---
 
 ## 10. Na ďalšie pokračovanie (poznámky 2026-09-30)
 
-### 10.1 Predpis – podiel pracujúcich katolíkov (doladiť)
+### 10.1 Predpis – podiel pracujúcich katolíkov ⬜ (doladiť)
 
 Dnes: predpis = **všetci katolíci × 2 € ročne** (≈ 931 000 € za diecézu, napr. Rajec 13 272 €). Treba doladiť, aby sa predpis počítal len z **pracujúcich / zárobkovo činných** katolíkov:
 
@@ -837,7 +890,7 @@ Dnes: predpis = **všetci katolíci × 2 € ročne** (≈ 931 000 € za diecé
 
 Technicky: `parish_target_settings.working_share NUMERIC(5,4)` (+ príp. `parish_year_targets.working_share` ako snapshot) – migrácia pri doladení.
 
-### 10.2 F5 – verejné stránky farností: podklad `web_parochia`
+### 10.2 F5 – verejné stránky farností: podklad `web_parochia` ✅ analyzované → § 11
 
 Pozastavený projekt **https://github.com/dusanpecko/web_parochia** (vetva `main`, prístup overený, zatiaľ nestiahnutý) poslúži ako pomôcka pre tvorbu stránok farností v Kroku:
 
@@ -845,6 +898,85 @@ Pozastavený projekt **https://github.com/dusanpecko/web_parochia** (vetva `main
 2. zosúladiť s modelom Kroku (§ 3.3 bohoslužby, § 3.8 kňazi, § 4.1 `parish_posts`, § 4.2 URL `/farnosti/[slug]`),
 3. navrhnúť, čo prevziať (komponenty, rozloženie, typy obsahu) a čo spraviť nanovo – doplniť do § 4 a naplánovať migráciu **035_parish_pages**.
 
-### 10.3 Testovanie F1b–F4 (pred pushom)
+### 10.3 Testovanie F1b–F4 (pred pushom) ✅ *(používateľ 2026-10-01: zatiaľ všetko funguje)*
 
 Používateľ najprv sám otestuje a doladí, potom push a test Juliou. Na test: registrácia + onboarding (aj Google), admin farností (doplniť štatistiku Dolný Moštenec, Hvozdnica, Jasenové, Bánová a chýbajúce IČO), predpisy 2026 (vygenerované 2026-09-30), zóna farnosti cez „Prihlásiť sa za farnosť“.
+
+---
+
+## 11. Podklad `web_parochia` – čo prevziať pre farské stránky (na diskusiu, 2026-10-01)
+
+Repo `github.com/dusanpecko/web_parochia` (Parochia.one) má jeden commit (20. 2. 2026). Je to pnpm/turbo monorepo, reálna je len aplikácia `apps/web`: Next 16, Tailwind 4, shadcn/ui, Supabase, editor Plate, súbory na B2. Mobilná aplikácia je len „hello world“. Robí multi-tenant (subdoména / vlastná doména → `/sites/[domain]`) a farnosť má vlastný dashboard aj page builder.
+
+**Hlavný záver:** prevziať **štruktúru verejnej stránky, niekoľko komponentov ako vzor a dátové nápady**. Neprevziať dátový model, multi-tenant vrstvu, editor ani page builder – model Kroku (034) je pre naše účely lepší a bezpečnejší.
+
+### 11.1 Čo funguje vs. čo je rozpracované
+
+| Funkčné | Rozpracované / stub / chýba |
+|---|---|
+| Rozvrh omší + úradné hodiny + spoveď | Page builder (~10 %, časť sekcií vypisuje surový JSON) |
+| Oznamy a aktuality (`posts`), archív, detail | Liturgický kalendár – natvrdo mock dáta |
+| Sviatosti s FAQ a CTA (`/sviatosti/[type]`) | SEO: žiadne `generateMetadata`, sitemap ani schema.org |
+| Udalosti s RRULE + export ICS | Mapa, PDF oznamy, sviatky farnosti, úmysly sv. omší |
+| Téma (farby, fonty), upload obrázkov | i18n verejných stránok (preklady sa ukladajú, nezobrazujú) |
+| Adorácie, modlitbová stena, rezervácie, newsletter | Testy, rate limiting, CSP, audit log |
+
+### 11.2 Návrh – ÁNO (prevziať ako vzor, prepísať do Kroku)
+
+| # | Čo | Ako u nás | Môj názor |
+|---|---|---|---|
+| A1 | **Rozloženie verejnej stránky**: hero → najnovší oznam → bohoslužby (omše + kancelária + spoveď) → aktuality → kontakt/pätička | `/farnosti/[slug]` ako server komponent, bez framer-motion, v dizajne Kroku | ✅ jednoznačne |
+| A2 | **`ScheduleSection`** – omše zoskupené podľa dňa, bočný panel kancelária + spoveď | Prepísať nad `parish_schedule_items`: aktuálny režim (bežný/letný) zvýraznený, prepínač, samostatný blok „prvý piatok“ | ✅ |
+| A3 | **Karta „najnovší oznam“ + archív oznamov** | `parish_posts` (§ 4.1) – už máme `valid_from/valid_to` a PDF prílohu, ktoré tam chýbajú | ✅ |
+| A4 | **Plávajúce tlačidlo „Časy omší“** na mobile | Malý client komponent na `/farnosti/[slug]` | ✅ lacné, užitočné |
+| A5 | **Sekcia „Podporte“ (IBAN + QR)** | Máme `pay-by-square` a VS – na stránke farnosti odkaz „Podporte Pastoračný fond za farnosť X“ (predvyplnená farnosť pri registrácii) | ✅ – priamo napĺňa cieľ Kroku |
+| A6 | **ICS kalendár** (`lib/calendar.ts`) | `/farnosti/[slug]/calendar.ics` – bohoslužby týždňa (+ neskôr udalosti); doplniť TZID, escapovanie, zalamovanie riadkov | 🟡 až po F5, nice-to-have |
+| A7 | **Sviatosti per farnosť** („Krst / Sobáš / Pohreb – čo treba vybaviť“, FAQ) | Buď pevné texty diecézy + farský doplnok, alebo pole v `parish_posts` typu `page` | 🤔 na diskusiu – veľmi hľadaný obsah, ale pridá prácu kňazom |
+| A8 | **Udalosti** (`events`: začiatok/koniec, miesto, RRULE, odkaz na článok) | Samostatná tabuľka `parish_events` alebo článok s dátumom | 🤔 na diskusiu – zatiaľ by stačili oznamy |
+| A9 | **História kňazov** (pôsobí od–do, svätenie, foto) | Rozšíriť `parish_clergy` o `active_from/active_to` + foto (foto už je v checkliste) | 🟡 foto áno, dátumy svätenia nie sú nutné |
+| A10 | **„Nepublikovaná farnosť“** (údržbový režim) | Už máme `visible_on_web` – stačí náhľad pre prihlásenú farnosť | ✅ (len využiť existujúce) |
+
+### 11.3 Návrh – NIE
+
+| Čo | Prečo nie |
+|---|---|
+| Multi-tenant middleware (rewrite na `/sites/[domain]`, 1–2 DB dotazy pri **každom** requeste) | Pre Krok stačí `/farnosti/[slug]` + voliteľný 301 zo subdomény (§ 4.4) |
+| Page builder + AI builder | Nedokončený, generický fallback, XSS riziko; farnosti potrebujú vyplniť formulár, nie skladať stránku |
+| Editor Plate + Plate JSON (`PostEditor`, `PlateContentRenderer`) | Krok má TipTap HTML (`SimpleRichTextEditor`) – nekompatibilné |
+| Tabuľka `masses` + druhý model `parish_schedules` | Náš model (režimy, prvý piatok, položky) je lepší |
+| `profiles.parish_id` + jedna rola, RLS cez `belongs_to_parish()` | Koliduje s `parish_users` (M:N, admin/editor) a so schvaľovaním návrhov |
+| Téma per farnosť (vlastné farby, fonty, logo) | Jednotný vizuál Kroku = dôvera + menej práce; nanajvýš vlastná titulná fotka |
+| Rezervácie, adorácie, modlitbová stena, newsletter, formuláre, CRM, AI, Stripe | Mimo rozsahu fondu; každé je samostatný produkt s GDPR záťažou |
+| Liturgický kalendár | Je to mock; ak niekedy, tak nanovo nad reálnym zdrojom (breviar.sk / KBS) s cache |
+| Viacjazyčnosť farských stránok | Nie je potrebná |
+
+### 11.4 Čo tam nie je a musíme postaviť sami
+
+- **SEO** – `generateMetadata`, `app/sitemap.ts`, OG obrázok, JSON-LD `CatholicChurch` (adresa, geo, telefón) + `Event` pre bohoslužby. Toto je hlavná hodnota F5 (dopyt „sv. omše <obec>“).
+- **Vyhľadávanie podľa obce** na `/farnosti` (cez `parish_villages`).
+- **Mapa** – Leaflet/OSM podľa GPS farnosti (GPS už máme v prezentácii).
+- **Hody a výročná poklona** – údaje už máme v `parishes`, len ich zobraziť.
+- **PDF oznamy** – upload na B2 (ako „Na stiahnutie“), na stránke náhľad + stiahnutie.
+- **Sanitizácia HTML** – dnes Krok renderuje TipTap HTML cez `dangerouslySetInnerHTML` bez čistenia (aktuality, výzvy). Kým píše len kancelária, je to v poriadku; obsah od **farností** je externý vstup → pred F5 pridať `sanitize-html` (pri ukladaní aj pri renderi).
+- **Výber stĺpcov** vo verejných dotazoch (žiadne `select('*')`) – u nás už vynútené column GRANT-om z 034.
+
+### 11.5 Poučenie z bezpečnostných chýb `web_parochia`
+
+Ak sa projekt niekedy obnoví alebo je repo verejné, treba vedieť:
+
+- RLS „Active parishes are viewable by everyone“ + `select('*')` → verejne čitateľné **`smtp_password` (plaintext)** a `maintenance_password`. To je presne chyba, ktorú sme v Kroku opravili v 034 (column GRANT).
+- `lib/crypto.ts` má záložný kľúč `'default-insecure-password-change-me'` a statický salt.
+- Sekcia `rich_text` – `dangerouslySetInnerHTML` bez sanitizácie (XSS).
+- Rezervácie – verejný SELECT môže vystaviť osobné údaje.
+- Schema drift (`parish_menus` chýba v migráciách, duplicitné čísla migrácií).
+
+### 11.6 Otázky na rozhodnutie
+
+| # | Otázka | Môj návrh |
+|---|---|---|
+| W1 | Rozsah F5: len A1–A5 + SEO + mapa? | **Áno** – ICS, sviatosti a udalosti až v ďalšom kole |
+| W2 | Sviatosti („čo treba na krst/sobáš“) – spoločný text diecézy, vlastný text farnosti, alebo vôbec? | Spoločný text diecézy + krátky farský doplnok (kontakt, termíny prípravy) |
+| W3 | Udalosti – samostatná tabuľka, alebo stačia oznamy/články? | Zatiaľ len oznamy a články |
+| W4 | Vlastný vzhľad farnosti? | Nie, len titulná fotka |
+| W5 | Oznamy: text, PDF, alebo oboje? | Oboje – veľa farností má oznamy len vo Worde/PDF |
+| W6 | Prepojenie „Podporte fond za túto farnosť“ → registrácia s predvyplnenou farnosťou | Áno (malá úprava `/registracia?farnost=<slug>`) |

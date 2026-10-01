@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth'
 import { logParishChange } from '@/lib/parishes/writes'
 import { sanitizeRichHtml } from '@/lib/html/sanitize'
+import { uploadImage } from '@/lib/storage'
+import { POST_COLUMNS, loadSacramentEditRows, writeParishPost, type ParishPostInput, type ParishPostRow, type SacramentEditRow } from '@/lib/parishes/posts'
 
 /**
  * Web farností – diecézna strana (fáza F5): diecézne texty sviatostí (O27)
@@ -98,5 +100,81 @@ export async function saveSacramentText(type: string, input: { title: string; co
   if (error) return { success: false, error: 'Uloženie zlyhalo.' }
   revalidatePath('/admin/farnosti/sviatosti')
   revalidatePath('/farnosti', 'layout')
+  return { success: true }
+}
+
+// ------------------------------------------------------------ Web farnosti v detaile farnosti (admin)
+
+async function revalidateParish(parishId: string) {
+  const { data } = await db().from('parishes').select('slug').eq('id', parishId).maybeSingle()
+  revalidatePath(`/admin/farnosti/${parishId}`)
+  if (data?.slug) revalidatePath(`/farnosti/${data.slug}`, 'layout')
+}
+
+export async function getParishWebForAdmin(parishId: string): Promise<{ posts: ParishPostRow[]; sacraments: SacramentEditRow[] }> {
+  await requirePermission(PERM)
+  const client = db()
+  const [{ data: posts }, sacraments] = await Promise.all([
+    client.from('parish_posts').select(POST_COLUMNS).eq('parish_id', parishId).order('created_at', { ascending: false }).limit(200),
+    loadSacramentEditRows(client, parishId),
+  ])
+  return { posts: (posts ?? []) as ParishPostRow[], sacraments }
+}
+
+/** Diecéza píše za farnosť; stiahnutie nerieši (na to je setPostTakedown). */
+export async function adminSaveParishPost(parishId: string, input: ParishPostInput) {
+  const { user } = await requirePermission(PERM)
+  const client = db()
+  const res = await writeParishPost(client, parishId, user.id, input)
+  if (!res.success) return res
+  await logParishChange(client, parishId, user.id, 'post', input.id ? 'admin_update' : 'post_create', { title: input.title, published: input.published })
+  await revalidateParish(parishId)
+  return res
+}
+
+export async function adminDeleteParishPost(parishId: string, postId: string): Promise<Result> {
+  const { user } = await requirePermission(PERM)
+  const client = db()
+  const { data } = await client.from('parish_posts').select('title').eq('id', postId).eq('parish_id', parishId).maybeSingle()
+  if (!data) return { success: false, error: 'Príspevok sa nenašiel.' }
+  const { error } = await client.from('parish_posts').delete().eq('id', postId)
+  if (error) return { success: false, error: 'Zmazanie zlyhalo.' }
+  await logParishChange(client, parishId, user.id, 'post', 'post_delete', { title: data.title })
+  await revalidateParish(parishId)
+  return { success: true }
+}
+
+export async function adminUploadParishFile(parishId: string, formData: FormData): Promise<{ url?: string; name?: string; error?: string }> {
+  await requirePermission(PERM)
+  const file = formData.get('file')
+  if (!(file instanceof File) || file.size === 0) return { error: 'Žiadny súbor.' }
+  if (file.size > 15 * 1024 * 1024) return { error: 'Súbor je väčší ako 15 MB.' }
+  const isPdf = file.type === 'application/pdf'
+  if (!isPdf && !/^image\/(jpeg|png|webp|gif)$/.test(file.type)) return { error: 'Povolené sú obrázky (JPG, PNG, WebP) a PDF.' }
+  const res = await uploadImage(file, `parishes/${parishId}/${isPdf ? 'files' : 'images'}`)
+  return res ? { url: res.url, name: file.name } : { error: 'Nahrávanie zlyhalo.' }
+}
+
+export async function adminUploadEditorImage(parishId: string, formData: FormData): Promise<{ url?: string; error?: string }> {
+  const file = formData.get('file')
+  if (file instanceof File && file.type === 'application/pdf') return { error: 'Do textu vkladajte len obrázky.' }
+  const res = await adminUploadParishFile(parishId, formData)
+  return res.url ? { url: res.url } : { error: res.error }
+}
+
+export async function adminSaveParishSacrament(parishId: string, type: string, content: string | null, isHidden: boolean): Promise<Result> {
+  const { user } = await requirePermission(PERM)
+  const client = db()
+  const clean = content == null ? null : sanitizeRichHtml(content) || null
+  if (!clean && !isHidden) {
+    await client.from('parish_sacrament_texts').delete().eq('parish_id', parishId).eq('type', type)
+  } else {
+    const { error } = await client
+      .from('parish_sacrament_texts')
+      .upsert({ parish_id: parishId, type, content: clean, is_hidden: isHidden, updated_by: user.id, updated_at: new Date().toISOString() })
+    if (error) return { success: false, error: 'Uloženie zlyhalo.' }
+  }
+  await logParishChange(client, parishId, user.id, 'sacrament', 'admin_update', { [type]: isHidden ? 'skryté' : clean ? 'vlastný text' : 'diecézny text' })
+  await revalidateParish(parishId)
   return { success: true }
 }

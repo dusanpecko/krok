@@ -11,13 +11,21 @@ import ParishClergyTab from './ParishClergyTab'
 import ParishDonationsTab from './ParishDonationsTab'
 import ParishAccessTab from './ParishAccessTab'
 import type { ChangeRequestRow, ParishAccessRow } from '@/app/admin/farnosti/actions'
+import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
+import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
+import { adminDeleteParishPost, adminSaveParishPost, adminSaveParishSacrament, adminUploadEditorImage, adminUploadParishFile } from '@/app/admin/farnosti/web-actions'
+import type { ParishPostRow, SacramentEditRow } from '@/lib/parishes/posts'
 
-type TabKey = 'basic' | 'villages' | 'schedule' | 'clergy' | 'donations' | 'access'
+const POST_ACTIONS = { save: adminSaveParishPost, remove: adminDeleteParishPost, upload: adminUploadParishFile, uploadEditorImage: adminUploadEditorImage }
+
+type TabKey = 'basic' | 'villages' | 'schedule' | 'posts' | 'sacraments' | 'clergy' | 'donations' | 'access'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'basic', label: 'Základné údaje' },
   { key: 'villages', label: 'Obce a štatistika' },
   { key: 'schedule', label: 'Bohoslužby' },
+  { key: 'posts', label: 'Oznamy a aktuality' },
+  { key: 'sacraments', label: 'Sviatosti' },
   { key: 'clergy', label: 'Kňazi' },
   { key: 'donations', label: 'Dary a história' },
   { key: 'access', label: 'Prístupy a návrhy' },
@@ -28,11 +36,13 @@ export default function ParishDetailView({
   deaneries,
   access,
   requests,
+  web,
 }: {
   detail: ParishDetail
   deaneries: { id: string; name: string }[]
   access: ParishAccessRow[]
   requests: ChangeRequestRow[]
+  web: { posts: ParishPostRow[]; sacraments: SacramentEditRow[] }
 }) {
   const [tab, setTab] = useState<TabKey>('basic')
   const { parish } = detail
@@ -96,6 +106,8 @@ export default function ParishDetailView({
       {tab === 'basic' && <ParishBasicTab parish={parish} deaneries={deaneries} />}
       {tab === 'villages' && <ParishVillagesTab parishId={parish.id} initial={detail.villages} />}
       {tab === 'schedule' && <ParishScheduleTab parishId={parish.id} schedules={detail.schedules} villages={detail.villages} />}
+      {tab === 'posts' && <ParishPostsTab parishId={parish.id} parishSlug={parish.slug} posts={web.posts} actions={POST_ACTIONS} />}
+      {tab === 'sacraments' && <ParishSacramentsTab parishId={parish.id} rows={web.sacraments} save={adminSaveParishSacrament} />}
       {tab === 'clergy' && <ParishClergyTab parishId={parish.id} initial={detail.clergy} />}
       {tab === 'donations' && <ParishDonationsTab summary={detail.summary} log={detail.log} donorsCount={detail.donorsCount} />}
       {tab === 'access' && <ParishAccessTab parishId={parish.id} access={access} requests={requests} defaultEmail={parish.email} />}

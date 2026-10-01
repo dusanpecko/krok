@@ -15,7 +15,8 @@ import {
 import ParishScheduleTab from '@/components/admin/parishes/ParishScheduleTab'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
-import { deleteMyPost, saveMyPost, saveMySacrament, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
+import { deleteMyPost, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
+import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS } from '@/lib/parishes/fields'
 import type { ClergyMember, VillageWithStats } from '@/lib/parishes/types'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
@@ -89,7 +90,12 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
       {tab === 'schedule' && <ParishScheduleTab parishId={p.id} schedules={view.schedules} villages={view.villages} save={saveMySchedule} />}
       {tab === 'posts' && <ParishPostsTab parishId={p.id} parishSlug={p.slug} posts={view.posts} actions={POST_ACTIONS} />}
       {tab === 'sacraments' && <ParishSacramentsTab parishId={p.id} rows={view.sacraments} save={saveMySacrament} />}
-      {tab === 'presentation' && <PresentationTab view={view} />}
+      {tab === 'presentation' && (
+        <div className="space-y-6">
+          <PresentationTab view={view} />
+          <SocialLinksEditor parishId={p.id} initial={p.social_links ?? []} save={saveMySocialLinks} />
+        </div>
+      )}
       {tab === 'official' && <OfficialTab view={view} />}
       {tab === 'population' && <PopulationTab view={view} />}
       {tab === 'clergy' && <ClergyTab parishId={p.id} clergy={view.clergy} />}

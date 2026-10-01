@@ -7,6 +7,8 @@ import Shell, { SectionHeading, cardCls } from './Shell'
 import ScheduleView from './ScheduleView'
 import MassTimesButton from './MassTimesButton'
 import PostCard from './PostCard'
+import SocialIcon from '@/components/parishes/SocialIcon'
+import { socialLabel } from '@/lib/parishes/social'
 import { clergyName, dayMonth, formatDateTime, googleMapsUrl, validRange } from '@/lib/parishes/format'
 
 export default function Home({ parish, announcements, news, events, sacraments }: ParishHomeProps) {
@@ -228,6 +230,24 @@ export default function Home({ parish, announcements, news, events, sacraments }
             </a>
           )}
         </div>
+        {parish.social_links.length > 0 && (
+          <div className="mt-6">
+            <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-3">Sledujte nás</p>
+            <div className="flex flex-wrap gap-2">
+              {parish.social_links.map((l, i) => (
+                <a
+                  key={i}
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-extrabold hover:border-gold/40 hover:text-gold-bright transition-colors"
+                >
+                  <SocialIcon kind={l.kind} size={18} /> {socialLabel(l)}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Podpora */}

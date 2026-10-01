@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireParishMember } from '@/lib/parishes/access'
-import { logParishChange } from '@/lib/parishes/writes'
+import { logParishChange, writeSocialLinks } from '@/lib/parishes/writes'
+import type { SocialLink } from '@/lib/parishes/social'
 import { POST_COLUMNS, loadSacramentEditRows, writeParishPost, type ParishPostInput, type ParishPostRow, type SacramentEditRow } from '@/lib/parishes/posts'
 import { sanitizeRichHtml } from '@/lib/html/sanitize'
 import { uploadImage } from '@/lib/storage'
@@ -106,4 +107,12 @@ export async function setMyTheme(parishId: string, theme: string): Promise<Resul
   await logParishChange(db, parishId, user.id, 'parish', 'parish_update', { theme })
   await revalidateParishWeb(db, parishId)
   return { success: true }
+}
+
+/** Sociálne siete – farnosť ich mení hneď (prezentácia). */
+export async function saveMySocialLinks(parishId: string, links: SocialLink[]): Promise<Result> {
+  const { user, db } = await requireParishMember(parishId)
+  const res = await writeSocialLinks(db, parishId, user.id, links, 'parish_update')
+  if (res.success) await revalidateParishWeb(db, parishId)
+  return res
 }

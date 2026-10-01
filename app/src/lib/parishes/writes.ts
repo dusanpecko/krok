@@ -1,3 +1,4 @@
+import { normalizeSocialLinks } from './social'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Schedule, VillageWithStats } from './types'
 
@@ -9,6 +10,18 @@ import type { Schedule, VillageWithStats } from './types'
 export const STATS_YEAR = 2021
 
 type WriteResult = { success: true } | { success: false; error: string }
+
+/** Sociálne siete farnosti (036) – zóna farnosti aj admin. */
+export async function writeSocialLinks(db: SupabaseClient, parishId: string, userId: string, input: unknown, action: string): Promise<WriteResult> {
+  const { value, error } = normalizeSocialLinks(input)
+  if (error) return { success: false, error }
+  const { data: before } = await db.from('parishes').select('social_links').eq('id', parishId).maybeSingle()
+  if (JSON.stringify(before?.social_links ?? []) === JSON.stringify(value)) return { success: true }
+  const { error: dbError } = await db.from('parishes').update({ social_links: value, profile_updated_at: new Date().toISOString(), profile_updated_by: userId }).eq('id', parishId)
+  if (dbError) return { success: false, error: 'Uloženie zlyhalo.' }
+  await logParishChange(db, parishId, userId, 'parish', action, { social_links: value.map((l) => l.url) })
+  return { success: true }
+}
 
 export async function logParishChange(db: SupabaseClient, parishId: string, userId: string | null, entity: string, action: string, changes: Record<string, unknown>) {
   await db.from('parish_change_log').insert({ parish_id: parishId, user_id: userId, entity, action, changes })

@@ -1,4 +1,5 @@
 /** Typy registra farností (migrácia 034) – zdieľané server aj klient. */
+import type { SocialLink } from './social'
 
 export type ParishKind = 'parish' | 'chaplaincy' | 'other'
 export type ParishSeason = 'regular' | 'summer'
@@ -81,6 +82,7 @@ export interface ParishRow {
   longitude: number | null
   intro: string | null
   image_url: string | null
+  social_links: SocialLink[]
   notes: string | null
   is_active: boolean
   visible_on_web: boolean

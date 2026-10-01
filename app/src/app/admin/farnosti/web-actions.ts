@@ -3,7 +3,8 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth'
-import { logParishChange } from '@/lib/parishes/writes'
+import { logParishChange, writeSocialLinks } from '@/lib/parishes/writes'
+import type { SocialLink } from '@/lib/parishes/social'
 import { sanitizeRichHtml } from '@/lib/html/sanitize'
 import { uploadImage } from '@/lib/storage'
 import { POST_COLUMNS, loadSacramentEditRows, writeParishPost, type ParishPostInput, type ParishPostRow, type SacramentEditRow } from '@/lib/parishes/posts'
@@ -177,4 +178,11 @@ export async function adminSaveParishSacrament(parishId: string, type: string, c
   await logParishChange(client, parishId, user.id, 'sacrament', 'admin_update', { [type]: isHidden ? 'skryté' : clean ? 'vlastný text' : 'diecézny text' })
   await revalidateParish(parishId)
   return { success: true }
+}
+
+export async function adminSaveSocialLinks(parishId: string, links: SocialLink[]): Promise<Result> {
+  const { user } = await requirePermission(PERM)
+  const res = await writeSocialLinks(db(), parishId, user.id, links, 'admin_update')
+  if (res.success) await revalidateParish(parishId)
+  return res
 }

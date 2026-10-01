@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { serviceDb } from './access'
 import { getSessionUser, getUserAccess } from '@/lib/auth'
 import type { ParishKind, ParishOccasion, ParishSeason, ParishServiceType } from './types'
+import { normalizeSocialLinks, type SocialLink } from './social'
 
 /**
  * Verejné stránky farností /farnosti (návrh § 4, fáza F5). Serverový modul.
@@ -11,7 +12,7 @@ import type { ParishKind, ParishOccasion, ParishSeason, ParishServiceType } from
 
 const PUBLIC_PARISH_COLUMNS =
   'id, slug, name, official_name, kind, deanery_id, patrocinium, street, postal_code, city, phone, email, website, ' +
-  'feast_day, feast_day_note, adoration_date, adoration_note, latitude, longitude, image_url, intro, theme, visible_on_web, is_active, updated_at'
+  'feast_day, feast_day_note, adoration_date, adoration_note, latitude, longitude, image_url, intro, social_links, theme, visible_on_web, is_active, updated_at'
 
 export interface PublicScheduleItem {
   service_type: ParishServiceType
@@ -93,6 +94,7 @@ export interface PublicParish {
   longitude: number | null
   image_url: string | null
   intro: string | null
+  social_links: SocialLink[]
   theme: string
   visible_on_web: boolean
   updated_at: string | null
@@ -175,6 +177,7 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
 
   return {
     ...row,
+    social_links: normalizeSocialLinks(row.social_links ?? []).value,
     latitude: row.latitude != null ? Number(row.latitude) : null,
     longitude: row.longitude != null ? Number(row.longitude) : null,
     deanery_name: (deanery as { name: string } | null)?.name ?? null,

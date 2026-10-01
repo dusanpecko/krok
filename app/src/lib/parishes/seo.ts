@@ -51,7 +51,9 @@ export function parishJsonLd(parish: PublicParish) {
       addressCountry: 'SK',
     },
     ...(parish.latitude != null && parish.longitude != null ? { geo: { '@type': 'GeoCoordinates', latitude: parish.latitude, longitude: parish.longitude } } : {}),
-    ...(parish.website ? { sameAs: [parish.website.startsWith('http') ? parish.website : `https://${parish.website}`] } : {}),
+    ...(parish.website || parish.social_links.length
+      ? { sameAs: [...(parish.website ? [parish.website.startsWith('http') ? parish.website : `https://${parish.website}`] : []), ...parish.social_links.map((l) => l.url)] }
+      : {}),
     containedInPlace: { '@type': 'Place', name: 'Žilinská diecéza' },
     ...(byTime.size
       ? {

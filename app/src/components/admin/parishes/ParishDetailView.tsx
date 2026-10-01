@@ -13,7 +13,8 @@ import ParishAccessTab from './ParishAccessTab'
 import type { ChangeRequestRow, ParishAccessRow } from '@/app/admin/farnosti/actions'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
-import { adminDeleteParishPost, adminSaveParishPost, adminSaveParishSacrament, adminUploadEditorImage, adminUploadParishFile } from '@/app/admin/farnosti/web-actions'
+import { adminDeleteParishPost, adminSaveParishPost, adminSaveParishSacrament, adminSaveSocialLinks, adminUploadEditorImage, adminUploadParishFile } from '@/app/admin/farnosti/web-actions'
+import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
 import type { ParishPostRow, SacramentEditRow } from '@/lib/parishes/posts'
 
 const POST_ACTIONS = { save: adminSaveParishPost, remove: adminDeleteParishPost, upload: adminUploadParishFile, uploadEditorImage: adminUploadEditorImage }
@@ -103,7 +104,12 @@ export default function ParishDetailView({
         ))}
       </div>
 
-      {tab === 'basic' && <ParishBasicTab parish={parish} deaneries={deaneries} />}
+      {tab === 'basic' && (
+        <div className="space-y-6">
+          <ParishBasicTab parish={parish} deaneries={deaneries} />
+          <SocialLinksEditor parishId={parish.id} initial={parish.social_links ?? []} save={adminSaveSocialLinks} />
+        </div>
+      )}
       {tab === 'villages' && <ParishVillagesTab parishId={parish.id} initial={detail.villages} />}
       {tab === 'schedule' && <ParishScheduleTab parishId={parish.id} schedules={detail.schedules} villages={detail.villages} />}
       {tab === 'posts' && <ParishPostsTab parishId={parish.id} parishSlug={parish.slug} posts={web.posts} actions={POST_ACTIONS} />}

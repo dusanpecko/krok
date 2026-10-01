@@ -57,7 +57,9 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] Motívy: `parishes.theme` + register motívov (zatiaľ `standard`) – § 4.1, O29
 - [ ] Čistenie vloženého textu z Wordu (TipTap + `sanitize-html`) – § 4.1, O30
 - [ ] „Podporujem fond“ → registrácia s predvyplnenou farnosťou – § 12, O31
-- [ ] Rozhodnúť E1–E8 a postaviť e-pokladničku farnosti (F5b) – § 12, O31
+- [x] Rozhodnúť E1, E2, E3, E5 – O32–O34
+- [ ] E4 – overiť s ekonómom príjem na účel farnosti a potvrdenie o dare – § 12
+- [ ] Postaviť e-pokladničku farnosti (F5b) – § 12
 
 Cieľ modulu:
 
@@ -106,6 +108,9 @@ Cieľ modulu:
 | O29 | Vzhľad (W4) | **Zatiaľ jeden štandardný motív**, ale kód sa robí tak, aby sa dali **neskôr pridávať ďalšie motívy (templaty)** a farnosť si vyberie. |
 | O30 | Oznamy (W5) | **Text** – kňaz skopíruje z Wordu do webu; pri vložení sa musí **odstrániť balast z Wordu** (štýly, `mso-*`, prázdne spany…). PDF príloha voliteľne. |
 | O31 | Podpora zo stránky farnosti (W6) | **Dve tlačidlá:** „Podporujem fond“ (registrácia s **predvyplnenou farnosťou**) a „Podporujem farnosť“ = **e-pokladnička** – čo sa vyzbiera pre farnosť, fond farnosti pošle. Detail a otvorené otázky v § 12. |
+| O32 | E-pokladnička a predpis (E1) | **Nie** – dar do e-pokladničky je dar pre farnosť, do plnenia predpisu sa nerátá. |
+| O33 | Poplatky e-pokladničky (E2, E3) | Vyúčtovanie **mesačne**. Odpočítava sa **poplatok Mollie (%)** a **poplatok fondu (%)** – obe **nastaviteľné pre každú farnosť zvlášť** (napr. 1 % + 2 %, iná farnosť inak). Cieľ: spravodlivé rozdelenie – silnejšie farnosti podporujú slabšie a fond z poplatku pokrýva svoju prevádzku. |
+| O34 | Spôsob platby (E5) | **Len platobná brána Mollie**, bankový prevod nie. |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
 
@@ -1023,17 +1028,17 @@ Ak sa projekt niekedy obnoví alebo je repo verejné, treba vedieť:
 1. **„Podporujem Pastoračný fond“** → `/registracia?farnost=<slug>` – farnosť je predvyplnená (darca ju vidí a môže zmeniť). Dar ide do fondu a ráta sa farnosti do predpisu ako doteraz (O1). *Malá úprava, súčasť F5.*
 2. **„Podporujem farnosť“ (e-pokladnička)** → jednorazový online dar cez Mollie (karta, Apple/Google Pay, bankové tlačidlá), s možnosťou aj bez registrácie. Peniaze prijme fond a **vyzbieranú sumu pošle farnosti** na jej IBAN (z registra).
 
-**Návrh dát:** `donations.destination` (`'fund'` | `'parish'`, predvolene `fund`) – pri `parish` je `parish_id` **cieľová farnosť** (nie farnosť darcu). Nová tabuľka `parish_payouts` (farnosť, obdobie, suma, poplatky, dátum odoslania, kto, poznámka) + v admine „Vyúčtovanie e-pokladničiek“: za obdobie zoznam farností s nevyplatenou sumou → export príkazov (SEPA XML / CSV) → označiť ako odoslané. V zóne farnosti: „E-pokladnička: vyzbierané / poslané / čaká“.
+**Návrh dát:** `donations.destination` (`'fund'` | `'parish'`, predvolene `fund`) – pri `parish` je `parish_id` **cieľová farnosť** (nie farnosť darcu). Nastavenie farnosti `parish_box_settings` (`enabled`, `mollie_fee_pct`, `fund_fee_pct`, účel/text, zapnuté kým/kedy) s predvolenými hodnotami diecézy. Nová tabuľka `parish_payouts` (farnosť, mesiac, hrubá suma, poplatok Mollie, poplatok fondu, **použité percentá ako snapshot**, čistá suma, dátum odoslania, kto, poznámka) + v admine „Vyúčtovanie e-pokladničiek“: za obdobie zoznam farností s nevyplatenou sumou → export príkazov (SEPA XML / CSV) → označiť ako odoslané. V zóne farnosti: „E-pokladnička: vyzbierané / poslané / čaká“.
 
 **Otvorené otázky:**
 
 | # | Otázka | Môj návrh |
 |---|---|---|
-| E1 | Ráta sa dar do e-pokladničky farnosti **do plnenia predpisu**? | **Nie** – predpis je príspevok do fondu; e-pokladnička je samostatné počítadlo (inak by fond „plnil“ predpis peniazmi, ktoré odíde späť farnosti) |
-| E2 | Ako často posielať peniaze farnosti? | **Mesačne** (alebo štvrťročne) jedným prevodom s rozpisom |
-| E3 | Poplatky Mollie (~1–2 %) | Odpočítať zo sumy pre farnosť a v rozpise ich uviesť |
+| ~~E1~~ | Ráta sa dar do e-pokladničky farnosti **do plnenia predpisu**? | ✅ **Nie** – O32 |
+| ~~E2~~ | Ako často posielať peniaze farnosti? | ✅ **Mesačne** – O33 |
+| ~~E3~~ | Poplatky Mollie (~1–2 %) | ✅ **% Mollie + % fondu, nastaviteľné pre každú farnosť** – O33 |
 | E4 | Kto je príjemca daru a vydáva potvrdenie o dare? | Fond (diecéza) – **overiť s ekonómom**: príjem na účel tretej osoby a jeho preposlanie (účtovanie ako prijaté na účel / záväzok voči farnosti) |
-| E5 | Len online, alebo aj prevodom (QR s VS farnosti)? | Na štart **len online cez Mollie**, bankový prevod neskôr (párovanie by potrebovalo osobitný VS-rad pre farnosti) |
+| ~~E5~~ | Len online, alebo aj prevodom (QR s VS farnosti)? | ✅ **Len Mollie** – O34 |
 | E6 | Pravidelný mesačný dar do e-pokladničky? | Neskôr; začať jednorazovými |
 | E7 | Môže farnosť uviesť účel („na opravu strechy“) s cieľovou sumou? | Áno ako text pri pokladničke, cieľová suma voliteľne – neskôr |
 | E8 | Musí byť farnosť zapojená (mať účet v Kroku), aby mala e-pokladničku? | Áno – zapína ju diecéza po overení IBAN-u farnosti |

@@ -57,9 +57,14 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] Motívy: `parishes.theme` + register motívov (zatiaľ `standard`) – § 4.1, O29
 - [ ] Čistenie vloženého textu z Wordu (TipTap + `sanitize-html`) – § 4.1, O30
 - [ ] „Podporujem fond“ → registrácia s predvyplnenou farnosťou – § 12, O31
-- [x] Rozhodnúť E1, E2, E3, E5 – O32–O34
-- [ ] E4 – overiť s ekonómom príjem na účel farnosti a potvrdenie o dare – § 12
-- [ ] Postaviť e-pokladničku farnosti (F5b) – § 12
+- [x] Rozhodnúť E1–E8 – O32–O38
+- [ ] Postaviť e-zvonček farnosti (F5b; jednorazový + pravidelný, poplatky Mollie/fond per farnosť, mesačné vyúčtovanie) – § 12
+- [ ] Účelové zbierky farností (cieľová suma) – neskôr, O37
+
+**Ďalšie moduly (zapísané, aby sme nezabudli)**
+- [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13
+- [ ] Web diecézy na platforme Krok (doména `dcza.sk`) – nápad, § 14
+- [ ] **Kňazská zóna** – dokumenty diecézy pre kňazov (obežníky, tlačivá, smernice) – § 15
 
 Cieľ modulu:
 
@@ -111,6 +116,10 @@ Cieľ modulu:
 | O32 | E-pokladnička a predpis (E1) | **Nie** – dar do e-pokladničky je dar pre farnosť, do plnenia predpisu sa nerátá. |
 | O33 | Poplatky e-pokladničky (E2, E3) | Vyúčtovanie **mesačne**. Odpočítava sa **poplatok Mollie (%)** a **poplatok fondu (%)** – obe **nastaviteľné pre každú farnosť zvlášť** (napr. 1 % + 2 %, iná farnosť inak). Cieľ: spravodlivé rozdelenie – silnejšie farnosti podporujú slabšie a fond z poplatku pokrýva svoju prevádzku. |
 | O34 | Spôsob platby (E5) | **Len platobná brána Mollie**, bankový prevod nie. |
+| O35 | Účtovanie (E4) | Dar do e-zvončeka sa účtuje ako **dar – kostolná zbierka**. |
+| O36 | Typ daru (E6) | **Jednorazový aj pravidelný** (mesačný) – darca si vyberie. |
+| O37 | Rozsah prvej verzie (E7) | Začíname **len „e-zvončekom“** (všeobecná zbierka pre farnosť). **Účelové zbierky** („na opravu strechy“, cieľová suma) pridáme neskôr. |
+| O38 | Farnosti s vlastným webom (E8) | **Fáza II:** moduly (widgety) pre farské weby mimo našej platformy – podpora fondu Krok aj e-zvonček na ich stránke (§ 13). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
 
@@ -1021,12 +1030,12 @@ Ak sa projekt niekedy obnoví alebo je repo verejné, treba vedieť:
 
 ---
 
-## 12. E-pokladnička farnosti (O31) – návrh, otvorené otázky
+## 12. E-zvonček farnosti (e-pokladnička, O31–O37) – návrh, otázky ✅ zodpovedané
 
 **Predstava:** na stránke farnosti sú dve tlačidlá.
 
 1. **„Podporujem Pastoračný fond“** → `/registracia?farnost=<slug>` – farnosť je predvyplnená (darca ju vidí a môže zmeniť). Dar ide do fondu a ráta sa farnosti do predpisu ako doteraz (O1). *Malá úprava, súčasť F5.*
-2. **„Podporujem farnosť“ (e-pokladnička)** → jednorazový online dar cez Mollie (karta, Apple/Google Pay, bankové tlačidlá), s možnosťou aj bez registrácie. Peniaze prijme fond a **vyzbieranú sumu pošle farnosti** na jej IBAN (z registra).
+2. **„Podporujem farnosť“ (e-zvonček)** → jednorazový alebo pravidelný online dar cez Mollie (karta, Apple/Google Pay, bankové tlačidlá), s možnosťou aj bez registrácie. Peniaze prijme fond a **vyzbieranú sumu pošle farnosti** na jej IBAN (z registra).
 
 **Návrh dát:** `donations.destination` (`'fund'` | `'parish'`, predvolene `fund`) – pri `parish` je `parish_id` **cieľová farnosť** (nie farnosť darcu). Nastavenie farnosti `parish_box_settings` (`enabled`, `mollie_fee_pct`, `fund_fee_pct`, účel/text, zapnuté kým/kedy) s predvolenými hodnotami diecézy. Nová tabuľka `parish_payouts` (farnosť, mesiac, hrubá suma, poplatok Mollie, poplatok fondu, **použité percentá ako snapshot**, čistá suma, dátum odoslania, kto, poznámka) + v admine „Vyúčtovanie e-pokladničiek“: za obdobie zoznam farností s nevyplatenou sumou → export príkazov (SEPA XML / CSV) → označiť ako odoslané. V zóne farnosti: „E-pokladnička: vyzbierané / poslané / čaká“.
 
@@ -1037,8 +1046,37 @@ Ak sa projekt niekedy obnoví alebo je repo verejné, treba vedieť:
 | ~~E1~~ | Ráta sa dar do e-pokladničky farnosti **do plnenia predpisu**? | ✅ **Nie** – O32 |
 | ~~E2~~ | Ako často posielať peniaze farnosti? | ✅ **Mesačne** – O33 |
 | ~~E3~~ | Poplatky Mollie (~1–2 %) | ✅ **% Mollie + % fondu, nastaviteľné pre každú farnosť** – O33 |
-| E4 | Kto je príjemca daru a vydáva potvrdenie o dare? | Fond (diecéza) – **overiť s ekonómom**: príjem na účel tretej osoby a jeho preposlanie (účtovanie ako prijaté na účel / záväzok voči farnosti) |
+| ~~E4~~ | Kto je príjemca daru a vydáva potvrdenie o dare? | ✅ **Dar – kostolná zbierka** – O35 |
 | ~~E5~~ | Len online, alebo aj prevodom (QR s VS farnosti)? | ✅ **Len Mollie** – O34 |
-| E6 | Pravidelný mesačný dar do e-pokladničky? | Neskôr; začať jednorazovými |
-| E7 | Môže farnosť uviesť účel („na opravu strechy“) s cieľovou sumou? | Áno ako text pri pokladničke, cieľová suma voliteľne – neskôr |
-| E8 | Musí byť farnosť zapojená (mať účet v Kroku), aby mala e-pokladničku? | Áno – zapína ju diecéza po overení IBAN-u farnosti |
+| ~~E6~~ | Pravidelný mesačný dar do e-pokladničky? | ✅ **Jednorazový aj pravidelný** – O36 |
+| ~~E7~~ | Môže farnosť uviesť účel („na opravu strechy“) s cieľovou sumou? | ✅ Teraz len **e-zvonček**, účelové zbierky neskôr – O37 |
+| ~~E8~~ | Musí byť farnosť zapojená (mať účet v Kroku), aby mala e-pokladničku? | ✅ Áno; fáza II = widgety pre farnosti s vlastným webom – O38 |
+
+---
+
+## 13. Fáza II – widgety pre farské weby mimo platformy (O38)
+
+Farnosti, ktoré majú vlastný web (WordPress, Webnode…) a našu stránku nevyužijú, dostanú **vložiteľné moduly**:
+
+- **„Podporte Pastoračný fond“** – tlačidlo/karta s plnením farnosti (bez mien), odkaz na registráciu s predvyplnenou farnosťou.
+- **E-zvonček** – darovací formulár farnosti (Mollie), rovnaký ako na `/farnosti/[slug]`.
+- Prípadne **bohoslužby** z registra (aby farnosť nemusela udržiavať dve miesta).
+
+Technicky: `<script src="https://mojkrok.sk/embed.js" data-farnost="varin">` alebo `<iframe>` na `/embed/farnosti/<slug>/…`. Pozor na CSP `frame-ancestors`, cookies tretích strán (platba vždy v novom okne / redirect na Mollie) a vzhľad (svetlý/tmavý, farba tlačidla). Existujúci widget výziev (`/vyzvy`) je dobrý základ.
+
+## 14. Nápad: web diecézy na platforme Krok
+
+Pripravovaný web diecézy beží na WordPresse. Ak by sme ho neskôr presunuli k nám, pobežal by na **vlastnej doméne `dcza.sk`** (Vercel podporuje viac domén na jednom projekte; obsah by sa vyberal podľa hostu – rovnaký mechanizmus ako § 4.4). Výhoda: jeden register farností, bohoslužieb a kňazov pre diecézny web aj farské stránky; jedna správa obsahu. Zatiaľ len zapísané – **držíme sa jednotného dizajnu**, aby bol prechod možný. Rozhodnúť až po F5.
+
+## 15. Kňazská zóna – dokumentácia diecézy pre kňazov (zapísané 2026-10-01)
+
+**Účel:** neverejné miesto, kde diecéza ukladá dokumenty pre kňazov – **obežníky, tlačivá, smernice**, prípadne dekréty, pastoračné pokyny, matričné pokyny, liturgické materiály.
+
+Prvý návrh (na diskusiu):
+
+- **Kto vidí:** kňazi s účtom (účty farností z `parish_users` + osobné účty kňazov prepojené na `parish_clergy`); spravuje diecéza (nové oprávnenie `manage_clergy_docs`). Niektoré dokumenty možno len pre farárov / dekanov.
+- **Štruktúra:** kategórie (Obežníky, Tlačivá, Smernice…), rok, číslo obežníka, dátum vydania, platnosť (platné / zrušené – nahradené novším), súbor PDF/DOCX na B2 (rovnako ako dnešné „Na stiahnutie“ – `downloads`, migrácia 020).
+- **Funkcie:** vyhľadávanie, „nové od poslednej návštevy“, e-mail kňazom pri novom obežníku, prípadne potvrdenie „prečítal som“.
+- **Kde:** `/knazska-zona` (alebo sekcia v `/moja-farnost`).
+
+Otvorené otázky: K1 prístup aj pre kňazov bez farnosti (výpomoc, dôchodcovia, rehoľníci)? K2 potrebujeme potvrdenie prečítania? K3 kto okrem kúrie môže dokumenty pridávať (dekani)? K4 importovať archív starších obežníkov?

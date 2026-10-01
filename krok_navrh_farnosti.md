@@ -64,7 +64,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
 - [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13
 - [ ] Web diecézy na platforme Krok (doména `dcza.sk`) – nápad, § 14
-- [ ] **Kňazská zóna** – dokumenty diecézy pre kňazov (obežníky, tlačivá, smernice) – § 15
+- [ ] **Kňazská zóna** – archív dokumentov kúrie pre kňazov (aj bez farnosti), e-mail pri zverejnení, bez importu – § 15, O39–O42
 
 Cieľ modulu:
 
@@ -120,6 +120,10 @@ Cieľ modulu:
 | O36 | Typ daru (E6) | **Jednorazový aj pravidelný** (mesačný) – darca si vyberie. |
 | O37 | Rozsah prvej verzie (E7) | Začíname **len „e-zvončekom“** (všeobecná zbierka pre farnosť). **Účelové zbierky** („na opravu strechy“, cieľová suma) pridáme neskôr. |
 | O38 | Farnosti s vlastným webom (E8) | **Fáza II:** moduly (widgety) pre farské weby mimo našej platformy – podpora fondu Krok aj e-zvonček na ich stránke (§ 13). |
+| O39 | Kňazská zóna – prístup (K1) | **Áno aj pre kňazov bez farnosti** (výpomoc, dôchodcovia, rehoľníci) – osobné účty kňazov. |
+| O40 | Potvrdenie prečítania (K2) | **Nie.** Zóna je archív; každý dokument sa kňazom posiela aj **e-mailom**. |
+| O41 | Kto pridáva dokumenty (K3) | **Len kúria.** |
+| O42 | Archív (K4) | Starý archív sa neimportuje – **všetko sa pridáva ručne**. Obežníky sú **platné stále**; čo diecéza archivuje, presunie sa do **Archívu**. |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
 
@@ -1068,15 +1072,14 @@ Technicky: `<script src="https://mojkrok.sk/embed.js" data-farnost="varin">` ale
 
 Pripravovaný web diecézy beží na WordPresse. Ak by sme ho neskôr presunuli k nám, pobežal by na **vlastnej doméne `dcza.sk`** (Vercel podporuje viac domén na jednom projekte; obsah by sa vyberal podľa hostu – rovnaký mechanizmus ako § 4.4). Výhoda: jeden register farností, bohoslužieb a kňazov pre diecézny web aj farské stránky; jedna správa obsahu. Zatiaľ len zapísané – **držíme sa jednotného dizajnu**, aby bol prechod možný. Rozhodnúť až po F5.
 
-## 15. Kňazská zóna – dokumentácia diecézy pre kňazov (zapísané 2026-10-01)
+## 15. Kňazská zóna – dokumentácia diecézy pre kňazov (O39–O42)
 
-**Účel:** neverejné miesto, kde diecéza ukladá dokumenty pre kňazov – **obežníky, tlačivá, smernice**, prípadne dekréty, pastoračné pokyny, matričné pokyny, liturgické materiály.
+**Účel:** neverejný archív, kam diecéza ukladá dokumenty pre kňazov – **obežníky, tlačivá, smernice**, prípadne dekréty, pastoračné a matričné pokyny, liturgické materiály.
 
-Prvý návrh (na diskusiu):
-
-- **Kto vidí:** kňazi s účtom (účty farností z `parish_users` + osobné účty kňazov prepojené na `parish_clergy`); spravuje diecéza (nové oprávnenie `manage_clergy_docs`). Niektoré dokumenty možno len pre farárov / dekanov.
-- **Štruktúra:** kategórie (Obežníky, Tlačivá, Smernice…), rok, číslo obežníka, dátum vydania, platnosť (platné / zrušené – nahradené novším), súbor PDF/DOCX na B2 (rovnako ako dnešné „Na stiahnutie“ – `downloads`, migrácia 020).
-- **Funkcie:** vyhľadávanie, „nové od poslednej návštevy“, e-mail kňazom pri novom obežníku, prípadne potvrdenie „prečítal som“.
-- **Kde:** `/knazska-zona` (alebo sekcia v `/moja-farnost`).
-
-Otvorené otázky: K1 prístup aj pre kňazov bez farnosti (výpomoc, dôchodcovia, rehoľníci)? K2 potrebujeme potvrdenie prečítania? K3 kto okrem kúrie môže dokumenty pridávať (dekani)? K4 importovať archív starších obežníkov?
+- **Kto vidí (O39):** všetci kňazi s osobným účtom – aj bez farnosti (výpomoc, dôchodcovia, rehoľníci). Účet kňaza ≠ účet farnosti: nová tabuľka `clergy_accounts` (user, meno, voliteľne väzba na `parish_clergy`, aktívny), účty zakladá kúria pozvánkou. Účty farností (`parish_users`) prístup dostanú tiež.
+- **Kto pridáva (O41):** len kúria – nové oprávnenie `manage_clergy_docs`.
+- **Štruktúra:** kategórie (Obežníky, Tlačivá, Smernice…), rok, číslo obežníka, dátum vydania, súbor PDF/DOCX na B2 (ako „Na stiahnutie“ – `downloads`, migrácia 020), stav **aktuálne / archív (O42)** – obežníky sú platné stále, archivovaním sa len presunú do sekcie Archív.
+- **E-mail (O40):** pri zverejnení dokumentu ide e-mail všetkým kňazom (príloha alebo odkaz do zóny; odosielanie cez Brevo ako newsletter – `lib/newsletter/brevo.ts`). Žiadne potvrdzovanie prečítania.
+- **Funkcie:** vyhľadávanie, filter kategória/rok, „nové“ (napr. posledných 30 dní).
+- **Import (O42):** nerobí sa, dokumenty pridáva kúria ručne.
+- **Kde:** `/knazska-zona`.

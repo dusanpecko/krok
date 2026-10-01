@@ -80,6 +80,7 @@ export interface ParishRow {
   latitude: number | null
   longitude: number | null
   intro: string | null
+  image_url: string | null
   notes: string | null
   is_active: boolean
   visible_on_web: boolean

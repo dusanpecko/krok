@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft } from 'lucide-react'
+import { Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft, Globe, Upload, X } from 'lucide-react'
 import {
   saveMySchedule,
   submitParishChange,
@@ -13,11 +13,16 @@ import {
   type MyParishView,
 } from '@/app/moja-farnost/actions'
 import ParishScheduleTab from '@/components/admin/parishes/ParishScheduleTab'
+import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
+import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
+import { deleteMyPost, saveMyPost, saveMySacrament, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS } from '@/lib/parishes/fields'
 import type { ClergyMember, VillageWithStats } from '@/lib/parishes/types'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
-type TabKey = 'overview' | 'official' | 'presentation' | 'schedule' | 'population' | 'clergy'
+type TabKey = 'overview' | 'official' | 'presentation' | 'schedule' | 'posts' | 'sacraments' | 'population' | 'clergy'
+
+const POST_ACTIONS = { save: saveMyPost, remove: deleteMyPost, upload: uploadMyParishFile, uploadEditorImage: uploadMyEditorImage }
 
 const eur = (n: number | null | undefined) => (n == null ? '—' : n.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
@@ -27,7 +32,9 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
   const tabs: { key: TabKey; label: string }[] = [
     ...(isAdmin ? [{ key: 'overview' as const, label: 'Prehľad' }] : []),
     { key: 'schedule', label: 'Bohoslužby' },
+    { key: 'posts', label: 'Oznamy a aktuality' },
     { key: 'presentation', label: 'Prezentácia' },
+    { key: 'sacraments', label: 'Sviatosti' },
     { key: 'official', label: 'Úradné údaje' },
     { key: 'population', label: 'Obce a štatistika' },
     { key: 'clergy', label: 'Kňazi' },
@@ -48,14 +55,21 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
           </Link>
         </div>
       )}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-          <Church className="w-7 h-7 text-blue-600" /> {p.official_name ?? p.name}
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {view.deaneryName ? `Dekanát ${view.deaneryName}` : ''}
-          {pending > 0 && <span className="ml-3 font-bold text-amber-600">{pending} návrh(y) čaká na schválenie</span>}
-        </p>
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <Church className="w-7 h-7 text-blue-600" /> {p.official_name ?? p.name}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {view.deaneryName ? `Dekanát ${view.deaneryName}` : ''}
+            {pending > 0 && <span className="ml-3 font-bold text-amber-600">{pending} návrh(y) čaká na schválenie</span>}
+          </p>
+        </div>
+        {p.slug && (
+          <a href={`/farnosti/${p.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:border-blue-300 hover:bg-blue-50">
+            <Globe size={14} /> {p.visible_on_web ? 'Stránka farnosti' : 'Náhľad stránky (zatiaľ nezverejnená)'}
+          </a>
+        )}
       </div>
 
       <div className="flex gap-1 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
@@ -73,6 +87,8 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
 
       {tab === 'overview' && <OverviewTab view={view} />}
       {tab === 'schedule' && <ParishScheduleTab parishId={p.id} schedules={view.schedules} villages={view.villages} save={saveMySchedule} />}
+      {tab === 'posts' && <ParishPostsTab parishId={p.id} parishSlug={p.slug} posts={view.posts} actions={POST_ACTIONS} />}
+      {tab === 'sacraments' && <ParishSacramentsTab parishId={p.id} rows={view.sacraments} save={saveMySacrament} />}
       {tab === 'presentation' && <PresentationTab view={view} />}
       {tab === 'official' && <OfficialTab view={view} />}
       {tab === 'population' && <PopulationTab view={view} />}
@@ -219,7 +235,18 @@ function PresentationTab({ view }: { view: MyParishView }) {
     intro: p.intro ?? '', feast_day: p.feast_day ?? '', feast_day_note: p.feast_day_note ?? '',
     adoration_date: p.adoration_date ?? '', adoration_note: p.adoration_note ?? '',
     latitude: p.latitude != null ? String(p.latitude) : '', longitude: p.longitude != null ? String(p.longitude) : '',
+    image_url: p.image_url ?? '',
   })
+  const [uploading, setUploading] = useState(false)
+  const uploadPhoto = async (file: File) => {
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await uploadMyParishFile(p.id, fd)
+    setUploading(false)
+    if (res.url && !file.type.includes('pdf')) set('image_url', res.url)
+    else setMsg({ kind: 'error', text: res.error ?? 'Nahrajte obrázok (JPG, PNG, WebP).' })
+  }
   const [msg, setMsg] = useState<Msg>(null)
   const [pending, startTransition] = useTransition()
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }))
@@ -236,6 +263,20 @@ function PresentationTab({ view }: { view: MyParishView }) {
       <SectionTitle title="Prezentácia farnosti" description="Text a sviatky pre verejnú stránku farnosti – ukladajú sa hneď." />
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
       <Field label="Krátky text o farnosti"><textarea value={form.intro} onChange={(e) => set('intro', e.target.value)} rows={4} className={inputCls} /></Field>
+      <Field label="Titulná fotka (farský kostol)" hint="Zobrazí sa v hlavičke stránky farnosti. Ideálne na šírku, aspoň 1600 px.">
+        {form.image_url ? (
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={form.image_url} alt="" className="h-16 w-28 object-cover rounded-lg border" />
+            <button type="button" onClick={() => set('image_url', '')} className={btnSecondary}><X size={14} /> Odstrániť</button>
+          </div>
+        ) : (
+          <label className={`${btnSecondary} w-fit`}>
+            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Nahrať fotku
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
+          </label>
+        )}
+      </Field>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Field label="Hody (dátum)"><input type="date" value={form.feast_day} onChange={(e) => set('feast_day', e.target.value)} className={inputCls} /></Field>
         <Field label="Hody – poznámka" hint="Ak je sviatok pohyblivý."><input value={form.feast_day_note} onChange={(e) => set('feast_day_note', e.target.value)} className={inputCls} /></Field>
@@ -244,7 +285,7 @@ function PresentationTab({ view }: { view: MyParishView }) {
         <Field label="GPS šírka (farský kostol)"><input value={form.latitude} onChange={(e) => set('latitude', e.target.value)} className={inputCls} inputMode="decimal" /></Field>
         <Field label="GPS dĺžka"><input value={form.longitude} onChange={(e) => set('longitude', e.target.value)} className={inputCls} inputMode="decimal" /></Field>
       </div>
-      <div className="flex justify-end"><button onClick={save} disabled={pending} className={btnPrimary}>{pending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Uložiť</button></div>
+      <div className="flex justify-end"><button onClick={save} disabled={pending || uploading} className={btnPrimary}>{pending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Uložiť</button></div>
     </div>
   )
 }

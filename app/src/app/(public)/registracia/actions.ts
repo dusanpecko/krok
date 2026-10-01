@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { loadDonorChoiceOptions } from '@/lib/parishes/choices'
+import { loadDonorChoiceOptions, resolveParishSlug } from '@/lib/parishes/choices'
 
 // Service-role klient – parishes a projects majú pre anonymného návštevníka obmedzené čítanie
 const supabaseAdmin = createSupabaseClient(
@@ -20,4 +20,9 @@ export async function getRegistrationFormOptions() {
     console.error('Error fetching registration options:', err)
     return { parishes: [], projects: [] }
   }
+}
+
+/** Predvyplnená farnosť z odkazu /registracia?farnost=<slug> (stránka farnosti, O31). */
+export async function getParishIdBySlug(slug: string | undefined | null) {
+  return resolveParishSlug(supabaseAdmin, slug)
 }

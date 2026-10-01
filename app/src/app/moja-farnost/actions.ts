@@ -7,6 +7,7 @@ import { loadParishDetail } from '@/lib/parishes/load'
 import { logParishChange, writeSchedule } from '@/lib/parishes/writes'
 import { LIVE_PARISH_FIELDS, PROTECTED_PARISH_FIELDS, normalizeParishValue, FIELD_LABEL } from '@/lib/parishes/fields'
 import type { ClergyMember, ParishDetail, Schedule, VillageWithStats } from '@/lib/parishes/types'
+import { POST_COLUMNS, loadSacramentEditRows, type ParishPostRow, type SacramentEditRow } from '@/lib/parishes/posts'
 
 /**
  * Zóna farnosti /moja-farnost (návrh farností § 6.2, fáza F4).
@@ -37,15 +38,19 @@ export interface MyParishView extends Omit<ParishDetail, 'log' | 'donorsCount'> 
   deaneryName: string | null
   donorsCount: number
   requests: MyParishRequest[]
+  posts: ParishPostRow[]
+  sacraments: SacramentEditRow[]
 }
 
 export async function getMyParishView(parishId: string): Promise<MyParishView> {
   const { role, db, impersonating } = await requireParishMember(parishId)
   const detail = await loadParishDetail(db, parishId)
   if (!detail) throw new Error('Farnosť sa nenašla.')
-  const [{ data: deanery }, { data: requests }] = await Promise.all([
+  const [{ data: deanery }, { data: requests }, { data: posts }, sacraments] = await Promise.all([
     detail.parish.deanery_id ? db.from('deaneries').select('name').eq('id', detail.parish.deanery_id).maybeSingle() : Promise.resolve({ data: null }),
     db.from('parish_change_requests').select('id, entity, payload, status, submitted_at, review_note').eq('parish_id', parishId).order('submitted_at', { ascending: false }).limit(20),
+    db.from('parish_posts').select(POST_COLUMNS).eq('parish_id', parishId).order('created_at', { ascending: false }).limit(200),
+    loadSacramentEditRows(db, parishId),
   ])
   // interná poznámka diecézy sa farnosti nezobrazuje
   const { log: _log, ...rest } = detail
@@ -60,6 +65,8 @@ export async function getMyParishView(parishId: string): Promise<MyParishView> {
     impersonating,
     deaneryName: (deanery as { name: string } | null)?.name ?? null,
     requests: (requests ?? []) as MyParishRequest[],
+    posts: (posts ?? []) as ParishPostRow[],
+    sacraments,
   }
 }
 

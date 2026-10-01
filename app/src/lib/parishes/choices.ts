@@ -44,6 +44,14 @@ export async function validateParishId(admin: SupabaseClient, value: unknown): P
   return data.id as string
 }
 
+/** Slug z odkazu „Podporujem fond“ na stránke farnosti → id farnosti na predvyplnenie (O31). */
+export async function resolveParishSlug(admin: SupabaseClient, slug: unknown): Promise<string | null> {
+  if (typeof slug !== 'string' || !/^[a-z0-9-]{1,120}$/.test(slug)) return null
+  const { data } = await admin.from('parishes').select('id, name').eq('slug', slug).eq('is_active', true).maybeSingle()
+  if (!data || PSEUDO_PARISH_NAMES.includes(data.name as string)) return null
+  return data.id as string
+}
+
 /** Overí projekt od klienta: existuje a je zverejnený. */
 export async function validateProjectId(admin: SupabaseClient, value: unknown): Promise<string | null> {
   if (typeof value !== 'string' || !UUID_RE.test(value)) return null

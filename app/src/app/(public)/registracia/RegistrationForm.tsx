@@ -24,7 +24,7 @@ function GoogleIcon() {
   )
 }
 
-export default function RegistrationForm() {
+export default function RegistrationForm({ initialParishId = null, parishSlug = null }: { initialParishId?: string | null; parishSlug?: string | null }) {
   const { supabase } = useSupabase()
 
   const [firstName, setFirstName] = useState('')
@@ -35,7 +35,7 @@ export default function RegistrationForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [consent, setConsent] = useState(false)
   // Farnosť (povinná voľba – aj „nepatrím do farnosti“) a podporovaný projekt (nepovinné)
-  const [parishId, setParishId] = useState('')
+  const [parishId, setParishId] = useState(initialParishId ?? '')
   const [projectId, setProjectId] = useState('')
   const [options, setOptions] = useState<{ parishes: { id: string; name: string }[]; projects: { id: string; name: string }[] }>({ parishes: [], projects: [] })
   useEffect(() => {
@@ -120,7 +120,8 @@ export default function RegistrationForm() {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        // pri príchode zo stránky farnosti sa farnosť prenesie až do onboardingu
+        options: { redirectTo: `${window.location.origin}/auth/callback${parishSlug ? `?redirect=${encodeURIComponent(`/profil?farnost=${parishSlug}`)}` : ''}` },
       })
       if (oauthError) setError(oauthError.message)
     } catch {

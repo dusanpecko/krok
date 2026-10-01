@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { uploadPostImage } from '@/app/admin/aktuality/actions';
+import { cleanPastedHtml } from '@/lib/html/clean-paste';
 
 /** Predvolené šírky obrázka (hodnota = CSS šírka) */
 const IMAGE_WIDTHS: { value: string; label: string }[] = [
@@ -139,6 +140,8 @@ export default function SimpleRichTextEditor({
     ],
     content: value || '',
     editable: !disabled,
+    // Vloženie z Wordu – odstráni štýly, mso-* a podmienené komentáre (návrh farností O30)
+    editorProps: { transformPastedHTML: cleanPastedHtml },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       // Ak je obsah prázdny paragraph, vráť prázdny string

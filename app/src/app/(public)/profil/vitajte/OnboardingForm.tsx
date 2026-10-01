@@ -13,8 +13,8 @@ interface Option {
 const selectCls =
   'w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white text-sm font-medium outline-none focus:border-gold focus:ring-1 focus:ring-gold cursor-pointer'
 
-export default function OnboardingForm({ firstName, parishes, projects, next }: { firstName: string; parishes: Option[]; projects: Option[]; next: string }) {
-  const [parishId, setParishId] = useState('')
+export default function OnboardingForm({ firstName, parishes, projects, next, initialParishId = null }: { firstName: string; parishes: Option[]; projects: Option[]; next: string; initialParishId?: string | null }) {
+  const [parishId, setParishId] = useState(initialParishId ?? '')
   const [projectId, setProjectId] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

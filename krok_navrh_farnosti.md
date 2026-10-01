@@ -46,13 +46,18 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] Pilot – rozposlať prístupy prvým 5–8 farnostiam – § 8.1, O16
 
 **Verejné stránky (F5, F6)**
-- [ ] Migrácia 035: `parish_posts` (oznamy, články, PDF príloha) – § 4.1
+- [ ] Migrácia 035: `parish_posts` (oznamy, aktuality, PDF príloha), `sacrament_texts`, `parishes.theme` – § 4.1
 - [ ] `/farnosti` (zoznam + hľadanie podľa obce) a `/farnosti/[slug]` (bohoslužby, kňazi, kontakt, mapa, sviatky, oznamy) – § 4.2
-- [ ] Oznamy a články v zóne farnosti (TipTap) + stiahnutie z webu diecézou – § 4.3
+- [ ] Oznamy a aktuality v zóne farnosti (TipTap) + stiahnutie z webu diecézou – § 4.3
 - [ ] SEO: sitemap, OG, schema.org `Church` / `Event` – § 4.2
 - [ ] Zásady ochrany OÚ – obsah od farností – § 5.4
 - [ ] Subdomény `<farnost>.mojkrok.sk` (301) – § 4.4, F6
-- [ ] Rozhodnúť W1–W6 (rozsah F5 podľa podkladu `web_parochia`) – § 11
+- [x] Rozhodnúť W1–W6 (rozsah F5 podľa podkladu `web_parochia`) – § 11, O26–O31
+- [ ] Sviatosti: diecézny štandard + úprava farnosti – § 4.1, O27
+- [ ] Motívy: `parishes.theme` + register motívov (zatiaľ `standard`) – § 4.1, O29
+- [ ] Čistenie vloženého textu z Wordu (TipTap + `sanitize-html`) – § 4.1, O30
+- [ ] „Podporujem fond“ → registrácia s predvyplnenou farnosťou – § 12, O31
+- [ ] Rozhodnúť E1–E8 a postaviť e-pokladničku farnosti (F5b) – § 12, O31
 
 Cieľ modulu:
 
@@ -95,6 +100,12 @@ Cieľ modulu:
 | O23 | Race condition vo VS (Q1) | **Áno, riešiť spolu s F1b** – DB sekvencia namiesto „max + 1“ v JS na všetkých miestach, kde vzniká darca. |
 | O24 | Koeficient (Q3) | **2 €/katolík pre všetky farnosti**, jednotlivé predpisy sa dajú ručne prepísať. |
 | O25 | Viditeľnosť plnenia (Q4) | **Každá farnosť vidí len seba**, súhrn a porovnanie má len diecéza. |
+| O26 | Rozsah F5 (W1) | Rozloženie stránky, bohoslužby, najnovší oznam + archív, aktuality, kontakt, kňazi, mapa, hody/poklona, tlačidlo „Časy omší“, podpora + **SEO**. ICS a samostatné udalosti neskôr (§ 11). |
+| O27 | Sviatosti (W2) | **Spoločný text diecézy ako štandard**, farnosť si ho môže **upraviť** pre seba (vlastná verzia prekryje diecéznu). |
+| O28 | Typy obsahu (W3) | **Oznamy + aktuality.** Žiadne samostatné „články“ ani „udalosti“ – udalosť je aktualita (s voliteľným dátumom konania). |
+| O29 | Vzhľad (W4) | **Zatiaľ jeden štandardný motív**, ale kód sa robí tak, aby sa dali **neskôr pridávať ďalšie motívy (templaty)** a farnosť si vyberie. |
+| O30 | Oznamy (W5) | **Text** – kňaz skopíruje z Wordu do webu; pri vložení sa musí **odstrániť balast z Wordu** (štýly, `mso-*`, prázdne spany…). PDF príloha voliteľne. |
+| O31 | Podpora zo stránky farnosti (W6) | **Dve tlačidlá:** „Podporujem fond“ (registrácia s **predvyplnenou farnosťou**) a „Podporujem farnosť“ = **e-pokladnička** – čo sa vyzbiera pre farnosť, fond farnosti pošle. Detail a otvorené otázky v § 12. |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
 
@@ -570,7 +581,7 @@ GDPR: telefón a e-mail kňaza sú osobné údaje. Preto `is_public` per osoba, 
 ### 4.1 Oznamy a články ⬜
 
 ```sql
-CREATE TYPE parish_post_type AS ENUM ('announcement','article');   -- oznamy / článok
+CREATE TYPE parish_post_type AS ENUM ('announcement','news');   -- oznamy / aktuality (O28)
 
 CREATE TABLE parish_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -583,6 +594,7 @@ CREATE TABLE parish_posts (
   image_url TEXT,
   attachment_url TEXT,              -- naskenované oznamy v PDF
   valid_from DATE, valid_to DATE,   -- týždeň platnosti oznamov
+  event_at TIMESTAMPTZ,             -- aktualita = udalosť: voliteľný dátum konania („Pripravujeme“)
   published BOOLEAN NOT NULL DEFAULT false,
   published_at TIMESTAMPTZ,
   pinned BOOLEAN NOT NULL DEFAULT false,
@@ -594,6 +606,27 @@ CREATE TABLE parish_posts (
 ```
 
 Znovupoužijeme `SimpleRichTextEditor` a B2 upload z modulu aktualít – nová je len väzba na farnosť a práva.
+
+**Vkladanie z Wordu (O30):** v TipTap `editorProps.transformPastedHTML` vyčistiť Word HTML – odstrániť `<!--[if …]>`, `<o:p>`, `class="Mso…"`, všetky `style`, `<font>`, prázdne `<span>`, `lang`; ponechať len `p, h2, h3, strong, em, u, ul, ol, li, a, br, table/tr/td`. To isté pravidlo **na serveri** cez `sanitize-html` pri uložení (obsah od farností je externý vstup) a tlačidlo „Vložiť ako čistý text“ pre prípad núdze.
+
+**Sviatosti (O27):**
+
+```sql
+CREATE TABLE sacrament_texts (           -- štandard diecézy
+  type TEXT PRIMARY KEY,                 -- baptism, confirmation, marriage, anointing, funeral, confession…
+  title TEXT NOT NULL, content TEXT NOT NULL, sort_order INT, updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE parish_sacrament_texts (    -- úprava farnosti prekryje štandard
+  parish_id UUID REFERENCES parishes(id) ON DELETE CASCADE,
+  type TEXT REFERENCES sacrament_texts(type),
+  content TEXT, is_hidden BOOLEAN NOT NULL DEFAULT false, updated_at TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (parish_id, type)
+);
+```
+
+Verejne: vlastný text farnosti, inak diecézny. V zóne farnosti „Upraviť pre našu farnosť“ (predvyplní diecézny text) a „Vrátiť na diecézny“.
+
+**Motívy (O29):** `parishes.theme TEXT NOT NULL DEFAULT 'standard'` + register motívov v kóde (`lib/parish-themes/` → `{ key, label, preview, Layout }`). Stránka načíta dáta raz (jeden typ `PublicParish`) a vykreslí ich cez `Layout` zvoleného motívu – nový motív = nový priečinok, žiadna zmena DB ani dotazov. Výber motívu v zóne farnosti sa zobrazí, až keď budú aspoň dva.
 
 ### 4.2 Stránky ⬜ *(column GRANT na `parishes` už hotový ✅)*
 
@@ -970,13 +1003,37 @@ Ak sa projekt niekedy obnoví alebo je repo verejné, treba vedieť:
 - Rezervácie – verejný SELECT môže vystaviť osobné údaje.
 - Schema drift (`parish_menus` chýba v migráciách, duplicitné čísla migrácií).
 
-### 11.6 Otázky na rozhodnutie
+### 11.6 Otázky na rozhodnutie – ✅ rozhodnuté 2026-10-01 (O26–O31)
+
+| # | Otázka | Rozhodnutie |
+|---|---|---|
+| W1 | Rozsah F5 | ✅ ako navrhnuté – O26 |
+| W2 | Sviatosti | ✅ spoločný text diecézy ako štandard, farnosť si ho môže upraviť – O27 |
+| W3 | Udalosti | ✅ oznamy + aktuality; udalosť = aktualita – O28 |
+| W4 | Vlastný vzhľad | ✅ zatiaľ jeden motív, architektúra pripravená na ďalšie – O29 |
+| W5 | Oznamy | ✅ text kopírovaný z Wordu s čistením balastu – O30 |
+| W6 | Podpora zo stránky | ✅ „Podporujem fond“ (predvyplnená farnosť) + „Podporujem farnosť“ (e-pokladnička) – O31, § 12 |
+
+---
+
+## 12. E-pokladnička farnosti (O31) – návrh, otvorené otázky
+
+**Predstava:** na stránke farnosti sú dve tlačidlá.
+
+1. **„Podporujem Pastoračný fond“** → `/registracia?farnost=<slug>` – farnosť je predvyplnená (darca ju vidí a môže zmeniť). Dar ide do fondu a ráta sa farnosti do predpisu ako doteraz (O1). *Malá úprava, súčasť F5.*
+2. **„Podporujem farnosť“ (e-pokladnička)** → jednorazový online dar cez Mollie (karta, Apple/Google Pay, bankové tlačidlá), s možnosťou aj bez registrácie. Peniaze prijme fond a **vyzbieranú sumu pošle farnosti** na jej IBAN (z registra).
+
+**Návrh dát:** `donations.destination` (`'fund'` | `'parish'`, predvolene `fund`) – pri `parish` je `parish_id` **cieľová farnosť** (nie farnosť darcu). Nová tabuľka `parish_payouts` (farnosť, obdobie, suma, poplatky, dátum odoslania, kto, poznámka) + v admine „Vyúčtovanie e-pokladničiek“: za obdobie zoznam farností s nevyplatenou sumou → export príkazov (SEPA XML / CSV) → označiť ako odoslané. V zóne farnosti: „E-pokladnička: vyzbierané / poslané / čaká“.
+
+**Otvorené otázky:**
 
 | # | Otázka | Môj návrh |
 |---|---|---|
-| W1 | Rozsah F5: len A1–A5 + SEO + mapa? | **Áno** – ICS, sviatosti a udalosti až v ďalšom kole |
-| W2 | Sviatosti („čo treba na krst/sobáš“) – spoločný text diecézy, vlastný text farnosti, alebo vôbec? | Spoločný text diecézy + krátky farský doplnok (kontakt, termíny prípravy) |
-| W3 | Udalosti – samostatná tabuľka, alebo stačia oznamy/články? | Zatiaľ len oznamy a články |
-| W4 | Vlastný vzhľad farnosti? | Nie, len titulná fotka |
-| W5 | Oznamy: text, PDF, alebo oboje? | Oboje – veľa farností má oznamy len vo Worde/PDF |
-| W6 | Prepojenie „Podporte fond za túto farnosť“ → registrácia s predvyplnenou farnosťou | Áno (malá úprava `/registracia?farnost=<slug>`) |
+| E1 | Ráta sa dar do e-pokladničky farnosti **do plnenia predpisu**? | **Nie** – predpis je príspevok do fondu; e-pokladnička je samostatné počítadlo (inak by fond „plnil“ predpis peniazmi, ktoré odíde späť farnosti) |
+| E2 | Ako často posielať peniaze farnosti? | **Mesačne** (alebo štvrťročne) jedným prevodom s rozpisom |
+| E3 | Poplatky Mollie (~1–2 %) | Odpočítať zo sumy pre farnosť a v rozpise ich uviesť |
+| E4 | Kto je príjemca daru a vydáva potvrdenie o dare? | Fond (diecéza) – **overiť s ekonómom**: príjem na účel tretej osoby a jeho preposlanie (účtovanie ako prijaté na účel / záväzok voči farnosti) |
+| E5 | Len online, alebo aj prevodom (QR s VS farnosti)? | Na štart **len online cez Mollie**, bankový prevod neskôr (párovanie by potrebovalo osobitný VS-rad pre farnosti) |
+| E6 | Pravidelný mesačný dar do e-pokladničky? | Neskôr; začať jednorazovými |
+| E7 | Môže farnosť uviesť účel („na opravu strechy“) s cieľovou sumou? | Áno ako text pri pokladničke, cieľová suma voliteľne – neskôr |
+| E8 | Musí byť farnosť zapojená (mať účet v Kroku), aby mala e-pokladničku? | Áno – zapína ju diecéza po overení IBAN-u farnosti |

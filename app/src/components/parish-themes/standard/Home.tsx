@@ -7,6 +7,7 @@ import Shell, { SectionHeading, cardCls } from './Shell'
 import ScheduleView from './ScheduleView'
 import MassTimesButton from './MassTimesButton'
 import PostCard from './PostCard'
+import SacramentsSection from './SacramentsSection'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
 import { clergyName, dayMonth, formatDateTime, googleMapsUrl, validRange } from '@/lib/parishes/format'
@@ -154,17 +155,7 @@ export default function Home({ parish, announcements, news, events, sacraments }
       {sacraments.length > 0 && (
         <section className="mb-16">
           <SectionHeading id="sviatosti" icon={<BookOpen size={22} />}>Sviatosti – čo treba vybaviť</SectionHeading>
-          <div className="space-y-2">
-            {sacraments.map((s) => (
-              <details key={s.type} className={`${cardCls} group`}>
-                <summary className="cursor-pointer list-none px-5 py-4 font-extrabold flex items-center justify-between">
-                  {s.title}
-                  <span className="text-gold transition-transform group-open:rotate-45 text-xl leading-none">+</span>
-                </summary>
-                <div className="px-5 pb-5 theme-dark simple-rich-editor leading-relaxed text-blue-50/90" dangerouslySetInnerHTML={{ __html: s.content }} />
-              </details>
-            ))}
-          </div>
+          <SacramentsSection sacraments={sacraments} />
         </section>
       )}
 

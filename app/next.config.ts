@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       { source: '/grantove-vyzvy/:slug', destination: '/vyzvy/:slug', permanent: true },
+      { source: '/vseobecne-obchodne-podmienky', destination: '/podmienky', permanent: true },
     ]
   },
   experimental: {

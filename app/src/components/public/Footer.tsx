@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { KROK_ORG } from '@/lib/legal'
 import Link from 'next/link'
 import NewsletterSignup from './NewsletterSignup'
 
@@ -42,7 +43,7 @@ export default function Footer() {
             <ul className="space-y-4 text-gray-400">
               <li><Link href="/ochrana-udajov" className="hover:text-white transition-colors">Ochrana osobných údajov</Link></li>
               <li><Link href="/podmienky" className="hover:text-white transition-colors">Všeobecné podmienky</Link></li>
-              <li className="text-sm font-mono mt-4">IČO: 55 97 15 21</li>
+              {KROK_ORG.ico && <li className="text-sm font-mono mt-4">IČO: {KROK_ORG.ico}</li>}
             </ul>
           </div>
         </div>

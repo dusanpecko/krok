@@ -242,9 +242,10 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
           initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-          className="flex bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full sm:w-max backdrop-blur-md shadow-xl overflow-x-auto sm:overflow-x-visible no-scrollbar animate-in fade-in duration-500"
+          className="bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full sm:w-max backdrop-blur-md shadow-xl animate-in fade-in duration-500"
         >
-          <div className="flex w-full sm:w-auto min-w-max gap-1">
+          {/* Mobil: tri rovnaké stĺpce, ikona nad textom (nič sa neoreže); od sm vedľa seba */}
+          <div className="grid grid-cols-3 gap-1 sm:flex sm:w-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -253,9 +254,9 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    flex items-center justify-center sm:justify-start gap-2.5 px-5 py-3 rounded-xl text-sm font-extrabold transition-all duration-300 cursor-pointer w-full sm:w-auto
+                    flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2.5 px-2 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition-all duration-300 cursor-pointer w-full sm:w-auto min-w-0
                     ${isActive 
-                      ? 'bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep shadow-lg shadow-gold/15 scale-[1.02]' 
+                      ? 'bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep shadow-lg shadow-gold/15 sm:scale-[1.02]' 
                       : 'text-zinc-400 hover:text-white hover:bg-white/5'}
                   `}
                 >

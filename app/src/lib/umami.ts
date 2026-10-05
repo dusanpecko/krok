@@ -53,7 +53,7 @@ async function parishPages(base: string, startAt: number, endAt: number): Promis
   const rows = await get<ExpandedRow[]>('metrics/expanded', { type: 'path', search: base, startAt, endAt, limit: 500 })
   const map = new Map<string, PageTraffic>()
   for (const r of rows ?? []) {
-    const path = (r.name ?? '').split('?')[0].replace(/\/+$/, '') || '/'
+    const path = (r.name ?? '').split(/[?#]/)[0].replace(/\/+$/, '') || '/'
     if (path !== base && !path.startsWith(`${base}/`)) continue
     const cur = map.get(path) ?? { path, pageviews: 0, visits: 0 }
     cur.pageviews += Number(r.pageviews) || 0

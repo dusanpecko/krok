@@ -17,6 +17,19 @@ const nextConfig: NextConfig = {
       },
       { source: '/grantove-vyzvy/:slug', destination: '/vyzvy/:slug', permanent: true },
       { source: '/vseobecne-obchodne-podmienky', destination: '/podmienky', permanent: true },
+      // Ďalšie staré adresy WordPressu, ktoré mali návštevy podľa Umami (2026) – nech nekončia na 404
+      { source: '/grantova-vyzva-2025', destination: '/vyzvy', permanent: true },
+      { source: '/farnost-:slug', destination: '/farnosti/:slug', permanent: true },
+      { source: '/obnovitheslo', destination: '/prihlasenie', permanent: true },
+      { source: '/login', destination: '/prihlasenie', permanent: true },
+      { source: '/thank-you', destination: '/dakujeme', permanent: true },
+      { source: '/projekty', destination: '/podporene-projekty', permanent: true },
+      { source: '/projekty22', destination: '/podporene-projekty', permanent: true },
+      { source: '/projects/:path*', destination: '/podporene-projekty', permanent: true },
+      { source: '/category/:path*', destination: '/podporene-projekty', permanent: true },
+      { source: '/kategorie/:path*', destination: '/podporene-projekty', permanent: true },
+      { source: '/3d-flip-book/:path*', destination: '/na-stiahnutie', permanent: true },
+      { source: '/vyrocna-sprava-pastoracnej-cinnosti-dcza-za-rok-2023', destination: '/na-stiahnutie', permanent: true },
     ]
   },
   experimental: {

@@ -11,7 +11,7 @@ import SacramentsSection from './SacramentsSection'
 import OfficeHours from './OfficeHours'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
-import { officeHoursFor, clergyName, dayMonth, formatDateTime, googleMapsUrl, validRange } from '@/lib/parishes/format'
+import { clergyName, dayMonth, formatDateTime, googleMapsUrl, validRange } from '@/lib/parishes/format'
 
 export default function Home({ parish, announcements, news, events, sacraments }: ParishHomeProps) {
   const base = `/farnosti/${parish.slug}`
@@ -21,7 +21,6 @@ export default function Home({ parish, announcements, news, events, sacraments }
   const hasGps = parish.latitude != null && parish.longitude != null
   const address = [parish.street, [parish.postal_code, parish.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   const filials = parish.villages.filter((v) => !v.is_seat)
-  const hasOffice = officeHoursFor(parish).items.length > 0
 
   return (
     <Shell parish={parish} active="home">
@@ -65,9 +64,8 @@ export default function Home({ parish, announcements, news, events, sacraments }
       <section className="mb-16">
         <SectionHeading id="bohosluzby" icon={<Clock size={22} />}>Bohoslužby</SectionHeading>
         <ScheduleView schedules={parish.schedules} current={parish.currentSeason} />
-        {(hasOffice || feast || parish.feast_day_note || adoration || parish.adoration_note) && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
-            {hasOffice && <OfficeHours parish={parish} card />}
+        {(feast || parish.feast_day_note || adoration || parish.adoration_note) && (
+          <div className="grid sm:grid-cols-2 gap-3 mt-6">
             {(feast || parish.feast_day_note) && (
               <div className={`${cardCls} p-4`}>
                 <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-1">Hody</p>
@@ -85,6 +83,8 @@ export default function Home({ parish, announcements, news, events, sacraments }
           </div>
         )}
       </section>
+
+      <OfficeHours parish={parish} />
 
       {/* Pripravujeme */}
       {events.length > 0 && (
@@ -196,7 +196,6 @@ export default function Home({ parish, announcements, news, events, sacraments }
             <a href={googleMapsUrl(parish)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-extrabold text-gold-bright hover:underline pt-2">
               Navigovať <ExternalLink size={14} />
             </a>
-            <OfficeHours parish={parish} />
             {filials.length > 0 && (
               <div className="pt-4 border-t border-white/10">
                 <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-2">Filiálky</p>

@@ -6,15 +6,15 @@ import { officeHoursFor } from '@/lib/parishes/format'
 const time = (i: PublicScheduleItem) => (i.time_from && i.time_to ? `${i.time_from} – ${i.time_to}` : i.time_from ?? i.relative_note ?? '')
 
 /** Úradné hodiny farskej kancelárie (aktuálny režim, inak „cez rok“). */
-export default function OfficeHours({ parish }: { parish: PublicParish }) {
+export default function OfficeHours({ parish, card = false }: { parish: PublicParish; card?: boolean }) {
   const { items, season } = officeHoursFor(parish)
   if (!items.length) return null
   const days = DAYS.map((d) => ({ ...d, items: items.filter((i) => i.day_of_week === d.value) })).filter((d) => d.items.length)
   const other = items.filter((i) => i.day_of_week == null)
   return (
-    <div className="pt-4 border-t border-white/10">
+    <div className={card ? 'bg-white/[0.04] border border-white/10 rounded-2xl p-4' : 'pt-4 border-t border-white/10'}>
       <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-2 flex items-center gap-2">
-        <Clock size={14} className="text-gold" /> Úradné hodiny{season === 'summer' ? ' (leto)' : ''}
+        <Clock size={14} className="text-gold" /> {card ? 'Úradné hodiny farskej kancelárie' : 'Úradné hodiny'}{season === 'summer' ? ' (leto)' : ''}
       </p>
       <dl className="text-sm grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
         {days.map((d) => (

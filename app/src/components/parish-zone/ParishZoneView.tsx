@@ -15,13 +15,14 @@ import {
 import ParishScheduleTab from '@/components/admin/parishes/ParishScheduleTab'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
-import { deleteMyPost, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
+import { getMyParishTraffic, deleteMyPost, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
 import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
+import ParishTrafficCard from '@/components/parishes/ParishTrafficCard'
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS } from '@/lib/parishes/fields'
 import type { ClergyMember, VillageWithStats } from '@/lib/parishes/types'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
-type TabKey = 'overview' | 'official' | 'presentation' | 'schedule' | 'posts' | 'sacraments' | 'population' | 'clergy'
+type TabKey = 'overview' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'sacraments' | 'population' | 'clergy'
 
 const POST_ACTIONS = { save: saveMyPost, remove: deleteMyPost, upload: uploadMyParishFile, uploadEditorImage: uploadMyEditorImage }
 
@@ -32,6 +33,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
   const isAdmin = view.role === 'admin'
   const tabs: { key: TabKey; label: string }[] = [
     ...(isAdmin ? [{ key: 'overview' as const, label: 'Prehľad' }] : []),
+    { key: 'traffic', label: 'Návštevnosť' },
     { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
     { key: 'posts', label: 'Oznamy a aktuality' },
     { key: 'presentation', label: 'Prezentácia' },
@@ -88,6 +90,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
 
       {tab === 'overview' && <OverviewTab view={view} />}
       {tab === 'schedule' && <ParishScheduleTab parishId={p.id} schedules={view.schedules} villages={view.villages} save={saveMySchedule} />}
+      {tab === 'traffic' && <ParishTrafficCard parishId={p.id} load={getMyParishTraffic} />}
       {tab === 'posts' && <ParishPostsTab parishId={p.id} parishSlug={p.slug} posts={view.posts} actions={POST_ACTIONS} />}
       {tab === 'sacraments' && <ParishSacramentsTab parishId={p.id} rows={view.sacraments} save={saveMySacrament} />}
       {tab === 'presentation' && (

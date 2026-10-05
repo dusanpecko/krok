@@ -6,6 +6,7 @@ import { logParishChange, writeSocialLinks } from '@/lib/parishes/writes'
 import type { SocialLink } from '@/lib/parishes/social'
 import { POST_COLUMNS, loadSacramentEditRows, writeParishPost, type ParishPostInput, type ParishPostRow, type SacramentEditRow } from '@/lib/parishes/posts'
 import { sanitizeRichHtml } from '@/lib/html/sanitize'
+import { loadParishTraffic, type TrafficResult } from '@/lib/parishes/traffic'
 import { uploadImage } from '@/lib/storage'
 import { isParishTheme } from '@/components/parish-themes/meta'
 
@@ -115,4 +116,10 @@ export async function saveMySocialLinks(parishId: string, links: SocialLink[]): 
   const res = await writeSocialLinks(db, parishId, user.id, links, 'parish_update')
   if (res.success) await revalidateParishWeb(db, parishId)
   return res
+}
+
+/** Návštevnosť stránky farnosti (Umami) – vidí ju účet farnosti. */
+export async function getMyParishTraffic(parishId: string, days: number): Promise<TrafficResult> {
+  const { db } = await requireParishMember(parishId)
+  return loadParishTraffic(db, parishId, days)
 }

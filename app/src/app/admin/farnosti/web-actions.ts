@@ -6,6 +6,7 @@ import { requirePermission } from '@/lib/auth'
 import { logParishChange, writeSocialLinks } from '@/lib/parishes/writes'
 import type { SocialLink } from '@/lib/parishes/social'
 import { sanitizeRichHtml } from '@/lib/html/sanitize'
+import { loadParishTraffic, type TrafficResult } from '@/lib/parishes/traffic'
 import { uploadImage } from '@/lib/storage'
 import { POST_COLUMNS, loadSacramentEditRows, writeParishPost, type ParishPostInput, type ParishPostRow, type SacramentEditRow } from '@/lib/parishes/posts'
 
@@ -185,4 +186,9 @@ export async function adminSaveSocialLinks(parishId: string, links: SocialLink[]
   const res = await writeSocialLinks(db(), parishId, user.id, links, 'admin_update')
   if (res.success) await revalidateParish(parishId)
   return res
+}
+
+export async function adminGetParishTraffic(parishId: string, days: number): Promise<TrafficResult> {
+  await requirePermission(PERM)
+  return loadParishTraffic(db(), parishId, days)
 }

@@ -127,7 +127,7 @@ export default function OchranaUdajovPage() {
 
       <h2>8. Stránky farností</h2>
       <p>
-        Oznamy, aktuality a ďalší obsah na stránkach farností (<Link href="/farnosti">mojkrok.sk/farnosti</Link>) zverejňuje
+        Oznamy, aktuality a ďalší obsah na stránkach farností (mojkrok.sk/farnosti) zverejňuje
         príslušná farnosť. Za obsah, ktorý farnosť zverejní (napr. mená v oznamoch), zodpovedá farnosť. Ak sa vás týka
         obsah, s ktorým nesúhlasíte, kontaktujte farnosť alebo nás – príspevok vieme bezodkladne stiahnuť.
       </p>

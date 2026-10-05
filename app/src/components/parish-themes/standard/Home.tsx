@@ -5,7 +5,6 @@ import {
 import type { ParishHomeProps } from '../types'
 import Shell, { SectionHeading, cardCls } from './Shell'
 import ScheduleView from './ScheduleView'
-import MassTimesButton from './MassTimesButton'
 import PostCard from './PostCard'
 import SacramentsSection from './SacramentsSection'
 import OfficeHours from './OfficeHours'
@@ -24,8 +23,6 @@ export default function Home({ parish, announcements, news, events, sacraments }
 
   return (
     <Shell parish={parish} active="home">
-      <MassTimesButton />
-
       {/* Úvod + najnovší oznam */}
       <div className="grid lg:grid-cols-5 gap-6 mb-16">
         <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
@@ -36,14 +33,6 @@ export default function Home({ parish, announcements, news, events, sacraments }
               Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
             </p>
           )}
-          <div className="flex flex-wrap gap-3 pt-2">
-            <a href="#bohosluzby" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gold text-blue-deep font-black text-sm hover:bg-gold-bright">
-              <Clock size={16} /> Bohoslužby
-            </a>
-            <a href="#kontakt" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 font-extrabold text-sm hover:border-gold/40">
-              <MapPin size={16} /> Kontakt
-            </a>
-          </div>
         </div>
         {latest && (
           <Link href={`${base}/oznamy/${latest.slug}`} className={`${cardCls} lg:col-span-2 p-6 hover:border-gold/40 transition-colors group`}>

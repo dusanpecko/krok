@@ -100,13 +100,15 @@ export interface PublicParish {
   updated_at: string | null
   /** stránku vidí diecéza / farnosť pred zverejnením */
   preview: boolean
+  /** prihlásený spravuje farnosť – odkaz do zóny farnosti */
+  manageUrl: string | null
   villages: { name: string; church_name: string | null; is_seat: boolean }[]
   schedules: Partial<Record<ParishSeason, PublicSchedule>>
   currentSeason: ParishSeason
   clergy: PublicClergy[]
 }
 
-type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'latitude' | 'longitude'> & {
+type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'manageUrl' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'latitude' | 'longitude'> & {
   deanery_id: string | null
   is_active: boolean
   latitude: string | number | null
@@ -123,15 +125,19 @@ function inSeasonRange(from: string | null, to: string | null, today = new Date(
   return a <= b ? t >= a && t <= b : t >= a || t <= b
 }
 
-/** Môže prihlásený používateľ vidieť nezverejnenú farnosť (jej účet alebo diecéza)? */
-async function canPreview(parishId: string): Promise<boolean> {
+/**
+ * Vzťah prihláseného k farnosti: náhľad nezverejnenej stránky (jej účet, diecéza, kontrolór)
+ * a odkaz „Spravovať farnosť“ (účet farnosti alebo manage_parishes – vstup do zóny farnosti).
+ */
+async function viewerAccess(parishId: string): Promise<{ preview: boolean; manage: boolean }> {
   const user = await getSessionUser()
-  if (!user) return false
+  if (!user) return { preview: false, manage: false }
   const db = serviceDb()
   const { data } = await db.from('parish_users').select('role').eq('parish_id', parishId).eq('user_id', user.id).maybeSingle()
-  if (data) return true
+  if (data) return { preview: true, manage: true }
   const access = await getUserAccess(user.id)
-  return access.isAdmin || access.permissions.includes('manage_parishes') || access.permissions.includes('view_parishes')
+  const manage = access.isAdmin || access.permissions.includes('manage_parishes')
+  return { preview: manage || access.permissions.includes('view_parishes'), manage }
 }
 
 export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicParish | null> => {
@@ -139,11 +145,9 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
   const { data } = await db.from('parishes').select(PUBLIC_PARISH_COLUMNS).eq('slug', slug).maybeSingle()
   const row = data as unknown as ParishDbRow | null
   if (!row || !row.is_active) return null
-  let preview = false
-  if (!row.visible_on_web) {
-    if (!(await canPreview(row.id))) return null
-    preview = true
-  }
+  const viewer = await viewerAccess(row.id)
+  if (!row.visible_on_web && !viewer.preview) return null
+  const preview = !row.visible_on_web
 
   const [{ data: deanery }, { data: villages }, { data: schedules }, { data: clergy }] = await Promise.all([
     row.deanery_id ? db.from('deaneries').select('name').eq('id', row.deanery_id).maybeSingle() : Promise.resolve({ data: null }),
@@ -182,6 +186,7 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
     longitude: row.longitude != null ? Number(row.longitude) : null,
     deanery_name: (deanery as { name: string } | null)?.name ?? null,
     preview,
+    manageUrl: viewer.manage ? `/moja-farnost/${row.id}` : null,
     villages: (villages ?? []).map((v) => ({ name: v.name, church_name: v.church_name, is_seat: v.is_seat })),
     schedules: out,
     currentSeason,

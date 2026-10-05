@@ -44,7 +44,9 @@ export function sanitizeRichHtml(html: string | null | undefined): string {
 /** Čistý text z HTML (perex, meta description). */
 export function htmlToText(html: string | null | undefined, max = 200): string {
   if (!html) return ''
-  const text = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, ' ').trim()
+  // medzera za blokovými prvkami, aby sa slová z odsekov / riadkov nezlepili („Pondelok28. 09.“)
+  const spaced = html.replace(/<br\s*\/?>/gi, ' ').replace(/<\/(p|h[1-6]|li|div|tr|td|th|blockquote)>/gi, '</$1> ')
+  const text = sanitizeHtml(spaced, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, ' ').trim()
     .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
 }

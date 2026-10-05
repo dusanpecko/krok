@@ -77,7 +77,8 @@ export async function writeSchedule(db: SupabaseClient, parishId: string, schedu
   const { data: vil } = await db.from('parish_villages').select('id').eq('parish_id', parishId)
   const villageIds = new Set((vil ?? []).map((v) => v.id as string))
 
-  await db.from('parish_schedule_items').delete().eq('schedule_id', sched.id)
+  // Najprv vložiť nové položky, staré zmazať až po úspechu – pri chybe zostane pôvodný rozpis celý
+  const { data: oldItems } = await db.from('parish_schedule_items').select('id').eq('schedule_id', sched.id)
   if (items.length) {
     const { error: itemsErr } = await db.from('parish_schedule_items').insert(
       items.map((it, i) => ({
@@ -94,7 +95,12 @@ export async function writeSchedule(db: SupabaseClient, parishId: string, schedu
         sort_order: i,
       }))
     )
-    if (itemsErr) return { success: false, error: 'Uloženie položiek rozvrhu zlyhalo.' }
+    if (itemsErr) {
+      console.error('[writeSchedule] insert položiek zlyhal:', itemsErr.message)
+      return { success: false, error: 'Uloženie položiek rozvrhu zlyhalo – pôvodný rozvrh zostal nezmenený.' }
+    }
   }
+  const oldIds = (oldItems ?? []).map((o) => o.id as string)
+  if (oldIds.length) await db.from('parish_schedule_items').delete().in('id', oldIds)
   return { success: true }
 }

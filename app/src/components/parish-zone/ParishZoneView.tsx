@@ -32,7 +32,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
   const isAdmin = view.role === 'admin'
   const tabs: { key: TabKey; label: string }[] = [
     ...(isAdmin ? [{ key: 'overview' as const, label: 'Prehľad' }] : []),
-    { key: 'schedule', label: 'Bohoslužby' },
+    { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
     { key: 'posts', label: 'Oznamy a aktuality' },
     { key: 'presentation', label: 'Prezentácia' },
     { key: 'sacraments', label: 'Sviatosti' },

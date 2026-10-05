@@ -4,7 +4,7 @@ import type { SocialLink } from './social'
 export type ParishKind = 'parish' | 'chaplaincy' | 'other'
 export type ParishSeason = 'regular' | 'summer'
 export type ParishOccasion = 'regular' | 'first_friday'
-export type ParishServiceType = 'mass' | 'confession' | 'adoration' | 'devotion' | 'other'
+export type ParishServiceType = 'mass' | 'confession' | 'adoration' | 'devotion' | 'office' | 'other'
 
 export const KIND_LABEL: Record<ParishKind, string> = {
   parish: 'Farnosť',
@@ -17,6 +17,7 @@ export const SERVICE_LABEL: Record<ParishServiceType, string> = {
   confession: 'Spovedanie',
   adoration: 'Adorácia',
   devotion: 'Pobožnosť',
+  office: 'Úradné hodiny',
   other: 'Iné',
 }
 

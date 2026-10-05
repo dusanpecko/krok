@@ -8,6 +8,7 @@ import ScheduleView from './ScheduleView'
 import MassTimesButton from './MassTimesButton'
 import PostCard from './PostCard'
 import SacramentsSection from './SacramentsSection'
+import OfficeHours from './OfficeHours'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
 import { clergyName, dayMonth, formatDateTime, googleMapsUrl, validRange } from '@/lib/parishes/format'
@@ -193,6 +194,7 @@ export default function Home({ parish, announcements, news, events, sacraments }
             <a href={googleMapsUrl(parish)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-extrabold text-gold-bright hover:underline pt-2">
               Navigovať <ExternalLink size={14} />
             </a>
+            <OfficeHours parish={parish} />
             {filials.length > 0 && (
               <div className="pt-4 border-t border-white/10">
                 <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-2">Filiálky</p>

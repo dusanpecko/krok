@@ -47,3 +47,13 @@ export function googleMapsUrl(p: { latitude: number | null; longitude: number | 
   const q = [p.street, p.postal_code, p.city].filter(Boolean).join(', ') || p.name
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
 }
+
+/** Úradné hodiny pre aktuálny režim (v lete letné, ak sú zadané; inak „cez rok“), zoradené podľa času. */
+export function officeHoursFor<T extends { service_type: string; time_from: string | null }>(p: {
+  currentSeason: 'regular' | 'summer'
+  schedules: Partial<Record<'regular' | 'summer', { items: T[] }>>
+}): { season: 'regular' | 'summer'; items: T[] } {
+  const pick = (s: 'regular' | 'summer') => (p.schedules[s]?.items ?? []).filter((i) => i.service_type === 'office')
+  const season = p.currentSeason === 'summer' && pick('summer').length ? 'summer' : 'regular'
+  return { season, items: pick(season).sort((a, b) => (a.time_from ?? '99').localeCompare(b.time_from ?? '99')) }
+}

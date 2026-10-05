@@ -34,8 +34,9 @@ function byTime(a: PublicScheduleItem, b: PublicScheduleItem) {
 }
 
 function ScheduleTable({ schedule }: { schedule: PublicSchedule }) {
-  const regular = schedule.items.filter((i) => i.occasion === 'regular')
-  const firstFriday = schedule.items.filter((i) => i.occasion === 'first_friday')
+  const liturgy = schedule.items.filter((i) => i.service_type !== 'office')
+  const regular = liturgy.filter((i) => i.occasion === 'regular')
+  const firstFriday = liturgy.filter((i) => i.occasion === 'first_friday')
   const days = DAYS.map((d) => ({ ...d, items: regular.filter((i) => i.day_of_week === d.value).sort(byTime) })).filter((d) => d.items.length)
   const other = regular.filter((i) => i.day_of_week == null)
   const labels = [...new Set(other.map((i) => i.day_label ?? ''))]
@@ -79,10 +80,10 @@ function ScheduleTable({ schedule }: { schedule: PublicSchedule }) {
 
 /** Bohoslužby s prepínačom režimu; aktuálny režim je predvolený a označený. */
 export default function ScheduleView({ schedules, current }: { schedules: Partial<Record<ParishSeason, PublicSchedule>>; current: ParishSeason }) {
-  const seasons = (['regular', 'summer'] as ParishSeason[]).filter((s) => schedules[s])
+  const seasons = (['regular', 'summer'] as ParishSeason[]).filter((s) => schedules[s]?.items.some((i) => i.service_type !== 'office'))
   const [season, setSeason] = useState<ParishSeason>(schedules[current] ? current : seasons[0])
   if (!seasons.length) return <p className="text-blue-100/60 text-sm">Rozpis bohoslužieb zatiaľ nie je zverejnený. Informácie získate na farskom úrade.</p>
-  const sched = schedules[season]!
+  const sched = schedules[seasons.includes(season) ? season : seasons[0]]!
 
   return (
     <div>

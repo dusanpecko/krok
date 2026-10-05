@@ -24,7 +24,7 @@ type TabKey = 'basic' | 'villages' | 'schedule' | 'posts' | 'sacraments' | 'cler
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'basic', label: 'Základné údaje' },
   { key: 'villages', label: 'Obce a štatistika' },
-  { key: 'schedule', label: 'Bohoslužby' },
+  { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
   { key: 'posts', label: 'Oznamy a aktuality' },
   { key: 'sacraments', label: 'Sviatosti' },
   { key: 'clergy', label: 'Kňazi' },

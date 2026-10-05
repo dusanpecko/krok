@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { PublicParish, PublicPost } from './public'
-import { parishDisplayName } from './format'
+import { officeHoursFor, parishDisplayName } from './format'
 import { getBaseUrl } from '@/lib/mollie/client'
 
 /** SEO stránok farností (návrh § 4.2): metadata, OG a schema.org CatholicChurch. */
@@ -31,6 +31,8 @@ export function parishJsonLd(parish: PublicParish) {
   const url = `${base}/farnosti/${parish.slug}`
   const schedule = parish.schedules[parish.currentSeason]
   const masses = (schedule?.items ?? []).filter((i) => i.service_type === 'mass' && i.occasion === 'regular' && i.day_of_week != null && i.time_from)
+  // úradné hodiny kancelárie – len položky s dňom a časom od–do
+  const office = officeHoursFor(parish).items.filter((o) => o.day_of_week != null && o.time_from && o.time_to)
   const byTime = new Map<string, number[]>()
   for (const m of masses) byTime.set(m.time_from!, [...(byTime.get(m.time_from!) ?? []), m.day_of_week!])
 
@@ -55,6 +57,16 @@ export function parishJsonLd(parish: PublicParish) {
       ? { sameAs: [...(parish.website ? [parish.website.startsWith('http') ? parish.website : `https://${parish.website}`] : []), ...parish.social_links.map((l) => l.url)] }
       : {}),
     containedInPlace: { '@type': 'Place', name: 'Žilinská diecéza' },
+    ...(office.length
+      ? {
+          openingHoursSpecification: office.map((o) => ({
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: `https://schema.org/${SCHEMA_DAY[o.day_of_week!]}`,
+            opens: o.time_from,
+            closes: o.time_to,
+          })),
+        }
+      : {}),
     ...(byTime.size
       ? {
           event: [...byTime.entries()].map(([time, days]) => ({

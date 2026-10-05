@@ -69,8 +69,8 @@ export default function ParishScheduleTab({
   return (
     <div className={`${cardCls} space-y-5`}>
       <SectionTitle
-        title="Bohoslužby a spovedanie"
-        description="Dva režimy: cez rok a letný (prázdninový). Prvopiatkové spovedanie sa zadáva ako samostatné položky s príležitosťou „prvý piatok“."
+        title="Bohoslužby, spovedanie a úradné hodiny"
+        description="Dva režimy: cez rok a letný (prázdninový). Prvopiatkové spovedanie sa zadáva ako samostatné položky s príležitosťou „prvý piatok“. Úradné hodiny kancelárie zadajte s časom od–do (alebo „po dohode“ do poznámky) – na stránke sa zobrazia pri farskom úrade."
       />
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
 
@@ -170,6 +170,7 @@ export default function ParishScheduleTab({
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setCurrent({ items: [...current.items, emptyItem('mass')] })} className={btnSecondary}><Plus size={14} /> Sv. omša</button>
           <button type="button" onClick={() => setCurrent({ items: [...current.items, emptyItem('confession')] })} className={btnSecondary}><Plus size={14} /> Spovedanie</button>
+          <button type="button" onClick={() => setCurrent({ items: [...current.items, emptyItem('office')] })} className={btnSecondary}><Plus size={14} /> Úradné hodiny</button>
           <button type="button" onClick={sortItems} className={btnSecondary}>Zoradiť</button>
           {season === 'summer' && data.regular.items.length > 0 && (
             <button type="button" onClick={copyFromRegular} className={btnSecondary}><Copy size={14} /> Skopírovať z „cez rok“</button>

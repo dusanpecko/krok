@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
+import { UMAMI_ENABLED, UMAMI_WEBSITE_ID } from "@/lib/analytics";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -19,12 +20,8 @@ export default function RootLayout({
         <SupabaseProvider session={null}>
           {children}
         </SupabaseProvider>
-        {/* Umami Analytics */}
-        <Script
-          defer
-          src="https://cloud.umami.is/script.js"
-          data-website-id="bd55db02-e225-436f-9095-645bec96ed34"
-        />
+        {/* Umami Analytics – len produkcia (localhost a náhľady by kazili štatistiky farností) */}
+        {UMAMI_ENABLED && <Script defer src="https://cloud.umami.is/script.js" data-website-id={UMAMI_WEBSITE_ID} />}
       </body>
     </html>
   );

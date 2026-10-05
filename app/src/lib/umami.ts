@@ -1,3 +1,4 @@
+import { UMAMI_WEBSITE_ID as WEBSITE_ID } from '@/lib/analytics'
 /**
  * Umami Cloud API – návštevnosť stránok farností pre zónu farnosti a admin.
  * Skript na meranie je v root layoute (website id nižšie); tu sa len čítajú štatistiky.
@@ -5,7 +6,6 @@
  */
 
 const API = (process.env.UMAMI_API_URL ?? 'https://api.umami.is/v1').replace(/\/+$/, '')
-const WEBSITE_ID = process.env.UMAMI_WEBSITE_ID ?? 'bd55db02-e225-436f-9095-645bec96ed34'
 const TZ = 'Europe/Bratislava'
 
 export const umamiConfigured = () => !!process.env.UMAMI_API_KEY

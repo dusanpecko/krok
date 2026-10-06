@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Landmark, Users, HandHeart, MessageCircle, Download, Gift, Church } from 'lucide-react'
+import { Menu, X, Landmark, Users, HandHeart, MessageCircle, Download, Gift, Church, LogOut } from 'lucide-react'
 import KrokLogo from '@/components/KrokLogo'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
+import AccountMenu, { accountItems, useSignOut } from '@/components/public/AccountMenu'
+import { getAccountMenu, type AccountMenu as AccountMenuData } from '@/app/(public)/account-actions'
 
 const navLinks = [
   { href: '/vyzvy', label: 'Výzvy', icon: HandHeart },
@@ -30,11 +32,11 @@ export default function NavBar() {
   )
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { session, supabase } = useSupabase()
-  const [isAdmin, setIsAdmin] = useState(false)
-  // stránka farnosti, ktorú si darca vybral v profile – odkaz „Moja farnosť“
-  const [myParish, setMyParish] = useState<{ userId: string; slug: string | null } | null>(null)
-  const myParishSlug = session?.user && myParish?.userId === session.user.id ? myParish.slug : null
+  const { session } = useSupabase()
+  // Položky menu „Môj účet“ (profil, farnosť, správa farnosti, administrácia) – pre aktuálneho používateľa
+  const [account, setAccount] = useState<{ userId: string; menu: AccountMenuData | null } | null>(null)
+  const accountMenu = session?.user && account?.userId === session.user.id ? account.menu : null
+  const signOut = useSignOut()
   // Prihlásený darca ide rovno na kartu Podporiť vo svojom profile, inak na registráciu
   const supportHref = session ? '/profil#podporit' : '/registracia'
 
@@ -47,41 +49,14 @@ export default function NavBar() {
   }, [])
 
   useEffect(() => {
-    if (!session?.user) {
-      setIsAdmin(false)
-      return
-    }
-
-    const checkAdmin = async () => {
-      try {
-        const { data } = await supabase
-          .from('admin_users')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle()
-
-        setIsAdmin(!!data)
-      } catch {
-        setIsAdmin(false)
-      }
-    }
-
-    checkAdmin()
-  }, [session, supabase])
-
-  useEffect(() => {
     const userId = session?.user?.id
     if (!userId) return
-    supabase
-      .from('donors')
-      .select('parishes(slug, is_active)')
-      .eq('auth_user_id', userId)
-      .maybeSingle()
-      .then(({ data }) => {
-        const parish = (data as { parishes: { slug: string | null; is_active: boolean } | null } | null)?.parishes
-        setMyParish({ userId, slug: parish?.is_active && parish.slug ? parish.slug : null })
-      })
-  }, [session, supabase])
+    let cancelled = false
+    getAccountMenu()
+      .then((menu) => { if (!cancelled) setAccount({ userId, menu }) })
+      .catch(() => { if (!cancelled) setAccount({ userId, menu: null }) })
+    return () => { cancelled = true }
+  }, [session?.user?.id])
 
   // Dynamické štýly podľa podstránky a stavu skrolovania
   const navBgClass = isDarkHeroPage || isLightHeroPage
@@ -93,14 +68,6 @@ export default function NavBar() {
   const linkClass = isDarkHeroPage && !scrolled
     ? 'text-sm font-medium text-white/90 hover:text-white transition-colors'
     : 'text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors'
-
-  const profileLinkClass = isDarkHeroPage && !scrolled
-    ? 'text-sm font-medium text-white/90 hover:text-white transition-colors'
-    : 'text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors'
-
-  const adminLinkClass = isDarkHeroPage && !scrolled
-    ? 'text-sm font-medium text-white border border-white/50 px-4 py-2 rounded-full hover:bg-white/10 transition-colors'
-    : 'text-sm font-medium text-blue-600 border border-blue-600 px-4 py-2 rounded-full hover:bg-blue-50 transition-colors'
 
   const loginLinkClass = isDarkHeroPage && !scrolled
     ? 'text-sm font-medium text-white/80 hover:text-white transition-colors'
@@ -118,7 +85,7 @@ export default function NavBar() {
           </Link>
  
           {/* Desktop Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden xl:flex items-center space-x-6">
             {navLinks.map((link) => (
               <Link 
                 key={link.href} 
@@ -138,27 +105,7 @@ export default function NavBar() {
             </Link>
  
             {session ? (
-              <div className="flex items-center gap-4">
-                <Link 
-                  href="/profil"
-                  className={profileLinkClass}
-                >
-                  Profil
-                </Link>
-                {myParishSlug && (
-                  <Link href={`/farnosti/${myParishSlug}`} className={profileLinkClass}>
-                    Moja farnosť
-                  </Link>
-                )}
-                {isAdmin && (
-                  <Link 
-                    href="/admin"
-                    className={adminLinkClass}
-                  >
-                    Admin
-                  </Link>
-                )}
-              </div>
+              <AccountMenu menu={accountMenu} light={isDarkHeroPage && !scrolled} />
             ) : (
               <Link 
                 href="/prihlasenie"
@@ -170,7 +117,7 @@ export default function NavBar() {
           </div>
  
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="xl:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className={mobileMenuBtnClass}
@@ -183,7 +130,7 @@ export default function NavBar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white absolute top-full left-0 right-0 shadow-xl border-t border-gray-100 p-4 space-y-4">
+        <div className="xl:hidden bg-white absolute top-full left-0 right-0 shadow-xl border-t border-gray-100 p-4 space-y-4">
           {navLinks.map((link) => (
             <Link 
               key={link.href} 
@@ -203,32 +150,30 @@ export default function NavBar() {
           </Link>
           <hr />
           {session ? (
-            <div className="space-y-2">
-              <Link 
-                href="/profil"
-                className="block w-full text-center py-3 bg-gray-50 text-gray-900 font-bold rounded-xl"
-                onClick={() => setIsOpen(false)}
-              >
-                Môj Profil
-              </Link>
-              {myParishSlug && (
+            <div className="space-y-1">
+              <p className="px-1 pb-1 text-xs font-black uppercase tracking-widest text-gray-400">
+                {accountMenu?.displayName ?? 'Môj účet'}
+              </p>
+              {accountItems(accountMenu).map(({ href, label, icon: Icon }) => (
                 <Link
-                  href={`/farnosti/${myParishSlug}`}
-                  className="block w-full text-center py-3 bg-gray-50 text-gray-900 font-bold rounded-xl"
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-900 font-bold hover:bg-gray-50"
                   onClick={() => setIsOpen(false)}
                 >
-                  Moja farnosť
+                  <Icon size={18} className="text-gray-400" /> {label}
                 </Link>
-              )}
-              {isAdmin && (
-                <Link 
-                  href="/admin"
-                  className="block w-full text-center py-2 text-blue-600 font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Do administrácie
-                </Link>
-              )}
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  signOut()
+                }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 font-medium hover:bg-red-50 hover:text-red cursor-pointer"
+              >
+                <LogOut size={18} className="text-gray-400" /> Odhlásiť sa
+              </button>
             </div>
           ) : (
             <Link 

@@ -23,7 +23,7 @@ import { FIELD_LABEL, PROTECTED_PARISH_FIELDS } from '@/lib/parishes/fields'
 import type { ClergyMember, VillageWithStats } from '@/lib/parishes/types'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
-type TabKey = 'overview' | 'box' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'sacraments' | 'population' | 'clergy'
+type TabKey = 'overview' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'sacraments' | 'population' | 'clergy'
 
 const POST_ACTIONS = { save: saveMyPost, remove: deleteMyPost, upload: uploadMyParishFile, uploadEditorImage: uploadMyEditorImage }
 
@@ -33,7 +33,7 @@ type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
 export default function ParishZoneView({ view }: { view: MyParishView }) {
   const isAdmin = view.role === 'admin'
   const tabs: { key: TabKey; label: string }[] = [
-    ...(isAdmin ? [{ key: 'overview' as const, label: 'Prehľad' }, { key: 'box' as const, label: 'E-zvonček' }] : []),
+    ...(isAdmin ? [{ key: 'overview' as const, label: 'Prehľad a e-zvonček' }] : []),
     { key: 'traffic', label: 'Návštevnosť' },
     { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
     { key: 'posts', label: 'Oznamy a aktuality' },
@@ -89,8 +89,12 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
         ))}
       </div>
 
-      {tab === 'overview' && <OverviewTab view={view} />}
-      {tab === 'box' && <ParishBoxZoneTab parishId={p.id} parishSlug={p.slug} />}
+      {tab === 'overview' && (
+        <div className="space-y-10">
+          <OverviewTab view={view} />
+          <ParishBoxZoneTab parishId={p.id} parishSlug={p.slug} />
+        </div>
+      )}
       {tab === 'schedule' && <ParishScheduleTab parishId={p.id} schedules={view.schedules} villages={view.villages} save={saveMySchedule} />}
       {tab === 'traffic' && <ParishTrafficCard parishId={p.id} load={getMyParishTraffic} />}
       {tab === 'posts' && <ParishPostsTab parishId={p.id} parishSlug={p.slug} posts={view.posts} actions={POST_ACTIONS} />}

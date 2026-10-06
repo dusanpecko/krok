@@ -33,6 +33,9 @@ export default function ParishBoxZoneTab({ parishId, parishSlug }: { parishId: s
     )
   }
 
+  // nezapnutý a bez histórie → len krátka informácia (v spoločnej záložke s Prehľadom)
+  const compact = !view.enabled && view.payouts.length === 0 && view.waiting.count === 0
+
   return (
     <div className="space-y-6">
       <div className={cardCls}>
@@ -58,59 +61,63 @@ export default function ParishBoxZoneTab({ parishId, parishSlug }: { parishId: s
         )}
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        {[
-          ['Tento mesiac', formatEur(view.thisMonth.gross), `${view.thisMonth.count} darov`],
-          ['Čaká na odoslanie farnosti', formatEur(view.waiting.gross), `${view.waiting.count} darov`],
-          ['Pravidelní darcovia', String(view.activeRecurring), 'aktívne mesačné dary'],
-        ].map(([label, value, sub]) => (
-          <div key={label} className={cardCls}>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</p>
-            <p className="text-2xl font-black text-gray-900 mt-1">{value}</p>
-            <p className="text-xs text-gray-500">{sub}</p>
+      {!compact && (
+        <>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              ['Tento mesiac', formatEur(view.thisMonth.gross), `${view.thisMonth.count} darov`],
+              ['Čaká na odoslanie farnosti', formatEur(view.waiting.gross), `${view.waiting.count} darov`],
+              ['Pravidelní darcovia', String(view.activeRecurring), 'aktívne mesačné dary'],
+            ].map(([label, value, sub]) => (
+              <div key={label} className={cardCls}>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</p>
+                <p className="text-2xl font-black text-gray-900 mt-1">{value}</p>
+                <p className="text-xs text-gray-500">{sub}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className={cardCls}>
-        <h3 className="font-extrabold text-sm text-gray-900 uppercase tracking-wider mb-4">Výplaty od fondu</h3>
-        {view.payouts.length === 0 ? (
-          <p className="text-sm text-gray-500">Zatiaľ žiadne výplaty.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[560px]">
-              <thead>
-                <tr className="text-left text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
-                  <th className="py-2">Mesiac</th>
-                  <th className="py-2 text-right">Darov</th>
-                  <th className="py-2 text-right">Vyzbierané</th>
-                  <th className="py-2 text-right">Poplatky</th>
-                  <th className="py-2 text-right">Na účet farnosti</th>
-                  <th className="py-2 text-right">Stav</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {view.payouts.map((p) => (
-                  <tr key={p.id}>
-                    <td className="py-2">{new Date(p.period_month).toLocaleDateString('sk-SK', { month: 'long', year: 'numeric' })}</td>
-                    <td className="py-2 text-right">{p.gift_count}</td>
-                    <td className="py-2 text-right">{formatEur(p.gross_amount)}</td>
-                    <td className="py-2 text-right text-gray-500">{formatEur(p.mollie_fee + p.fund_fee)}</td>
-                    <td className="py-2 text-right font-black">{formatEur(p.net_amount)}</td>
-                    <td className="py-2 text-right text-xs font-bold">
-                      {p.status === 'sent' ? (
-                        <span className="text-emerald-700">odoslané {p.sent_at ? new Date(p.sent_at).toLocaleDateString('sk-SK') : ''}</span>
-                      ) : (
-                        <span className="text-amber-700">pripravuje sa</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={cardCls}>
+            <h3 className="font-extrabold text-sm text-gray-900 uppercase tracking-wider mb-4">Výplaty od fondu</h3>
+            {view.payouts.length === 0 ? (
+              <p className="text-sm text-gray-500">Zatiaľ žiadne výplaty.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[560px]">
+                  <thead>
+                    <tr className="text-left text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
+                      <th className="py-2">Mesiac</th>
+                      <th className="py-2 text-right">Darov</th>
+                      <th className="py-2 text-right">Vyzbierané</th>
+                      <th className="py-2 text-right">Poplatky</th>
+                      <th className="py-2 text-right">Na účet farnosti</th>
+                      <th className="py-2 text-right">Stav</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {view.payouts.map((p) => (
+                      <tr key={p.id}>
+                        <td className="py-2">{new Date(p.period_month).toLocaleDateString('sk-SK', { month: 'long', year: 'numeric' })}</td>
+                        <td className="py-2 text-right">{p.gift_count}</td>
+                        <td className="py-2 text-right">{formatEur(p.gross_amount)}</td>
+                        <td className="py-2 text-right text-gray-500">{formatEur(p.mollie_fee + p.fund_fee)}</td>
+                        <td className="py-2 text-right font-black">{formatEur(p.net_amount)}</td>
+                        <td className="py-2 text-right text-xs font-bold">
+                          {p.status === 'sent' ? (
+                            <span className="text-emerald-700">odoslané {p.sent_at ? new Date(p.sent_at).toLocaleDateString('sk-SK') : ''}</span>
+                          ) : (
+                            <span className="text-amber-700">pripravuje sa</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   )
 }

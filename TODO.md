@@ -109,7 +109,9 @@ Stav: kód hotový, commitnuté a pushnuté 2026-09-14 (e300fe3), migrácie 021/
 - [x] 🟠 Vercel env pre Mollie – nastavené 2026-09-14 (reálne API). ⏳ Overiť po prvom reálnom dare, že webhook `/api/mollie/webhook` dorazil a dar sa zapísal.
 - [x] 🟠 Mollie metódy – HOTOVO: karta, Apple Pay, Google Pay zapnuté a schválené.
 - [x] 🟠 Banka: payout z Mollie – HOTOVO (2026-09-04): migrácia 022 (`transaction_category` + `mollie_payout`), detekcia `src/lib/bank/mollie-payout.ts` (názov/správa obsahuje „Mollie“, voliteľne env `MOLLIE_PAYOUT_IBANS`). Fio sync aj XML import payout označia, ručné/hromadné/navrhované párovanie ho odmietne, v Banke má badge. ⏳ Po prvej reálnej výplate overiť, že sa rozpoznala (ak nie, doplniť IBAN do env).
-- [ ] 🟢 E-mail potvrdenie daru (Brevo) – teraz žiadny e-mail neposielame, darca vidí stav na `/dakujeme` a v profile.
+- [x] 🟢 E-mail potvrdenie daru (Brevo) – HOTOVO lokálne: e-mailové šablóny `/admin/emaily` (migrácia 040, `src/lib/email/*`). Automatické e-maily: vitajte po registrácii, jednorazový / pravidelný dar registrovaného darcu, dar na výzvu, dar bez registrácie, prihlásenie na newsletter.
+  - [ ] Spustiť `040_email_templates.sql` v Supabase, overiť odosielateľa `mojkrok@dcza.sk` v Brevo (Senders) a poslať test z adminu.
+  - [ ] Neskôr: e-mail pri dare bankovým prevodom (import výpisu), pri zlyhaní pravidelnej platby, double opt-in newslettera.
 - [x] 🟢 Homepage IBAN v modáli – HOTOVO (2026-09-04): reálny IBAN `SK04 8330 0000 0029 0168 8673`, VS sa berie z profilu prihláseného darcu (`getMyDonorVariableSymbol`), neprihlásený dostane odkaz na registráciu. QR kód je reálny PAY by square (`src/lib/bank/pay-by-square.ts`, knižnice `bysquare` + `qrcode`): verzia štandardu v hlavičke 1.0.0 – jediná, ktorú bankové appky akceptujú (1.2.0 = default knižnice v4, ani 1.1.0 ČSOB/Fio neprečítali; Fio hlási 'Nepodporovaná verzia BySquare QR kódu', bysquare issue #9). Výstup je bajt po bajte zhodný s bysquare v2, ktorá roky fungovala v produkcii, oba typy daru ako bežný platobný príkaz (trvalý príkaz z QR banky nepodporujú – prepínač `USE_STANDING_ORDER`), tichá zóna 3 moduly. QR aj v profile (karta Podporiť). ✅ Overené skenom v ČSOB (2026-09-04). Príjemca: Pastoračný fond Žilinskej diecézy.- zemn na SK0483300000002901688673 a  vs aky ma v profile
 
 ## Pripomienky 
@@ -136,3 +138,11 @@ Návrh a rozhodnutia: `krok_navrh_vyzvy.md`. Stav: commitnuté a pushnuté 2026-
 - Admin `/admin/sponzori` (dialóg CRUD, orezanie loga cez react-easy-crop → PNG, logo na svetlý aj tmavý podklad, suma verejná/interná, obdobie zverejnenia, poradie). Kód: `src/app/admin/sponzori/*`, `src/components/admin/sponsors/*`, typy `src/lib/sponsors/types.ts`.
 - Domovská: `SponsorsStrip` (pás „Podporili nás“ pod sekciou Dôkaz, pred Aktuálnymi výzvami; biele dlaždice s logami; skrytý, ak nie je nikto zverejnený). Dáta `getPublicSponsors()` v `(public)/actions.ts`.
 - [ ] 🟢 Zmazať duplicitné `public/QR_caj.webp` a nepoužitý `public/1_omsa.webp` (súťaž používa `public/sutaz/*`).
+
+
+----
+ako v aktualitách pri logách dám hypertext do obrázka a naformátujem obrázok - aby bol text hneď vedľa? https://mojkrok.sk/aktuality/podporili-nas-firmy-s-velkym-srdcom 
+
+dajú sa editovať vložené obrázky v aktualitách? napríklad na stred? Aká je ideálna šírka obrázka? 
+
+posuvné logá partnerov - neviem, či to nebude neprehľadné pri viacerých partneroch 

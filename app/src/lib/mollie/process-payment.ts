@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { allocateDonorVs } from '@/lib/donors/vs'
+import { sendDonationThankYouEmail } from '@/lib/email/notifications'
 import type { Payment } from '@mollie/api-client'
 import { formatMollieAmount, getMollieClient, getMollieMode, getWebhookUrl } from './client'
 
@@ -394,6 +395,8 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
   }
 
   let donorId: string | null = paymentRow.donor_id
+  // Dar zapísaný TÝMTO volaním → poďakovanie e-mailom (presne raz, aj pri súbežnom webhooku a návrate)
+  let newDonationId: string | null = null
 
   // === ZAPLATENÉ → dar do donations (raz) ===
   if (isPaid && !paymentRow.donation_id) {
@@ -435,6 +438,7 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
           .from('online_payments')
           .update({ donation_id: donation.id, donor_id: donorId })
           .eq('id', paymentRow.id)
+        newDonationId = donation.id
         console.log(`[mollie] Dar ${amount} € zaznamenaný (platba ${payment.id}, darca ${donorId})`)
       }
     }
@@ -465,6 +469,20 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
         await admin.from('online_subscriptions').update({ status: 'past_due' }).eq('id', sub.id)
       }
     }
+  }
+
+  // Ďalšie automatické platby pravidelného daru e-mail neposielajú – len prvá platba a jednorazový dar
+  if (newDonationId && donorId && kind !== 'recurring') {
+    await sendDonationThankYouEmail({
+      donorId,
+      donationId: newDonationId,
+      amount,
+      paidAt: paidAtIso ?? new Date().toISOString(),
+      recurring: kind === 'recurring_first',
+      interval: sub?.interval ?? meta.interval ?? null,
+      projectId: identity.project_id,
+      fallbackEmail: identity.email,
+    })
   }
 
   return {

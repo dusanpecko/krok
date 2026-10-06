@@ -18,6 +18,7 @@ import {
   Globe,
   CreditCard,
   Megaphone,
+  Mail,
   Handshake,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -55,6 +56,7 @@ const mainLinks = [
 
 const settingsLinks = [
   { href: '/admin/nastavenia/dekanaty', label: 'Dekanáty', icon: Map, permission: 'manage_config' },
+  { href: '/admin/emaily', label: 'E-mailové šablóny', icon: Mail, permission: 'manage_config' },
   { href: '/admin/import', label: 'Import výpisu', icon: FileUp, permission: 'import_bank' },
   { href: '/admin/roly', label: 'Správa rolí', icon: Users, permission: 'manage_roles' },
   { href: '/admin/exporty', label: 'Exporty', icon: FileText, permission: 'view_donors' },

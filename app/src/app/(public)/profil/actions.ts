@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { allocateDonorVs } from '@/lib/donors/vs'
+import { sendDonorWelcomeEmail } from '@/lib/email/notifications'
 import { addDonorProject, validateParishId, validateProjectId } from '@/lib/parishes/choices'
 import { NO_PARISH } from '@/lib/parishes/constants'
 
@@ -49,8 +50,9 @@ export async function getCurrentDonor() {
       .maybeSingle()
 
     if (byEmail) {
-      // Prvé prepojenie existujúceho darcu s účtom
-      const { error } = await admin
+      // Prvé prepojenie existujúceho darcu s účtom (podmienka auth_user_id IS NULL –
+      // pri súbežnom načítaní prepojí a pošle uvítací e-mail len jedno volanie)
+      const { data: linked, error } = await admin
         .from('donors')
         .update({
           auth_user_id: user.id,
@@ -58,8 +60,12 @@ export async function getCurrentDonor() {
           ...(choiceMade ? { onboarding_completed_at: new Date().toISOString() } : {}),
         })
         .eq('id', byEmail.id)
+        .is('auth_user_id', null)
+        .select('id')
+        .maybeSingle()
       if (error) console.error('[getCurrentDonor] Prepojenie auth_user_id zlyhalo:', error.message)
       await addDonorProject(admin, byEmail.id, projectId)
+      if (linked) await sendDonorWelcomeEmail(linked.id)
     } else {
       // Nový darca (registrácia e-mailom aj cez Google). Meno z metadát registrácie, inak z full_name / e-mailu.
       const fallbackName = String(meta.full_name || meta.name || userEmail.split('@')[0])
@@ -86,7 +92,10 @@ export async function getCurrentDonor() {
           .select('id')
           .single()
         if (error) console.error('[getCurrentDonor] Založenie profilu zlyhalo:', error.message)
-        if (created) await addDonorProject(admin, created.id, projectId)
+        if (created) {
+          await addDonorProject(admin, created.id, projectId)
+          await sendDonorWelcomeEmail(created.id)
+        }
       } catch (e) {
         console.error('[getCurrentDonor]', e instanceof Error ? e.message : e)
       }

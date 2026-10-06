@@ -3,6 +3,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { addBrevoContact } from '@/lib/newsletter/brevo'
+import { sendNewsletterWelcomeEmail } from '@/lib/email/notifications'
 import { NEWSLETTER_CONSENT_TEXT } from '@/lib/newsletter/consent'
 
 // Service-role klient – tabuľka newsletter_subscribers nemá verejné politiky
@@ -74,6 +75,8 @@ export async function subscribeNewsletter(input: {
     return { success: false, error: 'Prihlásenie sa nepodarilo. Skúste to prosím neskôr.' }
   }
   if (!brevo.ok) console.error('[newsletter] Brevo:', brevo.error)
+  // Potvrdenie len pri novom prihlásení (opakované odoslanie formulára e-mail nepošle)
+  if (existing?.status !== 'subscribed') await sendNewsletterWelcomeEmail({ email, firstName })
 
   return { success: true, alreadySubscribed }
 }

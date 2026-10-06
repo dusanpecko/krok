@@ -8,6 +8,8 @@ import { loadParishDetail } from '@/lib/parishes/load'
 import { logParishChange, writeSchedule, writeVillages } from '@/lib/parishes/writes'
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS, normalizeParishValue } from '@/lib/parishes/fields'
 import { getBaseUrl } from '@/lib/mollie/client'
+import { generateEmailLink } from '@/lib/auth/email-links'
+import { sendTemplateEmail } from '@/lib/email/send'
 import {
   PARISH_EDITABLE_FIELDS,
   type ClergyMember,
@@ -243,6 +245,8 @@ export interface ParishAccessRow {
   position: string | null
   invited_at: string | null
   accepted_at: string | null
+  /** účet sa už aspoň raz prihlásil (inak má zmysel poslať pozvánku znova) */
+  activated: boolean
 }
 
 export async function getParishAccess(parishId: string): Promise<ParishAccessRow[]> {
@@ -252,7 +256,7 @@ export async function getParishAccess(parishId: string): Promise<ParishAccessRow
   const rows: ParishAccessRow[] = []
   for (const r of data ?? []) {
     const { data: u } = await admin.auth.admin.getUserById(r.user_id)
-    rows.push({ ...r, email: u?.user?.email ?? null } as ParishAccessRow)
+    rows.push({ ...r, email: u?.user?.email ?? null, activated: !!u?.user?.last_sign_in_at } as ParishAccessRow)
   }
   return rows
 }
@@ -268,12 +272,60 @@ async function findAuthUserByEmail(admin: ReturnType<typeof db>, email: string) 
   return null
 }
 
+const ROLE_LABEL = { admin: 'správca účtu farnosti', editor: 'editor stránky farnosti' } as const
+const ZONE_NEXT = '/nastavit-heslo?next=/moja-farnost'
+
+/** Predvolené oslovenie z funkcie (farár → „Vážený pán farár“) */
+function defaultSalutation(position: string | null | undefined): string {
+  const p = position?.trim()
+  return p ? `Vážený pán ${p}` : 'Dobrý deň'
+}
+
 /**
- * Pridelí farnosti účet (diecéza). Existujúci používateľ dostane prístup hneď;
- * inak Supabase pošle pozvánku e-mailom (nastavenie hesla → /moja-farnost).
+ * E-mail k prístupu (náš text zo šablón, nie Supabase): neaktivovaný účet dostane pozvánku
+ * s odkazom na nastavenie hesla, aktívny účet len oznámenie s odkazom na prihlásenie.
+ */
+async function sendAccessEmail(
+  admin: ReturnType<typeof db>,
+  input: { parishId: string; email: string; role: 'admin' | 'editor'; salutation: string; activated: boolean; confirmed: boolean }
+): Promise<{ sent: boolean; error?: string }> {
+  const [{ data: parish }, { data: box }] = await Promise.all([
+    admin.from('parishes').select('name, official_name').eq('id', input.parishId).maybeSingle(),
+    admin.from('parish_box_settings').select('enabled').eq('parish_id', input.parishId).maybeSingle(),
+  ])
+  const common = {
+    salutation: input.salutation,
+    parish_name: parish?.official_name || parish?.name || 'farnosť',
+    role_label: ROLE_LABEL[input.role],
+    email: input.email,
+    has_box: !!box?.enabled,
+  }
+
+  if (input.activated) {
+    const res = await sendTemplateEmail({
+      templateKey: 'parish_access_granted',
+      to: input.email,
+      variables: { ...common, login_url: `${getBaseUrl()}/prihlasenie?redirect=${encodeURIComponent('/moja-farnost')}` },
+    })
+    return res.success ? { sent: true } : { sent: false, error: res.error }
+  }
+
+  // nepotvrdený účet → invite (Supabase ho povolí aj opakovane); potvrdený, no nikdy neprihlásený → magiclink
+  const link = await generateEmailLink(input.email, input.confirmed ? 'magiclink' : 'invite', ZONE_NEXT)
+  if (!link.success) return { sent: false, error: link.error }
+  const res = await sendTemplateEmail({ templateKey: 'parish_access_invite', to: input.email, variables: { ...common, invite_url: link.url } })
+  return res.success ? { sent: true } : { sent: false, error: res.error }
+}
+
+/**
+ * Pridelí farnosti účet (diecéza). Nový účet sa založí (bez e-mailu od Supabase) a dostane našu
+ * pozvánku s odkazom na nastavenie hesla; existujúci účet dostane oznámenie o prístupe.
  * Admin účet je pre farnosť práve jeden (uq_parish_admin) – predošlý sa zmení na editora.
  */
-export async function grantParishAccess(parishId: string, input: { email: string; role: 'admin' | 'editor'; position?: string }): Promise<Result<{ invited: boolean }>> {
+export async function grantParishAccess(
+  parishId: string,
+  input: { email: string; role: 'admin' | 'editor'; position?: string; salutation?: string }
+): Promise<Result<{ invited: boolean; emailSent: boolean; emailError?: string }>> {
   const { user } = await requirePermission(PERM)
   const admin = db()
   const email = input.email?.trim().toLowerCase()
@@ -283,10 +335,9 @@ export async function grantParishAccess(parishId: string, input: { email: string
   let authUser = await findAuthUserByEmail(admin, email)
   let invited = false
   if (!authUser) {
-    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${getBaseUrl()}/auth/callback?redirect=${encodeURIComponent('/moja-farnost')}`,
-    })
-    if (error || !data?.user) return { success: false, error: `Pozvánku sa nepodarilo odoslať: ${error?.message ?? 'neznáma chyba'}` }
+    // založí účet bez e-mailu od Supabase – pozvánku pošleme sami nižšie
+    const { data, error } = await admin.auth.admin.createUser({ email, email_confirm: false })
+    if (error || !data?.user) return { success: false, error: `Účet sa nepodarilo založiť: ${error?.message ?? 'neznáma chyba'}` }
     authUser = data.user
     invited = true
   }
@@ -297,9 +348,44 @@ export async function grantParishAccess(parishId: string, input: { email: string
     { onConflict: 'parish_id,user_id' }
   )
   if (error) return { success: false, error: 'Pridelenie prístupu zlyhalo.' }
-  await logParishChange(admin, parishId, user.id, 'access', 'admin_update', { granted: [null, `${email} (${role})`], invited })
+
+  const mail = await sendAccessEmail(admin, {
+    parishId,
+    email,
+    role,
+    salutation: input.salutation?.trim() || defaultSalutation(input.position),
+    activated: !!authUser.last_sign_in_at,
+    confirmed: !!authUser.email_confirmed_at,
+  })
+  await logParishChange(admin, parishId, user.id, 'access', 'admin_update', { granted: [null, `${email} (${role})`], invited, email_sent: mail.sent })
   revalidatePath(`/admin/farnosti/${parishId}`)
-  return { success: true, invited }
+  return { success: true, invited, emailSent: mail.sent, emailError: mail.error }
+}
+
+/** Pošle pozvánku (neaktivovaný účet) alebo oznámenie o prístupe znova. */
+export async function resendParishAccessEmail(parishId: string, userId: string, salutation?: string): Promise<Result<{ invite: boolean }>> {
+  const { user } = await requirePermission(PERM)
+  const admin = db()
+  const { data: row } = await admin.from('parish_users').select('role, position').eq('parish_id', parishId).eq('user_id', userId).maybeSingle()
+  if (!row) return { success: false, error: 'Prístup sa nenašiel.' }
+  const { data: u } = await admin.auth.admin.getUserById(userId)
+  const email = u?.user?.email
+  if (!email) return { success: false, error: 'Účet nemá e-mail.' }
+
+  const activated = !!u?.user?.last_sign_in_at
+  const mail = await sendAccessEmail(admin, {
+    parishId,
+    email,
+    role: row.role === 'editor' ? 'editor' : 'admin',
+    salutation: salutation?.trim() || defaultSalutation(row.position),
+    activated,
+    confirmed: !!u?.user?.email_confirmed_at,
+  })
+  if (!mail.sent) return { success: false, error: `E-mail sa nepodarilo odoslať: ${mail.error ?? 'neznáma chyba'}` }
+  await admin.from('parish_users').update({ invited_at: new Date().toISOString() }).eq('parish_id', parishId).eq('user_id', userId)
+  await logParishChange(admin, parishId, user.id, 'access', 'admin_update', { resent: [null, email] })
+  revalidatePath(`/admin/farnosti/${parishId}`)
+  return { success: true, invite: !activated }
 }
 
 export async function revokeParishAccess(parishId: string, userId: string): Promise<Result> {

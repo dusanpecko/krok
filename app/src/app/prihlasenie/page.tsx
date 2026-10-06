@@ -28,7 +28,11 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    searchParams.get('error') === 'link'
+      ? 'Odkaz z e-mailu už neplatí alebo bol použitý. Prihláste sa, prípadne si cez „Zabudli ste heslo?“ pošlite nový.'
+      : null
+  )
 
   // Ak je už prihlásený, presmeruj cez post-login (rozhodne podľa role)
   useEffect(() => {
@@ -187,7 +191,12 @@ function LoginForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Heslo</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700">Heslo</label>
+                  <a href="/zabudnute-heslo" className="text-xs font-medium hover:underline" style={{ color: KROK.blue }}>
+                    Zabudli ste heslo?
+                  </a>
+                </div>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input

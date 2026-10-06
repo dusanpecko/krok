@@ -30,18 +30,18 @@ export default function RecurringChoice({ subscriptions, newAmount, value, onCha
   const total = subscriptions.reduce((acc, s) => acc + (s.interval === 'year' ? s.amount / 12 : s.amount), 0)
 
   return (
-    <div className="space-y-3 p-4 rounded-2xl bg-amber-400/10 border border-amber-300/30">
-      <div className="flex items-start gap-2 text-sm text-amber-100">
-        <AlertTriangle size={18} className="shrink-0 mt-0.5 text-amber-300" />
+    <div className="space-y-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
+      <div className="flex items-start gap-2 text-sm text-amber-900">
+        <AlertTriangle size={18} className="shrink-0 mt-0.5 text-amber-600" />
         <p className="leading-relaxed">
           {subscriptions.length === 1 ? (
             <>
-              Už máte pravidelný dar <strong className="text-white">{formatEur(subscriptions[0].amount)}</strong>
+              Už máte pravidelný dar <strong className="text-ink">{formatEur(subscriptions[0].amount)}</strong>
               {subscriptions[0].interval === 'year' ? ' ročne' : ' mesačne'}.
             </>
           ) : (
             <>
-              Už máte <strong className="text-white">{subscriptions.length} pravidelné dary</strong> (spolu {formatEur(total)} mesačne).
+              Už máte <strong className="text-ink">{subscriptions.length} pravidelné dary</strong> (spolu {formatEur(total)} mesačne).
             </>
           )}{' '}
           Čo chcete urobiť?
@@ -54,8 +54,8 @@ export default function RecurringChoice({ subscriptions, newAmount, value, onCha
             key={s.id}
             className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
               value.mode === 'replace' && value.replaceId === s.id
-                ? 'bg-white/10 border-gold/50'
-                : 'bg-white/5 border-white/10 hover:border-white/25'
+                ? 'bg-blue-soft/60 border-gold/50'
+                : 'bg-white border-blue/10 hover:border-blue/30'
             }`}
           >
             <input
@@ -66,10 +66,10 @@ export default function RecurringChoice({ subscriptions, newAmount, value, onCha
               onChange={() => onChange({ mode: 'replace', replaceId: s.id })}
             />
             <span className="text-sm">
-              <span className="text-white font-bold block">
+              <span className="text-ink font-bold block">
                 Zmeniť výšku z {formatEur(s.amount)} na {newAmount > 0 ? formatEur(newAmount) : '…'}
               </span>
-              <span className="text-zinc-400 text-xs">
+              <span className="text-mute text-xs">
                 Doterajší pravidelný dar sa zruší hneď po úspešnej platbe nového.
               </span>
             </span>
@@ -78,7 +78,7 @@ export default function RecurringChoice({ subscriptions, newAmount, value, onCha
 
         <label
           className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-            value.mode === 'add' ? 'bg-white/10 border-gold/50' : 'bg-white/5 border-white/10 hover:border-white/25'
+            value.mode === 'add' ? 'bg-blue-soft/60 border-gold/50' : 'bg-white border-blue/10 hover:border-blue/30'
           }`}
         >
           <input
@@ -89,8 +89,8 @@ export default function RecurringChoice({ subscriptions, newAmount, value, onCha
             onChange={() => onChange({ mode: 'add', replaceId: null })}
           />
           <span className="text-sm">
-            <span className="text-white font-bold block">Pridať ďalší pravidelný dar</span>
-            <span className="text-zinc-400 text-xs">
+            <span className="text-ink font-bold block">Pridať ďalší pravidelný dar</span>
+            <span className="text-mute text-xs">
               Budete mať {subscriptions.length + 1} pravidelné dary, spolu {formatEur(total + newAmount)} mesačne.
             </span>
           </span>

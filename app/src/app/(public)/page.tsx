@@ -49,7 +49,7 @@ const HERO_VARIANTS: HeroVariant[] = [
     headline: (
       <>
         Budúcnosť živej viery <br />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white font-extrabold">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue to-gold-ink font-extrabold">
           začína tvojím krokom.
         </span>
       </>
@@ -65,7 +65,7 @@ const HERO_VARIANTS: HeroVariant[] = [
     headline: (
       <>
         Krok viery, ktorý premení <br />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white font-extrabold">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue to-gold-ink font-extrabold">
           neistú budúcnosť na spoločné dielo.
         </span>
       </>
@@ -157,7 +157,7 @@ function BackgroundSparkles() {
       {SPARKLES.map((p, i) => (
         <motion.div
           key={i}
-          className="absolute w-1.5 h-1.5 bg-gold-bright rounded-full opacity-30"
+          className="absolute w-1.5 h-1.5 bg-gold rounded-full opacity-50"
           style={{
             top: `${p.top}%`,
             left: `${p.left}%`,
@@ -285,7 +285,7 @@ export default function KrokLandingPage() {
   }, [part1InView, part2InView, part3InView]);
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep text-white font-sans selection:bg-gold-bright/35 selection:text-white">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm text-ink font-sans selection:bg-gold/30 selection:text-ink">
       
       {/* Filmové zrno pre hmatateľný retro/sakrálny efekt */}
       <div className="grain" />
@@ -301,7 +301,7 @@ export default function KrokLandingPage() {
           ========================================================================= */}
       <section className="relative h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
         {/* Kontemplatívne pozadie - temný nočný prechod s jemnou hmlou */}
-        <div className="absolute inset-0 bg-radial-[at_center_bottom] from-blue/35 via-blue-deep to-blue-deep z-0" />
+        <div className="absolute inset-0 bg-radial-[at_center_bottom] from-blue-soft via-paper-warm to-paper-warm z-0" />
         
         {/* Dekoratívny svetelný kruh v pozadí imitujúci ranné zore / večnú sviecu */}
         <motion.div 
@@ -327,7 +327,7 @@ export default function KrokLandingPage() {
             transition={{ duration: 1.2, ease: "easeOut" }}
             className="mb-8"
           >
-            <span className="px-4 py-1.5 rounded-full border border-gold/25 bg-gold/5 text-gold-bright text-xs tracking-widest uppercase font-extrabold">
+            <span className="px-4 py-1.5 rounded-full border border-gold/25 bg-gold/5 text-gold-ink text-xs tracking-widest uppercase font-extrabold">
               Veľká rodina malých darcov
             </span>
           </motion.div>
@@ -338,7 +338,7 @@ export default function KrokLandingPage() {
               initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.4, delay: 0.2, ease: "easeOut" }}
-              className="text-4xl md:text-5xl lg:text-6xl font-light text-white leading-tight mb-6"
+              className="text-4xl md:text-5xl lg:text-6xl font-light text-ink leading-tight mb-6"
             >
               {HERO_VARIANTS[heroIndex].headline}
             </motion.h1>
@@ -347,7 +347,7 @@ export default function KrokLandingPage() {
               initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.6, delay: 0.6 }}
-              className="text-zinc-300 text-base md:text-lg max-w-2xl leading-relaxed mb-0 font-light text-center"
+              className="text-ink/80 text-base md:text-lg max-w-2xl leading-relaxed mb-0 font-light text-center"
             >
               {HERO_VARIANTS[heroIndex].subline}
             </motion.p>
@@ -361,13 +361,13 @@ export default function KrokLandingPage() {
           >
             <a 
               href="#dar" 
-              className="px-8 py-4 bg-gradient-to-r from-blue to-blue-deep hover:from-blue hover:to-blue/90 text-white rounded-xl text-lg font-extrabold shadow-2xl hover:shadow-blue/50 transition-all flex items-center justify-center gap-3 group border border-white/10"
+              className="px-8 py-4 bg-gradient-to-r from-blue to-blue-deep hover:from-blue hover:to-blue/90 text-white rounded-xl text-lg font-extrabold shadow-2xl hover:shadow-blue/30 transition-all flex items-center justify-center gap-3 group border border-blue/10"
             >
               Urobiť prvý krok <ArrowRight className="group-hover:translate-x-1.5 transition-transform" size={20} />
             </a>
             <a 
               href="#problem" 
-              className="px-8 py-4 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-xl text-lg font-bold transition-all flex items-center justify-center border border-white/10"
+              className="px-8 py-4 bg-white hover:bg-blue-soft/50 text-ink/80 rounded-xl text-lg font-bold transition-all flex items-center justify-center border border-blue/10"
             >
               Spoznať víziu
             </a>
@@ -380,10 +380,10 @@ export default function KrokLandingPage() {
           animate={prefersReducedMotion ? {} : { y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="text-zinc-500 text-xs tracking-widest uppercase font-extrabold">Posuňte sa nižšie</span>
-          <div className="w-6 h-10 rounded-full border border-zinc-700 flex justify-center p-1.5">
+          <span className="text-mute text-xs tracking-widest uppercase font-extrabold">Posuňte sa nižšie</span>
+          <div className="w-6 h-10 rounded-full border border-mute/40 flex justify-center p-1.5">
             <motion.div 
-              className="w-1.5 h-1.5 bg-gold-bright rounded-full"
+              className="w-1.5 h-1.5 bg-gold rounded-full"
               animate={prefersReducedMotion ? {} : { y: [0, 16, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
@@ -394,7 +394,7 @@ export default function KrokLandingPage() {
       {/* =========================================================================
           SEKCIA 2: PROBLÉM (Pomenovanie existenčného napätia)
           ========================================================================= */}
-      <section id="problem" className="relative py-28 md:py-36 bg-blue-deep border-t border-white/5 overflow-hidden">
+      <section id="problem" className="relative py-28 md:py-36 bg-white border-t border-blue/10 overflow-hidden">
         {/* Pozadie */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red/5 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue/10 blur-[100px] pointer-events-none rounded-full" />
@@ -404,26 +404,26 @@ export default function KrokLandingPage() {
             
             {/* Ľavý stĺpec: Napätie, myšlienka a realita */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="flex items-center gap-3 text-gold kicker uppercase tracking-widest text-xs font-extrabold mb-2">
+              <div className="flex items-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-2">
                 <span className="w-8 h-[2px] bg-gold rounded-full" />
                 <span>Existenčná výzva</span>
               </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-white leading-tight">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-ink leading-tight">
                 Prečo Žilinská diecéza <br className="hidden md:inline" />
                 potrebuje vlastný fond?
               </h2>
               <div className="w-16 h-1 bg-gradient-to-r from-blue to-gold rounded-full" />
               
-              <p className="text-zinc-300 text-lg leading-relaxed pt-2">
-                Mnohé z našich pastoračných aktivít čelia vážnej neistote. Fond KROK bol zriadený ako forma získavania <strong className="text-gold">existenčne potrebných finančných prostriedkov</strong> pre dlhodobú a udržateľnú budúcnosť diecézy.
+              <p className="text-ink/80 text-lg leading-relaxed pt-2">
+                Mnohé z našich pastoračných aktivít čelia vážnej neistote. Fond KROK bol zriadený ako forma získavania <strong className="text-gold-ink">existenčne potrebných finančných prostriedkov</strong> pre dlhodobú a udržateľnú budúcnosť diecézy.
               </p>
               
               {/* Citát zo zriaďovacej listiny */}
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 border-l-gold border-l-4">
-                <p className="text-zinc-200 italic font-light leading-relaxed">
+              <div className="p-6 rounded-2xl bg-white border border-blue/10 border-l-gold border-l-4">
+                <p className="text-ink/90 italic font-light leading-relaxed">
                   „KROK je Pastoračný fond Žilinskej diecézy zriadený 1. augusta 2019. Jeho poslaním je podpora pastoračných aktivít na farskej, dekanátnej a diecéznej úrovni v synodálnom duchu.“
                 </p>
-                <div className="mt-3 text-sm text-zinc-400 uppercase tracking-widest font-extrabold">— Zo zriaďovacej listiny</div>
+                <div className="mt-3 text-sm text-mute uppercase tracking-widest font-extrabold">— Zo zriaďovacej listiny</div>
               </div>
             </div>
 
@@ -433,12 +433,12 @@ export default function KrokLandingPage() {
               {/* Pilier 1: Izolovanosť */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
-                className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
+                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
               >
                 <div>
                   <div className="w-12 h-12 bg-red/15 text-red rounded-xl flex items-center justify-center border border-red/20 mb-6 text-xl font-extrabold">I</div>
-                  <h3 className="text-xl font-extrabold text-white mb-2">Izolovanosť</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
+                  <h3 className="text-xl font-extrabold text-ink mb-2">Izolovanosť</h3>
+                  <p className="text-mute text-sm leading-relaxed">
                     Mnoho miestnych spoločenstiev, škôl či charitatívnych diel bojuje s materiálnym nedostatkom osamote. Chýba koordinované, spoločné krytie chrbta.
                   </p>
                 </div>
@@ -448,27 +448,27 @@ export default function KrokLandingPage() {
               {/* Pilier 2: Neistá budúcnosť */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
-                className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
+                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
               >
                 <div>
-                  <div className="w-12 h-12 bg-gold/15 text-gold rounded-xl flex items-center justify-center border border-gold/20 mb-6 text-xl font-extrabold">N</div>
-                  <h3 className="text-xl font-extrabold text-white mb-2">Neistá budúcnosť</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
+                  <div className="w-12 h-12 bg-gold/15 text-gold-ink rounded-xl flex items-center justify-center border border-gold/20 mb-6 text-xl font-extrabold">N</div>
+                  <h3 className="text-xl font-extrabold text-ink mb-2">Neistá budúcnosť</h3>
+                  <p className="text-mute text-sm leading-relaxed">
                     Pastoračné a evanjelizačné projekty nemôžu existovať zo dňa na deň. Bez stabilnej rezervy je ohrozená kontinuita formácie detí, mladých aj rodín.
                   </p>
                 </div>
-                <div className="text-xs text-gold font-mono tracking-widest uppercase mt-4">Kľúčový nedostatok</div>
+                <div className="text-xs text-gold-ink font-mono tracking-widest uppercase mt-4">Kľúčový nedostatok</div>
               </motion.div>
 
               {/* Pilier 3: Závislosť */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
-                className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl p-8 transition-all flex flex-col justify-between h-72 md:col-span-2"
+                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72 md:col-span-2"
               >
                 <div>
                   <div className="w-12 h-12 bg-blue/15 text-blue rounded-xl flex items-center justify-center border border-blue/20 mb-6 text-xl font-extrabold">Z</div>
-                  <h3 className="text-xl font-extrabold text-white mb-2">Závislosť na nestabilných zdrojoch</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
+                  <h3 className="text-xl font-extrabold text-ink mb-2">Závislosť na nestabilných zdrojoch</h3>
+                  <p className="text-mute text-sm leading-relaxed">
                     Spoliehanie sa výhradne na štátne príspevky alebo náhodné milodary robí strategické pastoračné diela zraniteľnými. Potrebujeme spoločne vybudovať nezávislú oporu postavenú priamo na ľuďoch.
                   </p>
                 </div>
@@ -484,7 +484,7 @@ export default function KrokLandingPage() {
       {/* =========================================================================
           SEKCIA 3: MECHANIZMUS (Sila spoločenstva, animované počítadlá a spájanie)
           ========================================================================= */}
-      <section ref={mechanismRef} className="relative py-28 md:py-36 bg-white/5 border-t border-white/5 overflow-hidden">
+      <section ref={mechanismRef} className="relative py-28 md:py-36 bg-paper-warm border-t border-blue/10 overflow-hidden">
         
         {/* Vizuál mechanizmu skladania malého daru do veľkého diela */}
         <div className="absolute inset-0 z-0 opacity-40 pointer-events-none flex items-center justify-center">
@@ -500,7 +500,7 @@ export default function KrokLandingPage() {
               return (
                 <motion.div
                   key={idx}
-                  className="absolute w-3 h-3 bg-gold-bright rounded-full blur-[2px] shadow-lg shadow-gold"
+                  className="absolute w-3 h-3 bg-gold rounded-full blur-[2px] shadow-lg shadow-gold/40"
                   style={{ x, y }}
                   animate={prefersReducedMotion ? {} : {
                     scale: [0.8, 1.3, 0.8],
@@ -527,18 +527,18 @@ export default function KrokLandingPage() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-3 text-gold kicker uppercase tracking-widest text-xs font-extrabold mb-4">
+          <div className="flex items-center justify-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-4">
             <span className="w-8 h-[2px] bg-gold rounded-full" />
             <span>Princíp fondu</span>
             <span className="w-8 h-[2px] bg-gold rounded-full" />
           </div>
-          <h2 className="text-3xl md:text-5xl font-light text-white max-w-3xl mx-auto leading-tight mb-8">
+          <h2 className="text-3xl md:text-5xl font-light text-ink max-w-3xl mx-auto leading-tight mb-8">
             Veľa malých krokov tvorí <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue to-gold font-extrabold">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue to-gold-ink font-extrabold">
               jeden veľký spoločný výsledok
             </span>
           </h2>
-          <p className="text-zinc-300 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
+          <p className="text-ink/80 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
             Pravidelná podpora vo výške 5 alebo 10 eur mesačne od jedného človeka nezmení všetko. <br className="hidden md:inline" />
             Keď sa však takýchto ľudí spojí celá diecéza, vytvoríme silu, ktorá zmení budúcnosť celej generácie.
           </p>
@@ -566,22 +566,22 @@ export default function KrokLandingPage() {
               );
             })}
           </div>
-          <p className="text-zinc-450 text-xs tracking-wider uppercase font-mono max-w-md mx-auto mb-16 leading-relaxed">
+          <p className="text-mute text-xs tracking-wider uppercase font-mono max-w-md mx-auto mb-16 leading-relaxed">
             Každá bodka je jeden darca. Spoločne tvoria silu, ktorá unesie aj tie najväčšie pastoračné diela.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mx-auto">
             
             {/* Počítadlo 1: Počet darcov */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm relative group hover:border-white/20 transition-all">
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-blue-deep text-blue rounded-full border border-white/10 flex items-center justify-center">
+            <div className="p-8 rounded-3xl bg-white border border-blue/10 backdrop-blur-sm relative group hover:border-blue/30 transition-all">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white shadow-sm text-blue rounded-full border border-blue/10 flex items-center justify-center">
                 <Users size={22} />
               </div>
-              <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-zinc-300 font-mono tracking-wide mb-3 bg-white/5 py-2.5 px-4 rounded-xl border border-white/5 text-center select-all">
+              <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-ink/80 font-mono tracking-wide mb-3 bg-white py-2.5 px-4 rounded-xl border border-blue/10 text-center select-all">
                 {mounted ? <CountUpNumber value={donorsCount} /> : donorsCount}
               </div>
-              <p className="text-zinc-200 font-extrabold text-sm tracking-wide uppercase mb-1">Darcov v rodine</p>
-              <p className="text-zinc-500 text-xs">
+              <p className="text-ink/90 font-extrabold text-sm tracking-wide uppercase mb-1">Darcov v rodine</p>
+              <p className="text-mute text-xs">
                 Aktívni pravidelní prispievatelia
               </p>
               {/* Poznámka pre Supabase napojenie */}
@@ -589,15 +589,15 @@ export default function KrokLandingPage() {
             </div>
 
             {/* Počítadlo 2: Celková suma */}
-            <div className="p-8 rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 backdrop-blur-sm relative group hover:border-white/20 transition-all shadow-xl">
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-blue-deep text-gold rounded-full border border-white/10 flex items-center justify-center">
+            <div className="p-8 rounded-3xl bg-gradient-to-b from-blue-soft/60 to-white border border-blue/10 backdrop-blur-sm relative group hover:border-blue/30 transition-all shadow-xl">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white shadow-sm text-gold-ink rounded-full border border-blue/10 flex items-center justify-center">
                 <Gift size={22} />
               </div>
-              <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-gold font-mono tracking-wide mb-3 bg-white/5 py-2.5 px-4 rounded-xl border border-white/5 text-center select-all">
+              <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-gold-ink font-mono tracking-wide mb-3 bg-white py-2.5 px-4 rounded-xl border border-blue/10 text-center select-all">
                 {mounted ? <CountUpNumber value={totalAmount} suffix=" €" /> : `${totalAmount.toLocaleString('sk-SK')} €`}
               </div>
-              <p className="text-gold font-extrabold text-sm tracking-wide uppercase mb-1">Vyzbieraná suma</p>
-              <p className="text-zinc-500 text-xs">
+              <p className="text-gold-ink font-extrabold text-sm tracking-wide uppercase mb-1">Vyzbieraná suma</p>
+              <p className="text-mute text-xs">
                 Transparentne spravované prostriedky
               </p>
               {/* Poznámka pre Supabase napojenie */}
@@ -605,15 +605,15 @@ export default function KrokLandingPage() {
             </div>
 
             {/* Počítadlo 3: Podporené projekty */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm relative group hover:border-white/20 transition-all">
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-blue-deep text-emerald-400 rounded-full border border-white/10 flex items-center justify-center">
+            <div className="p-8 rounded-3xl bg-white border border-blue/10 backdrop-blur-sm relative group hover:border-blue/30 transition-all">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white shadow-sm text-emerald-600 rounded-full border border-blue/10 flex items-center justify-center">
                 <TrendingUp size={22} />
               </div>
-              <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-zinc-300 font-mono tracking-wide mb-3 bg-white/5 py-2.5 px-4 rounded-xl border border-white/5 text-center select-all">
+              <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-ink/80 font-mono tracking-wide mb-3 bg-white py-2.5 px-4 rounded-xl border border-blue/10 text-center select-all">
                 {mounted ? <CountUpNumber value={projectsCount} /> : projectsCount}
               </div>
-              <p className="text-zinc-200 font-extrabold text-sm tracking-wide uppercase mb-1">Podporených projektov</p>
-              <p className="text-zinc-500 text-xs">
+              <p className="text-ink/90 font-extrabold text-sm tracking-wide uppercase mb-1">Podporených projektov</p>
+              <p className="text-mute text-xs">
                 Farnosti, animátori, charita, vzdelávanie
               </p>
               {/* Poznámka pre Supabase napojenie */}
@@ -623,8 +623,8 @@ export default function KrokLandingPage() {
           </div>
 
           {/* Tri piliere pastoračného fondu (Akronym KROK) */}
-          <div className="mt-24 pt-8 border-t border-white/5 max-w-5xl mx-auto">
-            <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-extrabold mb-8">Hodnoty skryté v mene</h3>
+          <div className="mt-24 pt-8 border-t border-blue/10 max-w-5xl mx-auto">
+            <h3 className="text-xs uppercase tracking-widest text-mute font-extrabold mb-8">Hodnoty skryté v mene</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
               {[
                 { letter: "K", name: "Kreativita", desc: "Nové pastoračné nápady a inovatívne prístupy." },
@@ -632,10 +632,10 @@ export default function KrokLandingPage() {
                 { letter: "O", name: "Odvaha", desc: "Nebáť sa nových výziev a prekonávania prekážok." },
                 { letter: "K", name: "Krása", desc: "Návrat k liturgickej hĺbke, kultúre a estetike." }
               ].map((item, idx) => (
-                <div key={idx} className="p-5 rounded-2xl bg-white/5 border border-white/10">
-                  <span className="text-3xl font-extrabold text-gold block mb-1">{item.letter}</span>
-                  <div className="text-white font-extrabold text-base mb-1">{item.name}</div>
-                  <p className="text-zinc-400 text-xs leading-relaxed">{item.desc}</p>
+                <div key={idx} className="p-5 rounded-2xl bg-white border border-blue/10">
+                  <span className="text-3xl font-extrabold text-gold-ink block mb-1">{item.letter}</span>
+                  <div className="text-ink font-extrabold text-base mb-1">{item.name}</div>
+                  <p className="text-mute text-xs leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -647,20 +647,20 @@ export default function KrokLandingPage() {
       {/* =========================================================================
           SEKCIA 4: DÔKAZ (Lectio Divina - split-screen scrollytelling)
           ========================================================================= */}
-      <section id="dokaz" ref={proofRef} className="relative py-28 md:py-36 bg-blue-deep border-t border-white/5">
+      <section id="dokaz" ref={proofRef} className="relative py-28 md:py-36 bg-white border-t border-blue/10">
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="mb-16 text-center max-w-3xl mx-auto">
-            <div className="flex items-center justify-center gap-3 text-gold kicker uppercase tracking-widest text-xs font-extrabold mb-3">
+            <div className="flex items-center justify-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-3">
               <span className="w-8 h-[2px] bg-gold rounded-full" />
               <span>KROK v praxi</span>
               <span className="w-8 h-[2px] bg-gold rounded-full" />
             </div>
-            <h2 className="text-3xl md:text-5xl font-light text-white">
+            <h2 className="text-3xl md:text-5xl font-light text-ink">
               Konkrétny príbeh podpory
             </h2>
-            <p className="text-zinc-300 text-base md:text-lg mt-4 leading-relaxed font-light">
+            <p className="text-ink/80 text-base md:text-lg mt-4 leading-relaxed font-light">
               Pozrite sa, ako Vaša podpora pomáha premieňať duchovný život v našich farnostiach na príklade projektu systematického rozjímania nad Božím slovom.
             </p>
           </div>
@@ -671,7 +671,7 @@ export default function KrokLandingPage() {
             {/* ĽAVÝ PANEL: Sticky vizuál a stav zbierky */}
             <div className="lg:col-span-6 lg:sticky lg:top-32 space-y-8">
               
-              <div className="relative aspect-video lg:aspect-square bg-white/5 rounded-3xl overflow-hidden border border-white/10 shadow-2xl p-8 flex flex-col justify-between">
+              <div className="relative aspect-video lg:aspect-square bg-blue-soft/40 rounded-3xl overflow-hidden border border-blue/10 shadow-2xl p-8 flex flex-col justify-between">
                 
                 {/* Dynamické pozadie panelu pre jednotlivé kroky */}
                 <div className="absolute inset-0 opacity-15 pointer-events-none">
@@ -688,8 +688,8 @@ export default function KrokLandingPage() {
 
                 {/* Indikátor aktívneho kroku */}
                 <div className="flex justify-between items-center z-10">
-                  <div className="text-zinc-500 text-xs font-mono tracking-widest uppercase font-extrabold">Projekt KROK</div>
-                  <div className="px-3 py-1 rounded-full bg-white/10 text-zinc-200 text-xs font-extrabold">
+                  <div className="text-mute text-xs font-mono tracking-widest uppercase font-extrabold">Projekt KROK</div>
+                  <div className="px-3 py-1 rounded-full bg-blue-soft/60 text-ink/90 text-xs font-extrabold">
                     {activeStoryPart + 1} / 3 fázy
                   </div>
                 </div>
@@ -707,11 +707,11 @@ export default function KrokLandingPage() {
                         transition={{ duration: 0.4 }}
                         className="space-y-4"
                       >
-                        <div className="w-20 h-20 bg-white/5 text-red rounded-2xl flex items-center justify-center mx-auto border border-red/20 shadow-lg">
+                        <div className="w-20 h-20 bg-white text-red rounded-2xl flex items-center justify-center mx-auto border border-red/20 shadow-lg">
                           <Compass size={38} className="animate-pulse" />
                         </div>
-                        <h4 className="text-2xl font-extrabold text-white">1. Hľadanie v hluku</h4>
-                        <p className="text-zinc-400 text-sm max-w-sm mx-auto leading-relaxed">
+                        <h4 className="text-2xl font-extrabold text-ink">1. Hľadanie v hluku</h4>
+                        <p className="text-mute text-sm max-w-sm mx-auto leading-relaxed">
                           [Placeholder Vizuál: Čiernobiela, atmosférická fotografia detailu unaveného človeka kráčajúceho rušnou mestskou ulicou, symbolizujúca preťaženosť informáciami a túžbu po tichu.]
                         </p>
                       </motion.div>
@@ -726,11 +726,11 @@ export default function KrokLandingPage() {
                         transition={{ duration: 0.4 }}
                         className="space-y-4"
                       >
-                        <div className="w-20 h-20 bg-white/5 text-blue rounded-2xl flex items-center justify-center mx-auto border border-blue/20 shadow-lg">
+                        <div className="w-20 h-20 bg-white text-blue rounded-2xl flex items-center justify-center mx-auto border border-blue/20 shadow-lg">
                           <BookOpen size={38} />
                         </div>
-                        <h4 className="text-2xl text-blue-300 font-extrabold">2. Sila Božieho slova</h4>
-                        <p className="text-zinc-400 text-sm max-w-sm mx-auto leading-relaxed">
+                        <h4 className="text-2xl text-blue font-extrabold">2. Sila Božieho slova</h4>
+                        <p className="text-mute text-sm max-w-sm mx-auto leading-relaxed">
                           [Placeholder Vizuál: Kontemplatívny záber zhora v šere kostola, sviečka osvetľujúca otvorenú knihu Svätého Písma a siluety mladých ľudí v sústredenej modlitbe.]
                         </p>
                       </motion.div>
@@ -745,11 +745,11 @@ export default function KrokLandingPage() {
                         transition={{ duration: 0.4 }}
                         className="space-y-4"
                       >
-                        <div className="w-20 h-20 bg-white/5 text-gold rounded-2xl flex items-center justify-center mx-auto border border-gold/20 shadow-lg">
+                        <div className="w-20 h-20 bg-white text-gold-ink rounded-2xl flex items-center justify-center mx-auto border border-gold/20 shadow-lg">
                           <Sparkles size={38} />
                         </div>
-                        <h4 className="text-2xl text-gold-bright font-extrabold">3. Oživenie spoločenstva</h4>
-                        <p className="text-zinc-400 text-sm max-w-sm mx-auto leading-relaxed">
+                        <h4 className="text-2xl text-gold-ink font-extrabold">3. Oživenie spoločenstva</h4>
+                        <p className="text-mute text-sm max-w-sm mx-auto leading-relaxed">
                           [Placeholder Vizuál: Svetlá, teplá fotografia skupinky ľudí sediacich v kruhu, ktorí sa spoločne usmievajú a živo debatujú pri šálke čaju v zrekonštruovanej farskej miestnosti.]
                         </p>
                       </motion.div>
@@ -759,16 +759,16 @@ export default function KrokLandingPage() {
                 </div>
 
                 {/* Progress bar a stav cieľa na spodku */}
-                <div className="z-10 bg-blue-deep/90 border border-white/10 p-5 rounded-2xl backdrop-blur-sm space-y-3">
+                <div className="z-10 bg-white/90 border border-blue/10 p-5 rounded-2xl backdrop-blur-sm space-y-3">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-zinc-200 font-extrabold tracking-wide uppercase">Lectio Divina</span>
-                    <span className="text-gold-bright font-extrabold">
+                    <span className="text-ink/90 font-extrabold tracking-wide uppercase">Lectio Divina</span>
+                    <span className="text-gold-ink font-extrabold">
                       {LECTIO_DIVINA_CURRENT.toLocaleString('sk-SK')} € / {LECTIO_DIVINA_TARGET.toLocaleString('sk-SK')} € ({Math.round((LECTIO_DIVINA_CURRENT / LECTIO_DIVINA_TARGET) * 100)}%)
                     </span>
                   </div>
                   
                   {/* Animovaný progress bar */}
-                  <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-blue-soft/60 rounded-full overflow-hidden">
                     <motion.div 
                       className="h-full bg-gradient-to-r from-blue via-gold to-emerald-500 rounded-full"
                       initial={prefersReducedMotion ? { width: "70%" } : { width: "0%" }}
@@ -777,7 +777,7 @@ export default function KrokLandingPage() {
                       transition={{ duration: 1.5, ease: "easeOut" }}
                     />
                   </div>
-                  <div className="flex justify-between text-[11px] text-zinc-500 font-mono">
+                  <div className="flex justify-between text-[11px] text-mute font-mono">
                     <span>Zostáva: {(LECTIO_DIVINA_TARGET - LECTIO_DIVINA_CURRENT).toLocaleString('sk-SK')} €</span>
                     <span>Duchovný rozvoj diecézy</span>
                   </div>
@@ -800,13 +800,13 @@ export default function KrokLandingPage() {
                   <span className="w-8 h-8 rounded-full bg-red/10 text-red border border-red/20 flex items-center justify-center text-sm font-extrabold font-mono">1</span>
                   <span className="text-xs uppercase tracking-widest text-red font-mono font-extrabold">Predtým: Duchovný hlad</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-white">
+                <h3 className="text-2xl md:text-3xl font-extrabold text-ink">
                   Izolovanosť a neustály hluk sveta
                 </h3>
-                <p className="text-zinc-300 text-base md:text-lg leading-relaxed font-light">
+                <p className="text-ink/80 text-base md:text-lg leading-relaxed font-light">
                   Žijeme v prepojenej dobe, no predsa sa mnohí veriaci cítia hlboko sami. Tradičné formy pastorácie niekedy strácajú oslovujúcu silu. Mladí aj starší zažívajú preťaženie informáciami a hľadajú bezpečné, tiché útočisko, kde by mohli načerpať skutočnú silu.
                 </p>
-                <blockquote className="border-l-2 border-red/30 pl-4 py-1 text-sm text-zinc-500 italic">
+                <blockquote className="border-l-2 border-red/30 pl-4 py-1 text-sm text-mute italic">
                   [Placeholder Príbeh: Zástupný príbeh farníka alebo kňaza o stave, kedy ľudia prichádzajú do kostola mechanicky, ale vo všednom živote im chýba hlbšie osobné spojenie so Svätým Písmom a prežívanie spoločenstva.]
                 </blockquote>
               </div>
@@ -822,13 +822,13 @@ export default function KrokLandingPage() {
                   <span className="w-8 h-8 rounded-full bg-blue/15 text-blue border border-blue/20 flex items-center justify-center text-sm font-extrabold font-mono">2</span>
                   <span className="text-xs uppercase tracking-widest text-blue font-mono font-extrabold">Krok vpred: Založenie spoločenstva</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-white">
+                <h3 className="text-2xl md:text-3xl font-extrabold text-ink">
                   Otvorenie dverí skrze Božie Slovo
                 </h3>
-                <p className="text-zinc-300 text-base md:text-lg leading-relaxed font-light">
+                <p className="text-ink/80 text-base md:text-lg leading-relaxed font-light">
                   Vďaka pastoračnému fondu KROK sme mohli zakúpiť materiály, vyškoliť vedúcich skupiniek a pripraviť metodiku pre systematické rozjímanie Lectio Divina (modlitba Božím Slovom). Krok za krokom sa začali farníci schádzať k tichému čítaniu, hlbokému stíšeniu a zdieľaniu.
                 </p>
-                <blockquote className="border-l-2 border-blue/30 pl-4 py-1 text-sm text-zinc-500 italic">
+                <blockquote className="border-l-2 border-blue/30 pl-4 py-1 text-sm text-mute italic">
                   [Placeholder Príbeh: Zástupný opis priebehu stretávania sa, ako ľudia spoločne čítajú nedeľné evanjelium, učia sa rozjímať v tichu a postupne odbúravajú bariéry ostychu pri rozhovoroch o osobnej viere.]
                 </blockquote>
               </div>
@@ -841,16 +841,16 @@ export default function KrokLandingPage() {
                 }`}
               >
                 <div className="inline-flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-gold/15 text-gold border border-gold/20 flex items-center justify-center text-sm font-extrabold font-mono">3</span>
-                  <span className="text-xs uppercase tracking-widest text-gold font-mono font-extrabold">Potom: Živá cirkev</span>
+                  <span className="w-8 h-8 rounded-full bg-gold/15 text-gold-ink border border-gold/20 flex items-center justify-center text-sm font-extrabold font-mono">3</span>
+                  <span className="text-xs uppercase tracking-widest text-gold-ink font-mono font-extrabold">Potom: Živá cirkev</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-white">
+                <h3 className="text-2xl md:text-3xl font-extrabold text-ink">
                   Krása a radosť spoločného kráčania
                 </h3>
-                <p className="text-zinc-300 text-base md:text-lg leading-relaxed font-light">
+                <p className="text-ink/80 text-base md:text-lg leading-relaxed font-light">
                   Zmena je hmatateľná. Lektoráty a skupinky Lectio Divina prinášajo do spoločenstiev synodálneho ducha, kedy si ľudia navzájom lepšie rozumejú a aktívne sa zapájajú do diania vo farnostiach. Viera prestala byť len nedeľným rituálom, stala sa každodenným spoločne prežívaným dobrodružstvom.
                 </p>
-                <blockquote className="border-l-2 border-gold/30 pl-4 py-1 text-sm text-zinc-500 italic">
+                <blockquote className="border-l-2 border-gold/30 pl-4 py-1 text-sm text-mute italic">
                   [Placeholder Príbeh: Zástupný príbeh reálnych prejavov – rodiny začali čítať Písmo doma pri večernej modlitbe, vzniklo trvalé priateľstvo medzi staršími farníkmi a zapojenou mládežou.]
                 </blockquote>
               </div>

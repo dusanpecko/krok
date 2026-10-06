@@ -8,7 +8,7 @@ import { formatSponsorAmount, type PublicSponsor } from '@/lib/sponsors/types'
 import { trackEvent } from '@/lib/analytics'
 
 /** Tónovanie bielej dlaždice do farby stránky (rovnaký princíp ako Photo na súťaži). */
-const TILE_TINT = 0.1
+const TILE_TINT = 0.03
 
 /**
  * Pás „Podporili nás“ na domovskej stránke: mriežka lôg (ako na lectio.one) – zalamuje sa
@@ -42,17 +42,17 @@ export default function SponsorsStrip() {
   }
 
   return (
-    <section id="podporili-nas" className="relative py-20 md:py-24 bg-blue-deep border-t border-white/5 overflow-hidden">
+    <section id="podporili-nas" className="relative py-20 md:py-24 bg-paper-warm border-t border-blue/10 overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-gold/5 blur-[120px] pointer-events-none rounded-full" />
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="flex items-center justify-center gap-3 text-gold-bright uppercase tracking-widest text-xs font-extrabold mb-4">
+          <div className="flex items-center justify-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-4">
             <span className="w-8 h-[2px] bg-gold rounded-full" />
             <span>Partneri fondu</span>
             <span className="w-8 h-[2px] bg-gold rounded-full" />
           </div>
-          <h2 className="text-3xl sm:text-4xl font-light text-white tracking-tight leading-tight">Podporili nás</h2>
-          <p className="text-zinc-300 text-base font-light leading-relaxed mt-4">
+          <h2 className="text-3xl sm:text-4xl font-light text-ink tracking-tight leading-tight">Podporili nás</h2>
+          <p className="text-ink/80 text-base font-light leading-relaxed mt-4">
             Ďakujeme partnerom, ktorí pomáhajú, aby pastoračné dielo v našej diecéze mohlo rásť.
           </p>
         </div>
@@ -71,7 +71,7 @@ function LogoTile({ sponsor, onClick }: { sponsor: PublicSponsor; onClick: () =>
       type="button"
       onClick={onClick}
       title={sponsor.description ?? sponsor.name}
-      className="group relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden bg-white border border-white/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-gold/20 focus:outline-none focus-visible:ring-4 focus-visible:ring-gold/40 cursor-pointer"
+      className="group relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden bg-white border border-blue/10 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue/10 focus:outline-none focus-visible:ring-4 focus-visible:ring-gold/40 cursor-pointer"
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center p-5 gap-2">
         {sponsor.logo_url ? (
@@ -104,10 +104,10 @@ function LogoGrid({ sponsors, onSelect }: { sponsors: PublicSponsor[]; onSelect:
       <div className={tile}>
         <Link
           href="/kontakt"
-          className="group w-full h-28 sm:h-32 rounded-2xl border-2 border-dashed border-white/20 hover:border-gold/60 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center text-center p-4 transition-colors"
+          className="group w-full h-28 sm:h-32 rounded-2xl border-2 border-dashed border-blue/20 hover:border-gold/60 bg-white hover:bg-blue-soft/50 flex flex-col items-center justify-center text-center p-4 transition-colors"
         >
-          <span className="text-sm font-extrabold text-white group-hover:text-gold-bright">Miesto pre vás</span>
-          <span className="text-xs text-zinc-400 mt-1">Staňte sa partnerom</span>
+          <span className="text-sm font-extrabold text-ink group-hover:text-blue">Miesto pre vás</span>
+          <span className="text-xs text-mute mt-1">Staňte sa partnerom</span>
         </Link>
       </div>
     </div>
@@ -135,23 +135,23 @@ function SponsorModal({ sponsor, onClose }: { sponsor: PublicSponsor; onClose: (
       role="dialog"
       aria-modal="true"
       aria-labelledby="sponsor-modal-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-blue-deep/80 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-md bg-white border border-blue/10 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Zavrieť"
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-blue-deep/70 border border-white/15 text-zinc-300 hover:text-white hover:border-gold/50 flex items-center justify-center cursor-pointer"
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white border border-blue/15 text-ink/80 hover:text-ink hover:border-gold/50 flex items-center justify-center cursor-pointer"
         >
           <X size={16} />
         </button>
 
-        <div className="bg-white p-8 flex items-center justify-center min-h-[160px]">
+        <div className="bg-white p-8 flex items-center justify-center min-h-[160px] border-b border-blue/10">
           {sponsor.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={sponsor.logo_url} alt={sponsor.name} className="max-h-28 max-w-[80%] object-contain" />
@@ -160,15 +160,15 @@ function SponsorModal({ sponsor, onClose }: { sponsor: PublicSponsor; onClose: (
           )}
         </div>
 
-        <div className="p-6 sm:p-8 space-y-4 text-white">
+        <div className="p-6 sm:p-8 space-y-4 text-ink">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold-bright mb-1">Partner fondu KROK</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold-ink mb-1">Partner fondu KROK</p>
             <h3 id="sponsor-modal-title" className="text-2xl font-extrabold leading-tight">{sponsor.name}</h3>
           </div>
-          {sponsor.description && <p className="text-sm text-zinc-300 font-light leading-relaxed">{sponsor.description}</p>}
+          {sponsor.description && <p className="text-sm text-ink/80 font-light leading-relaxed">{sponsor.description}</p>}
           {sponsor.amount != null && (
-            <p className="text-sm text-zinc-300">
-              Výška podpory: <strong className="text-gold-bright font-extrabold">{formatSponsorAmount(sponsor.amount)}</strong>
+            <p className="text-sm text-ink/80">
+              Výška podpory: <strong className="text-gold-ink font-extrabold">{formatSponsorAmount(sponsor.amount)}</strong>
             </p>
           )}
           {sponsor.website_url && (

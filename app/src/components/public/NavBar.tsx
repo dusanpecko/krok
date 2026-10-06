@@ -23,7 +23,9 @@ export default function NavBar() {
   // Stránky so svetlým pozadím hore – navbar na nich musí byť vždy biely.
   // Všetky ostatné majú tmavý hero: navbar je hore priehľadný s bielym textom.
   const lightPages = ['/registracia', '/granty', '/kontrolor']
-  const isDarkHeroPage = !lightPages.some(
+  // Svetlý hero (domovská stránka): navbar je hore priehľadný, ale s tmavým textom a farebným logom
+  const isLightHeroPage = pathname === '/'
+  const isDarkHeroPage = !isLightHeroPage && !lightPages.some(
     (p) => pathname === p || pathname?.startsWith(p + '/')
   )
   const [isOpen, setIsOpen] = useState(false)
@@ -82,7 +84,7 @@ export default function NavBar() {
   }, [session, supabase])
 
   // Dynamické štýly podľa podstránky a stavu skrolovania
-  const navBgClass = isDarkHeroPage
+  const navBgClass = isDarkHeroPage || isLightHeroPage
     ? (scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-2 border-b border-gray-100' : 'bg-transparent py-4')
     : 'bg-white/95 backdrop-blur-md shadow-sm py-2 border-b border-gray-100'
 

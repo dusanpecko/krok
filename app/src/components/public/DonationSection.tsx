@@ -34,7 +34,7 @@ export default function DonationSection({
   kicker = 'Pozvanie',
   title = <>Vstúpte do Veľkej rodiny <br />malých darcov</>,
   subtitle = 'Váš dar je investíciou do duchovného zdravia našej diecézy. Vyberte si výšku daru a staňte sa stabilným pilierom pastoračného fondu KROK.',
-  className = 'bg-white/5',
+  className = 'bg-paper-warm',
 }: Props) {
   // Stav pre darovací formulár
   const [isMonthly, setIsMonthly] = useState(true);
@@ -144,7 +144,7 @@ export default function DonationSection({
     {/* =========================================================================
         DAROVACIA SEKCIA (výber sumy + platobné okno)
         ========================================================================= */}
-    <section id={id} className={`relative py-28 md:py-36 border-t border-white/5 overflow-hidden ${className}`}>
+    <section id={id} className={`relative py-28 md:py-36 border-t border-blue/10 overflow-hidden ${className}`}>
       
       {/* Pozadie */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue/10 blur-[150px] pointer-events-none rounded-full" />
@@ -153,15 +153,15 @@ export default function DonationSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <div className="flex items-center justify-center gap-3 text-gold kicker uppercase tracking-widest text-xs font-extrabold mb-3">
+          <div className="flex items-center justify-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-3">
             <span className="w-8 h-[2px] bg-gold rounded-full" />
             <span>{kicker}</span>
             <span className="w-8 h-[2px] bg-gold rounded-full" />
           </div>
-          <h2 className="text-3xl md:text-5xl font-light text-white leading-tight">
+          <h2 className="text-3xl md:text-5xl font-light text-ink leading-tight">
             {title}
           </h2>
-          <p className="text-zinc-350 text-base md:text-lg mt-4 max-w-2xl mx-auto leading-relaxed font-light">
+          <p className="text-ink/80 text-base md:text-lg mt-4 max-w-2xl mx-auto leading-relaxed font-light">
             {subtitle}
           </p>
         </div>
@@ -169,16 +169,16 @@ export default function DonationSection({
         <div className="max-w-2xl mx-auto">
           
           {/* Platobný a darovací formulár */}
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm">
+          <div className="bg-white border border-blue/10 rounded-3xl p-6 md:p-8 shadow-lg shadow-blue/5">
             
             {/* Prepínač: Mesačne vs. Jednorazovo */}
-            <div className="flex bg-blue-deep/60 p-1 rounded-xl border border-white/5 mb-8">
+            <div className="flex bg-paper p-1 rounded-xl border border-blue/10 mb-8">
               <button
                 onClick={() => { setIsMonthly(true); if (selectedTier === 'custom') setSelectedTier(14); }}
                 className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${
                   isMonthly 
                     ? 'bg-blue text-white shadow-md' 
-                    : 'text-zinc-400 hover:text-white'
+                    : 'text-mute hover:text-ink'
                 }`}
               >
                 Pravidelne (Mesačne)
@@ -188,7 +188,7 @@ export default function DonationSection({
                 className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${
                   !isMonthly 
                     ? 'bg-blue text-white shadow-md' 
-                    : 'text-zinc-400 hover:text-white'
+                    : 'text-mute hover:text-ink'
                 }`}
               >
                 Jednorazovo
@@ -197,7 +197,7 @@ export default function DonationSection({
 
             {/* Výber výšky daru (Tiers) */}
             <div className="space-y-4 mb-6">
-              <label className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold block">
+              <label className="text-xs uppercase tracking-widest text-mute font-extrabold block">
                 Zvoľte výšku Vášho príspevku
               </label>
               
@@ -208,8 +208,8 @@ export default function DonationSection({
                     onClick={() => { setSelectedTier(tier); setCustomAmount(''); }}
                     className={`py-4 rounded-xl text-lg font-extrabold border transition-all ${
                       selectedTier === tier
-                        ? 'bg-gold/15 border-gold text-gold-bright shadow-lg shadow-gold/5'
-                        : 'bg-blue-deep/80 border-white/5 hover:border-white/20 text-zinc-400 hover:text-white'
+                        ? 'bg-gold/15 border-gold text-gold-ink shadow-lg shadow-gold/5'
+                        : 'bg-paper border-blue/10 hover:border-blue/30 text-mute hover:text-ink'
                     }`}
                   >
                     {tier} €
@@ -222,8 +222,8 @@ export default function DonationSection({
                 onClick={() => setSelectedTier('custom')}
                 className={`w-full py-3.5 rounded-xl text-sm font-extrabold border transition-all ${
                   selectedTier === 'custom'
-                    ? 'bg-gold/15 border-gold text-gold-bright'
-                    : 'bg-blue-deep/80 border-white/5 text-zinc-400 hover:text-white'
+                    ? 'bg-gold/15 border-gold text-gold-ink'
+                    : 'bg-paper border-blue/10 text-mute hover:text-ink'
                 }`}
               >
                 Zadať vlastnú sumu
@@ -244,10 +244,10 @@ export default function DonationSection({
                         value={customAmount}
                         onChange={(e) => setCustomAmount(e.target.value)}
                         placeholder="Zadajte ľubovoľnú sumu"
-                        className="w-full bg-blue-deep border border-white/10 focus:border-gold-bright focus:ring-1 focus:ring-gold-bright rounded-xl py-3 px-4 text-white text-base outline-none pr-12 font-mono"
+                        className="w-full bg-white border border-blue/10 focus:border-blue focus:ring-1 focus:ring-blue rounded-xl py-3 px-4 text-ink text-base outline-none pr-12 font-mono"
                         min="1"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-extrabold">€</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-mute font-extrabold">€</span>
                     </div>
                   </motion.div>
                 )}
@@ -256,8 +256,8 @@ export default function DonationSection({
 
             {/* Meno darcu (nepovinné) */}
             <div className="space-y-3 mb-8">
-              <p className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold">
-                Vaše údaje <span className="normal-case tracking-normal font-medium text-zinc-500">(nepovinné – môžete darovať aj anonymne)</span>
+              <p className="text-xs uppercase tracking-widest text-mute font-extrabold">
+                Vaše údaje <span className="normal-case tracking-normal font-medium text-mute">(nepovinné – môžete darovať aj anonymne)</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
@@ -269,7 +269,7 @@ export default function DonationSection({
                   placeholder="Meno"
                   aria-label="Meno"
                   autoComplete="given-name"
-                  className="w-full bg-blue-deep border border-white/10 focus:border-blue rounded-xl py-3.5 px-4 text-white text-sm outline-none transition-colors"
+                  className="w-full bg-white border border-blue/10 focus:border-blue rounded-xl py-3.5 px-4 text-ink text-sm outline-none transition-colors"
                 />
                 <input
                   id={`${id}-last-name`}
@@ -280,7 +280,7 @@ export default function DonationSection({
                   placeholder="Priezvisko"
                   aria-label="Priezvisko"
                   autoComplete="family-name"
-                  className="w-full bg-blue-deep border border-white/10 focus:border-blue rounded-xl py-3.5 px-4 text-white text-sm outline-none transition-colors"
+                  className="w-full bg-white border border-blue/10 focus:border-blue rounded-xl py-3.5 px-4 text-ink text-sm outline-none transition-colors"
                 />
               </div>
               {parishes.length > 0 && (
@@ -289,11 +289,11 @@ export default function DonationSection({
                   value={parishId}
                   onChange={(e) => setParishId(e.target.value)}
                   aria-label="Farnosť"
-                  className={`w-full bg-blue-deep border border-white/10 focus:border-blue rounded-xl py-3.5 px-4 text-sm outline-none transition-colors cursor-pointer ${parishId ? 'text-white' : 'text-zinc-500'}`}
+                  className={`w-full bg-white border border-blue/10 focus:border-blue rounded-xl py-3.5 px-4 text-sm outline-none transition-colors cursor-pointer ${parishId ? 'text-ink' : 'text-mute'}`}
                 >
                   <option value="">Farnosť (nepovinné)</option>
                   {parishes.map((p) => (
-                    <option key={p.id} value={p.id} className="text-white">{p.name}</option>
+                    <option key={p.id} value={p.id} className="text-ink">{p.name}</option>
                   ))}
                 </select>
               )}
@@ -310,35 +310,35 @@ export default function DonationSection({
             </button>
 
             {/* Sekundárne alternatívy pod formulárom */}
-            <div className="mt-8 pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
+            <div className="mt-8 pt-6 border-t border-blue/10 grid grid-cols-2 gap-4">
               
               {/* Možnosť 1: 2% z dane */}
               <button 
                 onClick={() => {
                   alert("Informácie k darovaniu 2% z Vašej dane z príjmu. Údaje priebežného prijímateľa: Pastoračný fond KROK, Žilinská diecéza.");
                 }}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-left transition-all"
+                className="flex items-center gap-3 p-3 rounded-xl bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 text-left transition-all"
               >
-                <div className="w-10 h-10 bg-blue-deep text-zinc-400 rounded-lg flex items-center justify-center border border-white/10 shrink-0">
+                <div className="w-10 h-10 bg-blue-soft text-blue rounded-lg flex items-center justify-center border border-blue/10 shrink-0">
                   <FileText size={18} />
                 </div>
                 <div>
-                  <span className="text-xs text-white font-extrabold block">Pravidelný donorský program</span>
-                  <span className="text-[10px] text-zinc-500 block">Stiahnuť vyhlásenie</span>
+                  <span className="text-xs text-ink font-extrabold block">Pravidelný donorský program</span>
+                  <span className="text-[10px] text-mute block">Stiahnuť vyhlásenie</span>
                 </div>
               </button>
 
               {/* Možnosť 2: Iné formy podpory */}
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-left transition-all"
+                className="flex items-center gap-3 p-3 rounded-xl bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 text-left transition-all"
               >
-                <div className="w-10 h-10 bg-blue-deep text-zinc-400 rounded-lg flex items-center justify-center border border-white/10 shrink-0">
+                <div className="w-10 h-10 bg-blue-soft text-blue rounded-lg flex items-center justify-center border border-blue/10 shrink-0">
                   <QrCode size={18} />
                 </div>
                 <div>
-                  <span className="text-xs text-white font-extrabold block">Bankový prevod / QR</span>
-                  <span className="text-[10px] text-zinc-500 block">Zobraziť IBAN a kód</span>
+                  <span className="text-xs text-ink font-extrabold block">Bankový prevod / QR</span>
+                  <span className="text-[10px] text-mute block">Zobraziť IBAN a kód</span>
                 </div>
               </button>
 
@@ -364,7 +364,7 @@ export default function DonationSection({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsModalOpen(false)}
-            className="absolute inset-0 bg-blue-deep/90 backdrop-blur-sm"
+            className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
           />
 
           {/* Samotné telo modálu */}
@@ -372,18 +372,18 @@ export default function DonationSection({
             initial={prefersReducedMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-blue-deep border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl z-10"
+            className="relative bg-white border border-blue/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl z-10"
           >
             
             {/* Hlavička modálu */}
-            <div className="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
+            <div className="p-6 border-b border-blue/10 bg-paper-warm flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <Heart className="text-gold-bright fill-gold-bright" size={24} />
-                <h3 className="text-xl font-extrabold text-white">Ďakujeme za Váš KROK</h3>
+                <Heart className="text-gold-ink fill-gold-bright" size={24} />
+                <h3 className="text-xl font-extrabold text-ink">Ďakujeme za Váš KROK</h3>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white"
+                className="w-8 h-8 rounded-full bg-white border border-blue/10 flex items-center justify-center text-mute hover:text-ink"
               >
                 ✕
               </button>
@@ -392,21 +392,21 @@ export default function DonationSection({
             {/* Telo modálu */}
             <div className="p-6 space-y-6">
               
-              <p className="text-zinc-300 text-sm leading-relaxed font-light">
+              <p className="text-ink/80 text-sm leading-relaxed font-light">
                 Ste krôčik od vstupu do našej rodiny darcov. Zaplaťte bezpečne kartou online, alebo pošlite dar priamo cez Váš internet banking pomocou platobných údajov nižšie.
               </p>
 
               {/* Zobrazenie platobnej sumy */}
-              <div className="p-4 rounded-2xl bg-white/5 text-center border border-white/10 space-y-1">
-                <div className="text-xs text-zinc-500 uppercase tracking-widest font-mono font-extrabold">Suma k úhrade</div>
-                <div className="text-3xl font-extrabold text-white">
+              <div className="p-4 rounded-2xl bg-white text-center border border-blue/10 space-y-1">
+                <div className="text-xs text-mute uppercase tracking-widest font-mono font-extrabold">Suma k úhrade</div>
+                <div className="text-3xl font-extrabold text-ink">
                   {cardAmountDisplay} {isMonthly && '/ mesačne'}
                 </div>
               </div>
 
               {/* Platba kartou online (Mollie) */}
               <div className="space-y-3 p-4 rounded-2xl bg-gold/5 border border-gold/20">
-                <label htmlFor={`${id}-email`} className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold block">
+                <label htmlFor={`${id}-email`} className="text-xs uppercase tracking-widest text-mute font-extrabold block">
                   Váš e-mail (pre potvrdenie platby)
                 </label>
                 <input
@@ -416,7 +416,7 @@ export default function DonationSection({
                   onChange={(e) => setDonorEmail(e.target.value)}
                   placeholder="meno@priklad.sk"
                   autoComplete="email"
-                  className="w-full bg-blue-deep border border-white/10 focus:border-gold-bright rounded-xl py-3 px-4 text-white text-sm outline-none transition-colors"
+                  className="w-full bg-white border border-blue/10 focus:border-blue rounded-xl py-3 px-4 text-ink text-sm outline-none transition-colors"
                 />
                 {isMonthly && (
                   <RecurringChoice
@@ -427,7 +427,7 @@ export default function DonationSection({
                   />
                 )}
                 {payError && (
-                  <div className="flex items-start gap-2 text-xs text-red-200">
+                  <div className="flex items-start gap-2 text-xs text-red">
                     <AlertCircle size={14} className="shrink-0 mt-0.5" /> {payError}
                   </div>
                 )}
@@ -439,13 +439,13 @@ export default function DonationSection({
                   {payLoading ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
                   {payLoading ? 'Presmerúvame na platobnú bránu…' : `Zaplatiť kartou ${cardAmountDisplay}${isMonthly ? ' mesačne' : ''}`}
                 </button>
-                <p className="text-[10px] text-zinc-500 text-center">
+                <p className="text-[10px] text-mute text-center">
                   Karta, Apple Pay, Google Pay – cez Mollie. {isMonthly && 'Pravidelný dar môžete kedykoľvek zrušiť vo svojom profile.'}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-zinc-500 font-extrabold">
-                <div className="flex-1 h-px bg-white/10" /> alebo prevodom <div className="flex-1 h-px bg-white/10" />
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-mute font-extrabold">
+                <div className="flex-1 h-px bg-blue-soft/60" /> alebo prevodom <div className="flex-1 h-px bg-blue-soft/60" />
               </div>
 
               {/* Prevodné údaje */}
@@ -454,16 +454,16 @@ export default function DonationSection({
                 {/* IBAN */}
                 <div className="space-y-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500 font-mono">Číslo účtu (IBAN)</span>
+                    <span className="text-xs text-mute font-mono">Číslo účtu (IBAN)</span>
                     <button 
                       onClick={() => copyToClipboard(KROK_IBAN)}
-                      className="text-xs text-gold-bright hover:text-gold flex items-center gap-1.5 font-medium"
+                      className="text-xs text-gold-ink hover:text-blue flex items-center gap-1.5 font-medium"
                     >
                       <Copy size={12} />
                       {copiedIBAN ? 'Skopírované!' : 'Kopírovať'}
                     </button>
                   </div>
-                  <div className="p-3.5 bg-white/5 border border-white/10 rounded-xl text-sm font-mono text-white select-all">
+                  <div className="p-3.5 bg-white border border-blue/10 rounded-xl text-sm font-mono text-ink select-all">
                     {KROK_IBAN_FORMATTED}
                   </div>
                 </div>
@@ -473,15 +473,15 @@ export default function DonationSection({
                   
                   {/* Variabilný symbol – vlastný VS darcu z jeho profilu */}
                   <div>
-                    <span className="text-xs text-zinc-500 font-mono block mb-1">Variabilný symbol</span>
+                    <span className="text-xs text-mute font-mono block mb-1">Variabilný symbol</span>
                     {myVS ? (
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-sm font-mono text-white select-all">
+                      <div className="p-3 bg-white border border-blue/10 rounded-xl text-sm font-mono text-ink select-all">
                         {myVS}
                       </div>
                     ) : (
                       <a
                         href={session ? '/profil' : '/registracia'}
-                        className="block p-3 bg-white/5 border border-white/10 rounded-xl text-xs text-zinc-300 hover:text-white hover:border-gold/40 transition-colors leading-snug"
+                        className="block p-3 bg-white border border-blue/10 rounded-xl text-xs text-ink/80 hover:text-ink hover:border-gold/40 transition-colors leading-snug"
                       >
                         {session
                           ? 'Váš VS nájdete v profile →'
@@ -492,8 +492,8 @@ export default function DonationSection({
 
                   {/* Konštantný symbol */}
                   <div>
-                    <span className="text-xs text-zinc-500 font-mono block mb-1">Konštantný symbol</span>
-                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-sm font-mono text-zinc-300">
+                    <span className="text-xs text-mute font-mono block mb-1">Konštantný symbol</span>
+                    <div className="p-3 bg-white border border-blue/10 rounded-xl text-sm font-mono text-ink/80">
                       0558
                     </div>
                   </div>
@@ -504,12 +504,12 @@ export default function DonationSection({
 
               {/* PAY by square QR kód – reálne platobné údaje (IBAN, suma, VS, KS) */}
               <div className="pt-2 flex flex-col items-center justify-center space-y-3">
-                <div className="relative w-40 h-40 bg-white p-1.5 rounded-2xl border border-zinc-800 flex items-center justify-center">
+                <div className="relative w-40 h-40 bg-white p-1.5 rounded-2xl border border-blue/10 flex items-center justify-center">
                   {qrDataUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={qrDataUrl} alt="PAY by square QR kód na úhradu daru" className="w-full h-full object-contain" />
                   ) : (
-                    <QrCode size={110} className="text-zinc-300 animate-pulse" />
+                    <QrCode size={110} className="text-ink/80 animate-pulse" />
                   )}
                   {/* Tiny watermark logotypu v strede QR kódu */}
                   <div className="absolute w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-zinc-200 overflow-hidden p-1">
@@ -523,8 +523,8 @@ export default function DonationSection({
                   </div>
                 </div>
                 <div className="text-center">
-                  <span className="text-xs text-white font-bold block">Naskenujte v bankovej aplikácii (PAY by square)</span>
-                  <span className="text-[10px] text-zinc-500">
+                  <span className="text-xs text-ink font-bold block">Naskenujte v bankovej aplikácii (PAY by square)</span>
+                  <span className="text-[10px] text-mute">
                     {isMonthly
                       ? 'QR nastaví príjemcu, sumu a váš VS – v banke ho uložte ako trvalý príkaz (mesačne)'
                       : 'QR nastaví príjemcu, sumu a váš variabilný symbol'}
@@ -535,11 +535,11 @@ export default function DonationSection({
             </div>
 
             {/* Päta modálu */}
-            <div className="p-6 bg-white/5 border-t border-white/10 flex justify-between items-center text-xs text-zinc-500">
+            <div className="p-6 bg-paper-warm border-t border-blue/10 flex justify-between items-center text-xs text-mute">
               <span>Platba je bezpečná a transparentná</span>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="px-5 py-2.5 bg-white/10 text-zinc-300 font-bold rounded-xl border border-white/10 hover:bg-white/20 hover:text-white"
+                className="px-5 py-2.5 bg-blue-soft/60 text-ink/80 font-bold rounded-xl border border-blue/10 hover:bg-blue-soft hover:text-ink"
               >
                 Rozumiem, hotovo
               </button>

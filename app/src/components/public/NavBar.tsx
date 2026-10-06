@@ -22,12 +22,10 @@ const navLinks = [
 
 export default function NavBar() {
   const pathname = usePathname()
-  // Stránky so svetlým pozadím hore – navbar na nich musí byť vždy biely.
-  // Všetky ostatné majú tmavý hero: navbar je hore priehľadný s bielym textom.
-  const lightPages = ['/registracia', '/granty', '/kontrolor']
-  // Svetlý hero (domovská stránka): navbar je hore priehľadný, ale s tmavým textom a farebným logom
-  const isLightHeroPage = pathname === '/'
-  const isDarkHeroPage = !isLightHeroPage && !lightPages.some(
+  // Celý web je svetlý. Na stránkach s úvodnou sekciou je navbar hore priehľadný,
+  // na formulárových stránkach (registrácia, granty) hneď biely.
+  const solidPages = ['/registracia', '/granty', '/kontrolor']
+  const transparentTop = !solidPages.some(
     (p) => pathname === p || pathname?.startsWith(p + '/')
   )
   const [isOpen, setIsOpen] = useState(false)
@@ -59,21 +57,12 @@ export default function NavBar() {
   }, [session?.user?.id])
 
   // Dynamické štýly podľa podstránky a stavu skrolovania
-  const navBgClass = isDarkHeroPage || isLightHeroPage
-    ? (scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-2 border-b border-gray-100' : 'bg-transparent py-4')
+  const navBgClass = transparentTop && !scrolled
+    ? 'bg-transparent py-4'
     : 'bg-white/95 backdrop-blur-md shadow-sm py-2 border-b border-gray-100'
 
-  const logoVariant = isDarkHeroPage ? (scrolled ? 'color' : 'white') : 'color'
-
-  const linkClass = isDarkHeroPage && !scrolled
-    ? 'text-sm font-medium text-white/90 hover:text-white transition-colors'
-    : 'text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors'
-
-  const loginLinkClass = isDarkHeroPage && !scrolled
-    ? 'text-sm font-medium text-white/80 hover:text-white transition-colors'
-    : 'text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors'
-
-  const mobileMenuBtnClass = isDarkHeroPage && !scrolled ? 'text-white p-2' : 'text-gray-700 p-2'
+  const linkClass = 'text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors'
+  const loginLinkClass = 'text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors'
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBgClass}`}>
@@ -81,7 +70,7 @@ export default function NavBar() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center group">
-            <KrokLogo variant={logoVariant} height={36} />
+            <KrokLogo variant="color" height={36} />
           </Link>
  
           {/* Desktop Links */}
@@ -105,7 +94,7 @@ export default function NavBar() {
             </Link>
  
             {session ? (
-              <AccountMenu menu={accountMenu} light={isDarkHeroPage && !scrolled} />
+              <AccountMenu menu={accountMenu} />
             ) : (
               <Link 
                 href="/prihlasenie"
@@ -120,7 +109,7 @@ export default function NavBar() {
           <div className="xl:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={mobileMenuBtnClass}
+              className="text-gray-700 p-2"
             >
               {isOpen ? <X size={28} /> : <Menu size={28} />}
             </button>

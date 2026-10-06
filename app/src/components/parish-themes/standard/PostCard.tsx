@@ -13,18 +13,18 @@ export default function PostCard({ post, href }: { post: PublicPostSummary; href
         <img src={post.image_url} alt="" className="w-full aspect-video object-cover" />
       )}
       <div className="p-5 flex-1 flex flex-col">
-        <p className="text-xs text-blue-100/50 font-bold flex items-center gap-2 mb-2">
-          {post.pinned && <Pin size={12} className="text-gold" />}
+        <p className="text-xs text-mute font-bold flex items-center gap-2 mb-2">
+          {post.pinned && <Pin size={12} className="text-gold-ink" />}
           {meta}
-          {post.attachment_url && <FileText size={12} className="text-gold" />}
+          {post.attachment_url && <FileText size={12} className="text-gold-ink" />}
         </p>
-        <h3 className="font-extrabold leading-snug group-hover:text-gold-bright">{post.title}</h3>
+        <h3 className="font-extrabold leading-snug group-hover:text-blue">{post.title}</h3>
         {post.event_at && (
-          <p className="text-sm text-gold-bright mt-1 flex items-center gap-1.5 first-letter:uppercase">
+          <p className="text-sm text-blue mt-1 flex items-center gap-1.5 first-letter:uppercase">
             <CalendarDays size={14} /> {formatDateTime(post.event_at)}
           </p>
         )}
-        {post.excerpt && <p className="text-sm text-blue-100/70 mt-2 line-clamp-3">{post.excerpt}</p>}
+        {post.excerpt && <p className="text-sm text-mute mt-2 line-clamp-3">{post.excerpt}</p>}
       </div>
     </Link>
   )

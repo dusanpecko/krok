@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 function Kicker({ children, center = false }: { children: React.ReactNode; center?: boolean }) {
   return (
     <div
-      className={`flex items-center gap-3 text-gold-bright uppercase tracking-widest text-xs font-extrabold mb-4 ${
+      className={`flex items-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-4 ${
         center ? 'justify-center' : ''
       }`}
     >
@@ -108,7 +108,7 @@ const spravnaRada = [
 
 export default function ONasPage() {
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep min-h-screen text-white pb-24 overflow-hidden">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm min-h-screen text-ink pb-24 overflow-hidden">
       {/* Dekoratívne svetelné pozadie */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
 
@@ -118,14 +118,14 @@ export default function ONasPage() {
             ===================================================== */}
         <header className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center mb-24">
           <div className="lg:col-span-7">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-gold-bright mb-4">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-blue mb-4">
               Kto sme
             </p>
             <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-6 leading-tight">
               O nás
             </h1>
-            <p className="text-blue-100/80 text-base sm:text-lg leading-relaxed mb-5">
-              <strong className="text-white font-bold">
+            <p className="text-mute text-base sm:text-lg leading-relaxed mb-5">
+              <strong className="text-ink font-bold">
                 KROK – Pastoračný fond Žilinskej diecézy
               </strong>{' '}
               bol zriadený 1. augusta 2019 z iniciatívy otca biskupa Mons. Tomáša
@@ -133,7 +133,7 @@ export default function ONasPage() {
               poslaním je finančne i metodicky zastrešovať a rozvíjať pastoračné
               aktivity na území celej našej diecézy.
             </p>
-            <p className="text-blue-100/70 text-base sm:text-lg leading-relaxed">
+            <p className="text-mute text-base sm:text-lg leading-relaxed">
               Sme tu pre všetkých, ktorí túžia kráčať vpred a budovať duchovné
               hodnoty v našom regióne. Každý váš dar je pre nás dôležitým krokom
               na tejto spoločnej ceste.
@@ -158,7 +158,7 @@ export default function ONasPage() {
             <h2 className="text-3xl sm:text-4xl font-light leading-tight mb-4">
               Hodnoty, ktoré nás vedú
             </h2>
-            <p className="text-blue-100/70 leading-relaxed">
+            <p className="text-mute leading-relaxed">
               Pastoračný fond KROK vznikol ako živá odpoveď na potrebu sprevádzať
               ľudí na ich ceste viery. Názov KROK v sebe ukrýva štyri základné
               hodnoty, ktoré sú podstatou všetkého, čo robíme:
@@ -169,20 +169,20 @@ export default function ONasPage() {
             {hodnoty.map((h) => (
               <div
                 key={h.name}
-                className="group bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-gold/40 rounded-2xl p-6 transition-all"
+                className="group bg-white/[0.04] hover:bg-white/[0.08] border border-blue/10 hover:border-gold/40 rounded-2xl p-6 transition-all"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <span className="text-4xl font-extrabold text-gold">
+                  <span className="text-4xl font-extrabold text-gold-ink">
                     {h.letter}
                   </span>
                   <div className="w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-                    <h.icon size={20} className="text-gold-bright" />
+                    <h.icon size={20} className="text-gold-ink" />
                   </div>
                 </div>
-                <h3 className="text-lg font-extrabold text-white mb-2">
+                <h3 className="text-lg font-extrabold text-ink mb-2">
                   {h.name}
                 </h3>
-                <p className="text-sm text-blue-100/60 leading-relaxed">
+                <p className="text-sm text-mute leading-relaxed">
                   {h.desc}
                 </p>
               </div>
@@ -207,15 +207,15 @@ export default function ONasPage() {
               <h2 className="text-3xl sm:text-4xl font-light leading-tight mb-6">
                 Poslanie
               </h2>
-              <p className="text-blue-100/80 text-base sm:text-lg leading-relaxed mb-5">
+              <p className="text-mute text-base sm:text-lg leading-relaxed mb-5">
                 Budujeme{' '}
-                <strong className="text-gold-bright font-bold">
+                <strong className="text-gold-ink font-bold">
                   rodinu malých darcov s veľkým srdcom
                 </strong>
                 , pretože veríme, že každé gesto lásky prehlbuje prítomnosť Boha
                 v našom svete.
               </p>
-              <p className="text-blue-100/70 text-base sm:text-lg leading-relaxed">
+              <p className="text-mute text-base sm:text-lg leading-relaxed">
                 Kráčame s dobou – využívame moderné prostriedky, aby sme chránili
                 večné hodnoty. Naším cieľom nie je len jednorazová pomoc, ale
                 budovanie udržateľného zázemia pre rast živej Cirkvi.
@@ -233,7 +233,7 @@ export default function ONasPage() {
             <h2 className="text-3xl sm:text-4xl font-light leading-tight mb-4">
               Naše piliere
             </h2>
-            <p className="text-blue-100/70 leading-relaxed">
+            <p className="text-mute leading-relaxed">
               Zameriavame sa na oblasti, kde živá viera prináša ovocie pre celú
               spoločnosť:
             </p>
@@ -243,18 +243,18 @@ export default function ONasPage() {
             {piliere.map((p) => (
               <div
                 key={p.title}
-                className="bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 hover:border-gold/30 rounded-2xl overflow-hidden flex flex-col transition-all"
+                className="bg-white/[0.04] hover:bg-white/[0.07] border border-blue/10 hover:border-gold/30 rounded-2xl overflow-hidden flex flex-col transition-all"
               >
                 <div className="p-6 sm:p-7 flex-1">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-gold/15 flex items-center justify-center flex-shrink-0">
-                      <p.icon size={20} className="text-gold-bright" />
+                      <p.icon size={20} className="text-gold-ink" />
                     </div>
-                    <h3 className="text-lg font-extrabold text-white">
+                    <h3 className="text-lg font-extrabold text-ink">
                       {p.title}
                     </h3>
                   </div>
-                  <p className="text-sm text-blue-100/60 leading-relaxed">
+                  <p className="text-sm text-mute leading-relaxed">
                     {p.desc}
                   </p>
                 </div>
@@ -272,7 +272,7 @@ export default function ONasPage() {
             <h2 className="text-3xl sm:text-4xl font-light leading-tight mb-4">
               Správa fondu
             </h2>
-            <p className="text-blue-100/70 leading-relaxed">
+            <p className="text-mute leading-relaxed">
               Na transparentnosť a správne smerovanie fondu KROK dohliada tím
               ľudí, ktorým záleží na rozvoji pastoračných aktivít v našej
               diecéze.
@@ -281,16 +281,16 @@ export default function ONasPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Kancelária fondu */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8">
+            <div className="bg-white/[0.04] border border-blue/10 rounded-2xl p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-11 h-11 rounded-xl bg-gold/15 flex items-center justify-center">
-                  <Briefcase size={22} className="text-gold-bright" />
+                  <Briefcase size={22} className="text-gold-ink" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white">
+                <h3 className="text-xl font-extrabold text-ink">
                   Kancelária fondu
                 </h3>
               </div>
-              <p className="text-sm text-blue-100/60 leading-relaxed mb-6">
+              <p className="text-sm text-mute leading-relaxed mb-6">
                 Každodenný chod fondu, komunikácia s darcami a príprava projektov.
               </p>
               <ul className="space-y-4">
@@ -298,10 +298,10 @@ export default function ONasPage() {
                   <li key={osoba.name} className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0 mt-2" />
                     <span>
-                      <span className="block text-[10px] font-black uppercase tracking-widest text-gold-bright/80">
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-blue/80">
                         {osoba.role}
                       </span>
-                      <span className="text-sm text-blue-50 font-medium">{osoba.name}</span>
+                      <span className="text-sm text-ink/85 font-medium">{osoba.name}</span>
                     </span>
                   </li>
                 ))}
@@ -309,16 +309,16 @@ export default function ONasPage() {
             </div>
 
             {/* Správna rada */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8">
+            <div className="bg-white/[0.04] border border-blue/10 rounded-2xl p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-11 h-11 rounded-xl bg-gold/15 flex items-center justify-center">
-                  <Users size={22} className="text-gold-bright" />
+                  <Users size={22} className="text-gold-ink" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white">
+                <h3 className="text-xl font-extrabold text-ink">
                   Správna rada
                 </h3>
               </div>
-              <p className="text-sm text-blue-100/60 leading-relaxed mb-6">
+              <p className="text-sm text-mute leading-relaxed mb-6">
                 Zabezpečuje efektívne spravovanie finančných prostriedkov,
                 komunikáciu s darcami a technické fungovanie fondu.
               </p>
@@ -326,7 +326,7 @@ export default function ONasPage() {
                 {spravnaRada.map((meno) => (
                   <li key={meno} className="flex items-center gap-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
-                    <span className="text-sm text-blue-50 font-medium">
+                    <span className="text-sm text-ink/85 font-medium">
                       {meno}
                     </span>
                   </li>
@@ -335,23 +335,23 @@ export default function ONasPage() {
             </div>
 
             {/* Dozorná rada */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8">
+            <div className="bg-white/[0.04] border border-blue/10 rounded-2xl p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-11 h-11 rounded-xl bg-gold/15 flex items-center justify-center">
-                  <ShieldCheck size={22} className="text-gold-bright" />
+                  <ShieldCheck size={22} className="text-gold-ink" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white">
+                <h3 className="text-xl font-extrabold text-ink">
                   Dozorná rada
                 </h3>
               </div>
-              <p className="text-sm text-blue-100/60 leading-relaxed mb-6">
+              <p className="text-sm text-mute leading-relaxed mb-6">
                 Dohliada na čistotu procesov a správnosť hospodárenia, aby ste si
                 mohli byť istí, že každý váš dar je použitý presne tam, kde má.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-center gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
-                  <span className="text-sm text-blue-50 font-medium">
+                  <span className="text-sm text-ink/85 font-medium">
                     Peter Dubec, Mgr., Ing.
                   </span>
                 </li>
@@ -362,13 +362,13 @@ export default function ONasPage() {
           {/* Zriaďovateľ */}
           <div className="bg-gradient-to-r from-gold/10 via-white/[0.04] to-white/[0.04] border border-gold/25 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="w-11 h-11 rounded-xl bg-gold/15 flex items-center justify-center flex-shrink-0">
-              <Church size={22} className="text-gold-bright" />
+              <Church size={22} className="text-gold-ink" />
             </div>
             <div>
-              <h3 className="text-sm font-black uppercase tracking-widest text-gold-bright mb-1">
+              <h3 className="text-sm font-black uppercase tracking-widest text-blue mb-1">
                 Zriaďovateľ
               </h3>
-              <p className="text-lg font-bold text-white">
+              <p className="text-lg font-bold text-ink">
                 Mons. Tomáš Galis, žilinský biskup
               </p>
             </div>
@@ -379,7 +379,7 @@ export default function ONasPage() {
             CITÁT BISKUPA
             ===================================================== */}
         <section className="mb-24">
-          <div className="relative bg-white/[0.04] border border-white/10 rounded-3xl p-8 sm:p-12 overflow-hidden">
+          <div className="relative bg-white/[0.04] border border-blue/10 rounded-3xl p-8 sm:p-12 overflow-hidden">
             {/* Dekoratívna žiara */}
             <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-gold/10 blur-[100px] pointer-events-none rounded-full" />
 
@@ -397,7 +397,7 @@ export default function ONasPage() {
               {/* Text citátu */}
               <div className="lg:col-span-8">
                 <Quote size={36} className="text-gold/40 mb-5" />
-                <blockquote className="space-y-4 text-blue-50/90 text-base sm:text-lg leading-relaxed italic font-light">
+                <blockquote className="space-y-4 text-ink/85 text-base sm:text-lg leading-relaxed italic font-light">
                   <p>Drahí priatelia, bratia a sestry,</p>
                   <p>
                     každý veľký cieľ sa začína tým najjednoduchším – prvým
@@ -414,7 +414,7 @@ export default function ONasPage() {
                 </blockquote>
                 <div className="mt-6 flex items-center gap-3">
                   <span className="w-10 h-[2px] bg-gold rounded-full" />
-                  <span className="text-sm font-extrabold uppercase tracking-widest text-gold-bright">
+                  <span className="text-sm font-extrabold uppercase tracking-widest text-blue">
                     Tomáš Galis, žilinský biskup
                   </span>
                 </div>
@@ -430,7 +430,7 @@ export default function ONasPage() {
           <h2 className="text-2xl sm:text-3xl font-light leading-tight mb-4">
             Pridajte sa k nám na spoločnej ceste
           </h2>
-          <p className="text-blue-100/70 leading-relaxed mb-8">
+          <p className="text-mute leading-relaxed mb-8">
             Každý dar – malý či veľký – je krokom, ktorý posúva pastoračné dielo
             našej diecézy vpred.
           </p>
@@ -447,7 +447,7 @@ export default function ONasPage() {
             </Link>
             <Link
               href="/kontakt"
-              className="px-8 py-4 bg-white/5 hover:bg-white/10 text-blue-50 rounded-xl text-base font-bold transition-all flex items-center justify-center border border-white/10"
+              className="px-8 py-4 bg-white hover:bg-blue-soft/50 text-ink/85 rounded-xl text-base font-bold transition-all flex items-center justify-center border border-blue/10"
             >
               Kontaktujte nás
             </Link>

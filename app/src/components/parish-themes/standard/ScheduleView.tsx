@@ -18,11 +18,11 @@ function Rows({ items }: { items: PublicScheduleItem[] }) {
     <ul className="space-y-1.5">
       {items.map((it, i) => (
         <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-sm">
-          <span className="font-extrabold text-white tabular-nums">{timeText(it)}</span>
-          {it.service_type !== 'mass' && <span className="text-gold-bright text-xs font-black uppercase tracking-wide">{SERVICE_LABEL[it.service_type]}</span>}
-          {it.time_from && it.relative_note && <span className="text-blue-100/60 text-xs">({it.relative_note})</span>}
-          {it.place && <span className="text-blue-100/70">{it.place}</span>}
-          {it.note && <span className="text-blue-100/50 text-xs">{it.note}</span>}
+          <span className="font-extrabold text-ink tabular-nums">{timeText(it)}</span>
+          {it.service_type !== 'mass' && <span className="text-blue text-xs font-black uppercase tracking-wide">{SERVICE_LABEL[it.service_type]}</span>}
+          {it.time_from && it.relative_note && <span className="text-mute text-xs">({it.relative_note})</span>}
+          {it.place && <span className="text-mute">{it.place}</span>}
+          {it.note && <span className="text-mute text-xs">{it.note}</span>}
         </li>
       ))}
     </ul>
@@ -45,27 +45,27 @@ function ScheduleTable({ schedule }: { schedule: PublicSchedule }) {
     <div className="space-y-6">
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {days.map((d) => (
-          <div key={d.value} className={`p-4 rounded-2xl border ${d.value === 0 ? 'bg-gold/10 border-gold/30' : 'bg-white/[0.04] border-white/10'}`}>
-            <p className={`text-xs font-black uppercase tracking-widest mb-2 ${d.value === 0 ? 'text-gold-bright' : 'text-blue-100/60'}`}>{d.label}</p>
+          <div key={d.value} className={`p-4 rounded-2xl border ${d.value === 0 ? 'bg-gold/10 border-gold/30' : 'bg-white/[0.04] border-blue/10'}`}>
+            <p className={`text-xs font-black uppercase tracking-widest mb-2 ${d.value === 0 ? 'text-gold-ink' : 'text-mute'}`}>{d.label}</p>
             <Rows items={d.items} />
           </div>
         ))}
         {labels.map((l) => (
-          <div key={l} className="p-4 rounded-2xl border bg-white/[0.04] border-white/10">
-            <p className="text-xs font-black uppercase tracking-widest mb-2 text-blue-100/60">{l || 'Ďalšie'}</p>
+          <div key={l} className="p-4 rounded-2xl border bg-white/[0.04] border-blue/10">
+            <p className="text-xs font-black uppercase tracking-widest mb-2 text-mute">{l || 'Ďalšie'}</p>
             <Rows items={other.filter((i) => (i.day_label ?? '') === l).sort(byTime)} />
           </div>
         ))}
       </div>
       {firstFriday.length > 0 && (
-        <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.04]">
-          <p className="text-xs font-black uppercase tracking-widest mb-3 text-gold-bright">Prvý piatok v mesiaci</p>
+        <div className="p-5 rounded-2xl border border-blue/10 bg-white/[0.04]">
+          <p className="text-xs font-black uppercase tracking-widest mb-3 text-blue">Prvý piatok v mesiaci</p>
           <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
             {DAYS.map((d) => ({ ...d, items: firstFriday.filter((i) => i.day_of_week === d.value).sort(byTime) }))
               .filter((d) => d.items.length)
               .map((d) => (
                 <div key={d.value}>
-                  <p className="text-xs font-bold text-blue-100/60 mb-1">{d.label}</p>
+                  <p className="text-xs font-bold text-mute mb-1">{d.label}</p>
                   <Rows items={d.items} />
                 </div>
               ))}
@@ -73,7 +73,7 @@ function ScheduleTable({ schedule }: { schedule: PublicSchedule }) {
           </div>
         </div>
       )}
-      {schedule.note && <p className="text-sm text-blue-100/60">{schedule.note}</p>}
+      {schedule.note && <p className="text-sm text-mute">{schedule.note}</p>}
     </div>
   )
 }
@@ -82,7 +82,7 @@ function ScheduleTable({ schedule }: { schedule: PublicSchedule }) {
 export default function ScheduleView({ schedules, current }: { schedules: Partial<Record<ParishSeason, PublicSchedule>>; current: ParishSeason }) {
   const seasons = (['regular', 'summer'] as ParishSeason[]).filter((s) => schedules[s]?.items.some((i) => i.service_type !== 'office'))
   const [season, setSeason] = useState<ParishSeason>(schedules[current] ? current : seasons[0])
-  if (!seasons.length) return <p className="text-blue-100/60 text-sm">Rozpis bohoslužieb zatiaľ nie je zverejnený. Informácie získate na farskom úrade.</p>
+  if (!seasons.length) return <p className="text-mute text-sm">Rozpis bohoslužieb zatiaľ nie je zverejnený. Informácie získate na farskom úrade.</p>
   const sched = schedules[seasons.includes(season) ? season : seasons[0]]!
 
   return (
@@ -94,7 +94,7 @@ export default function ScheduleView({ schedules, current }: { schedules: Partia
               key={s}
               type="button"
               onClick={() => setSeason(s)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold border cursor-pointer ${season === s ? 'bg-gold/15 border-gold text-gold-bright' : 'bg-white/5 border-white/10 text-blue-50 hover:border-gold/40'}`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold border cursor-pointer ${season === s ? 'bg-gold/15 border-gold text-gold-ink' : 'bg-white border-blue/10 text-ink/85 hover:border-gold/40'}`}
             >
               {SEASON_LABEL[s]}
               {s === current && <span className="ml-1.5 text-[10px] uppercase tracking-wider opacity-80">• teraz</span>}

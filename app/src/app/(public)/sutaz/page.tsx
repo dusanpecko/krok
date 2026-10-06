@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 function Kicker({ children, center = false }: { children: React.ReactNode; center?: boolean }) {
   return (
     <div
-      className={`flex items-center gap-3 text-gold-bright uppercase tracking-widest text-xs font-extrabold mb-4 ${
+      className={`flex items-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-4 ${
         center ? 'justify-center' : ''
       }`}
     >
@@ -47,7 +47,7 @@ const cinnosti = [
     icon: HeartHandshake,
     text: (
       <>
-        <strong className="text-white font-bold">Prepájame</strong> darcov a
+        <strong className="text-ink font-bold">Prepájame</strong> darcov a
         tých, ktorí potrebujú podporu
       </>
     ),
@@ -56,7 +56,7 @@ const cinnosti = [
     icon: Users,
     text: (
       <>
-        <strong className="text-white font-bold">Podporujeme</strong> farnosti,
+        <strong className="text-ink font-bold">Podporujeme</strong> farnosti,
         spoločenstvá a aktívnych lídrov
       </>
     ),
@@ -65,7 +65,7 @@ const cinnosti = [
     icon: Church,
     text: (
       <>
-        <strong className="text-white font-bold">Budujeme</strong> silnejšiu
+        <strong className="text-ink font-bold">Budujeme</strong> silnejšiu
         Cirkev a spoločenstvá v nej
       </>
     ),
@@ -97,7 +97,7 @@ const pravidla = [
 
 export default function SutazPage() {
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep min-h-screen text-white pb-24 overflow-hidden">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm min-h-screen text-ink pb-24 overflow-hidden">
       {/* Dekoratívne svetelné pozadie */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
 
@@ -107,14 +107,14 @@ export default function SutazPage() {
             ===================================================== */}
         <header className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center mb-24">
           <div className="lg:col-span-7">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-gold-bright mb-4">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-blue mb-4">
               Narodeninová súťaž
             </p>
             <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-6 leading-tight">
-              Už <strong className="font-extrabold text-gold">7 rokov</strong>{' '}
+              Už <strong className="font-extrabold text-gold-ink">7 rokov</strong>{' '}
               spoločne pomáhame
             </h1>
-            <p className="text-blue-100/80 text-base sm:text-lg leading-relaxed mb-8">
+            <p className="text-mute text-base sm:text-lg leading-relaxed mb-8">
               Už 7 rokov spoločne pomáhame zveľaďovať život v našej Žilinskej
               diecéze.
             </p>
@@ -123,16 +123,16 @@ export default function SutazPage() {
               {cinnosti.map((c, i) => (
                 <li key={i} className="flex items-center gap-4">
                   <div className="w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-                    <c.icon size={20} className="text-gold-bright" />
+                    <c.icon size={20} className="text-gold-ink" />
                   </div>
-                  <p className="text-blue-100/80 text-base sm:text-lg leading-relaxed">
+                  <p className="text-mute text-base sm:text-lg leading-relaxed">
                     {c.text}
                   </p>
                 </li>
               ))}
             </ul>
 
-            <p className="text-xl sm:text-2xl font-extrabold text-gold-bright">
+            <p className="text-xl sm:text-2xl font-extrabold text-gold-ink">
               A to všetko vďaka Vám!
             </p>
           </div>
@@ -154,19 +154,19 @@ export default function SutazPage() {
             <Kicker center>Ďakujeme, že nám pomáhate pomáhať</Kicker>
             <h2 className="text-3xl sm:text-4xl font-light leading-tight mb-4">
               Veľká narodeninová súťaž o{' '}
-              <strong className="font-extrabold text-gold">
+              <strong className="font-extrabold text-gold-ink">
                 20 vecných cien
               </strong>
             </h2>
-            <p className="text-blue-100/70 leading-relaxed mb-4">
+            <p className="text-mute leading-relaxed mb-4">
               Bez vás by naša práca nemala zmysel. Každá vaša pomoc, modlitba,
               zdieľanie či finančný príspevok nás posúva vpred.
             </p>
-            <p className="text-blue-100/70 leading-relaxed">
+            <p className="text-mute leading-relaxed">
               Chceme vám vašu štedrosť a podporu aspoň trochu oplatiť. Pri
               príležitosti nášho 7. výročia sme preto spolu s našimi sponzormi
               pripravili{' '}
-              <strong className="text-white font-bold">
+              <strong className="text-ink font-bold">
                 veľkú narodeninovú súťaž o 20 vecných cien!
               </strong>
             </p>
@@ -177,19 +177,19 @@ export default function SutazPage() {
             <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-gold/10 blur-[100px] pointer-events-none rounded-full" />
             <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="w-16 h-16 rounded-2xl bg-gold/15 border border-gold/25 flex items-center justify-center flex-shrink-0">
-                <Gift size={30} className="text-gold-bright" />
+                <Gift size={30} className="text-gold-ink" />
               </div>
-              <p className="text-blue-50/90 text-base sm:text-lg leading-relaxed">
+              <p className="text-ink/85 text-base sm:text-lg leading-relaxed">
                 Každý náš pravidelný podporovateľ, ktorý bude mať k{' '}
-                <strong className="text-gold-bright font-extrabold">
+                <strong className="text-gold-ink font-extrabold">
                   31. januáru 2027
                 </strong>{' '}
                 zriadený trvalý príkaz na aspoň{' '}
-                <strong className="text-gold-bright font-extrabold">
+                <strong className="text-gold-ink font-extrabold">
                   7 € mesačne
                 </strong>
                 , bude zaradený do žrebovania o{' '}
-                <strong className="text-white font-extrabold">
+                <strong className="text-ink font-extrabold">
                   20 vecných cien
                 </strong>
                 .
@@ -211,20 +211,20 @@ export default function SutazPage() {
 
           <div className="grid lg:grid-cols-2 gap-6">
             {/* 1. Online */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col">
+            <div className="bg-white/[0.04] border border-blue/10 rounded-2xl p-6 sm:p-8 flex flex-col">
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-4xl font-extrabold text-gold">1.</span>
+                <span className="text-4xl font-extrabold text-gold-ink">1.</span>
                 <div className="w-11 h-11 rounded-xl bg-gold/15 flex items-center justify-center">
-                  <QrCode size={22} className="text-gold-bright" />
+                  <QrCode size={22} className="text-gold-ink" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white">
+                <h3 className="text-xl font-extrabold text-ink">
                   Online na našej stránke
                 </h3>
               </div>
-              <p className="text-sm text-blue-100/60 leading-relaxed mb-6">
+              <p className="text-sm text-mute leading-relaxed mb-6">
                 <Link
                   href="/registracia"
-                  className="text-gold-bright font-bold underline underline-offset-4 hover:text-gold transition-colors"
+                  className="text-gold-ink font-bold underline underline-offset-4 hover:text-blue transition-colors"
                 >
                   Zaregistrujte sa TU
                 </Link>{' '}
@@ -242,34 +242,34 @@ export default function SutazPage() {
             </div>
 
             {/* 2. Internet banking */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col">
+            <div className="bg-white/[0.04] border border-blue/10 rounded-2xl p-6 sm:p-8 flex flex-col">
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-4xl font-extrabold text-gold">2.</span>
+                <span className="text-4xl font-extrabold text-gold-ink">2.</span>
                 <div className="w-11 h-11 rounded-xl bg-gold/15 flex items-center justify-center">
-                  <Landmark size={22} className="text-gold-bright" />
+                  <Landmark size={22} className="text-gold-ink" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white">
+                <h3 className="text-xl font-extrabold text-ink">
                   Vo svojom internet bankingu
                 </h3>
               </div>
-              <p className="text-sm text-blue-100/60 leading-relaxed mb-6">
+              <p className="text-sm text-mute leading-relaxed mb-6">
                 Prihláste sa do svojej banky a zriaďte si trvalý príkaz s týmito
                 údajmi:
               </p>
               <div className="space-y-3 mt-auto">
-                <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-gold-bright mb-1">
+                <div className="bg-white/[0.04] border border-blue/10 rounded-xl p-4">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-blue mb-1">
                     IBAN
                   </p>
-                  <p className="text-base sm:text-lg font-bold text-white font-mono tracking-wide">
+                  <p className="text-base sm:text-lg font-bold text-ink font-mono tracking-wide">
                     SK04 8330 0000 0029 0168 8673
                   </p>
                 </div>
-                <div className="bg-white/[0.04] border border-white/10 rounded-xl p-4">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-gold-bright mb-1">
+                <div className="bg-white/[0.04] border border-blue/10 rounded-xl p-4">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-blue mb-1">
                     Prijímateľ
                   </p>
-                  <p className="text-base font-bold text-white">
+                  <p className="text-base font-bold text-ink">
                     KROK – Pastoračný fond Žilinskej diecézy
                   </p>
                 </div>
@@ -293,15 +293,15 @@ export default function SutazPage() {
             {pravidla.map((p) => (
               <div
                 key={p.title}
-                className="group bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-gold/40 rounded-2xl p-6 transition-all"
+                className="group bg-white/[0.04] hover:bg-white/[0.08] border border-blue/10 hover:border-gold/40 rounded-2xl p-6 transition-all"
               >
                 <div className="w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center mb-5">
-                  <p.icon size={20} className="text-gold-bright" />
+                  <p.icon size={20} className="text-gold-ink" />
                 </div>
-                <h3 className="text-lg font-extrabold text-white mb-2">
+                <h3 className="text-lg font-extrabold text-ink mb-2">
                   {p.title}
                 </h3>
-                <p className="text-sm text-blue-100/60 leading-relaxed">
+                <p className="text-sm text-mute leading-relaxed">
                   {p.desc}
                 </p>
               </div>
@@ -313,7 +313,7 @@ export default function SutazPage() {
             Z VĎAKY ZA VAŠU PODPORU
             ===================================================== */}
         <section className="mb-24">
-          <div className="relative bg-white/[0.04] border border-white/10 rounded-3xl p-8 sm:p-12 overflow-hidden">
+          <div className="relative bg-white/[0.04] border border-blue/10 rounded-3xl p-8 sm:p-12 overflow-hidden">
             <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-gold/10 blur-[100px] pointer-events-none rounded-full" />
 
             <div className="relative grid lg:grid-cols-12 gap-10 items-center">
@@ -330,14 +330,14 @@ export default function SutazPage() {
                 <h2 className="text-3xl sm:text-4xl font-light leading-tight mb-6">
                   Svätá omša za vás
                 </h2>
-                <p className="text-blue-50/90 text-base sm:text-lg leading-relaxed mb-5">
+                <p className="text-ink/85 text-base sm:text-lg leading-relaxed mb-5">
                   Vždy v{' '}
-                  <strong className="text-gold-bright font-bold">
+                  <strong className="text-gold-ink font-bold">
                     prvú nedeľu v mesiaci
                   </strong>{' '}
                   obetujeme svätú omšu za vás – našich darcov a podporovateľov.
                 </p>
-                <p className="text-xl sm:text-2xl font-extrabold text-white">
+                <p className="text-xl sm:text-2xl font-extrabold text-ink">
                   Ďakujeme, že Vás máme!
                 </p>
               </div>
@@ -358,7 +358,7 @@ export default function SutazPage() {
           <h2 className="text-2xl sm:text-3xl font-light leading-tight mb-4">
             Zapojte sa ešte dnes
           </h2>
-          <p className="text-blue-100/70 leading-relaxed mb-8">
+          <p className="text-mute leading-relaxed mb-8">
             Každý pravidelný dar od 7 € mesačne vás zaradí do žrebovania o 20
             vecných cien – a hlavne pomôže pastoračnému dielu našej diecézy.
           </p>
@@ -375,7 +375,7 @@ export default function SutazPage() {
             </Link>
             <Link
               href="/#dar"
-              className="px-8 py-4 bg-white/5 hover:bg-white/10 text-blue-50 rounded-xl text-base font-bold transition-all flex items-center justify-center border border-white/10"
+              className="px-8 py-4 bg-white hover:bg-blue-soft/50 text-ink/85 rounded-xl text-base font-bold transition-all flex items-center justify-center border border-blue/10"
             >
               Chcem darovať jednorazovo
             </Link>

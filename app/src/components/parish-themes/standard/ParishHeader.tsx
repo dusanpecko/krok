@@ -38,7 +38,7 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
   }, [])
 
   const linkCls = (active?: boolean) =>
-    `px-3 py-2 rounded-lg text-sm font-extrabold whitespace-nowrap transition-colors ${active ? 'text-gold-bright' : 'text-blue-50/85 hover:text-gold-bright'}`
+    `px-3 py-2 rounded-lg text-sm font-extrabold whitespace-nowrap transition-colors ${active ? 'text-blue' : 'text-ink/85 hover:text-blue'}`
   const NavLink = ({ it, onClick, className }: { it: ParishNavItem; onClick?: () => void; className: string }) =>
     it.page ? (
       <Link href={it.href} onClick={onClick} className={className} aria-current={it.active ? 'page' : undefined}>
@@ -53,12 +53,12 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
   return (
     <>
       {/* Tenký pás KROK */}
-      <div className="bg-[#03172c] text-[11px] sm:text-xs text-blue-100/70 border-b border-white/5">
+      <div className="bg-blue text-[11px] sm:text-xs text-white/85">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-8 flex items-center justify-between gap-3">
           <Link href="/farnosti" className="inline-flex items-center gap-1 hover:text-gold-bright min-w-0">
             <ChevronLeft size={14} className="shrink-0" />
             <span className="truncate">
-              <strong className="font-black tracking-wider text-white/90">KROK</strong> · Farnosti Žilinskej diecézy
+              <strong className="font-black tracking-wider text-white">KROK</strong> · Farnosti Žilinskej diecézy
             </span>
           </Link>
           <div className="flex items-center gap-4 shrink-0">
@@ -75,7 +75,7 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
       </div>
 
       {/* Lišta farnosti */}
-      <header className={`sticky top-0 z-40 border-b transition-colors ${scrolled ? 'bg-blue-deep/95 backdrop-blur border-white/10 shadow-lg shadow-black/20' : 'bg-blue-deep border-transparent'}`}>
+      <header className={`sticky top-0 z-40 border-b transition-colors ${scrolled ? 'bg-white/95 backdrop-blur border-blue/10 shadow-md shadow-blue/5' : 'bg-white border-blue/10'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link href={homeHref} className="flex items-center gap-3 min-w-0">
             {logoUrl ? (
@@ -85,13 +85,13 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
               // eslint-disable-next-line @next/next/no-img-element
               <img src={imageUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-gold/40 shrink-0" />
             ) : (
-              <span className="w-10 h-10 rounded-full bg-white/5 border border-gold/30 flex items-center justify-center text-gold shrink-0">
+              <span className="w-10 h-10 rounded-full bg-white border border-gold/30 flex items-center justify-center text-gold-ink shrink-0">
                 <Church size={20} />
               </span>
             )}
             <span className="min-w-0">
-              <span className="block font-extrabold text-white leading-tight truncate">{name}</span>
-              {subtitle && <span className="block text-xs text-blue-100/60 truncate">{subtitle}</span>}
+              <span className="block font-extrabold text-ink leading-tight truncate">{name}</span>
+              {subtitle && <span className="block text-xs text-mute truncate">{subtitle}</span>}
             </span>
           </Link>
 
@@ -106,16 +106,16 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
             )}
           </nav>
 
-          <button type="button" onClick={() => setOpen((o) => !o)} className="lg:hidden p-2 -mr-2 text-white" aria-label={open ? 'Zavrieť menu' : 'Menu'} aria-expanded={open}>
+          <button type="button" onClick={() => setOpen((o) => !o)} className="lg:hidden p-2 -mr-2 text-ink" aria-label={open ? 'Zavrieť menu' : 'Menu'} aria-expanded={open}>
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
         {open && (
-          <div className="lg:hidden border-t border-white/10 bg-blue-deep">
+          <div className="lg:hidden border-t border-blue/10 bg-white">
             <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col">
               {items.map((it) => (
-                <NavLink key={it.href} it={it} onClick={() => setOpen(false)} className={`${linkCls(it.active)} py-3 text-base border-b border-white/5`} />
+                <NavLink key={it.href} it={it} onClick={() => setOpen(false)} className={`${linkCls(it.active)} py-3 text-base border-b border-blue/10`} />
               ))}
               {manageUrl && (
                 <Link href={manageUrl} className={`${linkCls()} py-3 text-base inline-flex items-center gap-2`}>

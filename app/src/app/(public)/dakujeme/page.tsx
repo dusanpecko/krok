@@ -61,22 +61,22 @@ function ThankYouContent() {
   const backHref = projectSlug ? `/vyzvy/${projectSlug}` : failed ? '/#dar' : '/'
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 min-h-screen bg-blue-deep text-white flex items-center justify-center px-4 py-32">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(9,80,150,0.35),_transparent_60%)] pointer-events-none" />
+    <div className="relative -mt-24 lg:-mt-32 min-h-screen bg-paper-warm text-ink flex items-center justify-center px-4 py-32">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(9,80,150,0.08),_transparent_60%)] pointer-events-none" />
 
-      <div className="relative w-full max-w-lg bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-8 sm:p-10 shadow-2xl text-center space-y-6">
+      <div className="relative w-full max-w-lg bg-white border border-blue/10 backdrop-blur-md rounded-3xl p-8 sm:p-10 shadow-2xl text-center space-y-6">
         {loading && (
           <>
-            <Loader2 size={48} className="mx-auto text-gold-bright animate-spin" />
+            <Loader2 size={48} className="mx-auto text-gold-ink animate-spin" />
             <h1 className="text-2xl font-extrabold">Overujeme vašu platbu…</h1>
           </>
         )}
 
         {!loading && notFound && (
           <>
-            <AlertCircle size={48} className="mx-auto text-zinc-400" />
+            <AlertCircle size={48} className="mx-auto text-mute" />
             <h1 className="text-2xl font-extrabold">Platbu sme nenašli</h1>
-            <p className="text-zinc-300 text-sm leading-relaxed font-light">
+            <p className="text-ink/80 text-sm leading-relaxed font-light">
               Odkaz je neplatný alebo už neplatí. Ak ste platbu odoslali, nájdete ju vo svojom profile
               v časti Moje dary.
             </p>
@@ -86,25 +86,25 @@ function ThankYouContent() {
         {!loading && paid && (
           <>
             <div className="w-20 h-20 mx-auto rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center">
-              <Heart size={36} className="text-gold-bright fill-gold-bright" />
+              <Heart size={36} className="text-gold-ink fill-gold-bright" />
             </div>
             <h1 className="text-3xl font-extrabold">Ďakujeme za váš KROK</h1>
-            <p className="text-zinc-300 text-sm leading-relaxed font-light">
+            <p className="text-ink/80 text-sm leading-relaxed font-light">
               {recurring ? (
                 <>
-                  Váš pravidelný dar vo výške <strong className="text-white">{formatEur(state.amount)}</strong>
+                  Váš pravidelný dar vo výške <strong className="text-ink">{formatEur(state.amount)}</strong>
                   {state.interval === 'year' ? ' ročne' : ' mesačne'} je nastavený. Prvú platbu sme prijali,
                   ďalšie sa budú sťahovať automaticky. Pravidelný dar môžete kedykoľvek zrušiť vo svojom profile.
                 </>
               ) : (
                 <>
-                  Váš dar vo výške <strong className="text-white">{formatEur(state.amount)}</strong> sme prijali.
+                  Váš dar vo výške <strong className="text-ink">{formatEur(state.amount)}</strong> sme prijali.
                   Vďaka vám môže pastoračná služba v našej diecéze rásť.
                 </>
               )}
             </p>
             {projectName && (
-              <p className="text-sm text-gold-bright font-bold">
+              <p className="text-sm text-blue font-bold">
                 Dar je určený na výzvu „{projectName}“.
               </p>
             )}
@@ -113,9 +113,9 @@ function ThankYouContent() {
 
         {!loading && pending && !timedOut && (
           <>
-            <Loader2 size={48} className="mx-auto text-gold-bright animate-spin" />
+            <Loader2 size={48} className="mx-auto text-gold-ink animate-spin" />
             <h1 className="text-2xl font-extrabold">Čakáme na potvrdenie platby</h1>
-            <p className="text-zinc-300 text-sm leading-relaxed font-light">
+            <p className="text-ink/80 text-sm leading-relaxed font-light">
               Banka platbu ešte spracúva. Stránka sa obnoví automaticky, prosím neodchádzajte.
             </p>
           </>
@@ -123,9 +123,9 @@ function ThankYouContent() {
 
         {!loading && timedOut && (
           <>
-            <RefreshCw size={48} className="mx-auto text-zinc-400" />
+            <RefreshCw size={48} className="mx-auto text-mute" />
             <h1 className="text-2xl font-extrabold">Platba ešte nie je potvrdená</h1>
-            <p className="text-zinc-300 text-sm leading-relaxed font-light">
+            <p className="text-ink/80 text-sm leading-relaxed font-light">
               Potvrdenie od banky mešká. Ak ste platbu dokončili, zaznamená sa automaticky, len čo ju
               banka potvrdí – skontrolujte neskôr časť Moje dary vo svojom profile.
             </p>
@@ -136,7 +136,7 @@ function ThankYouContent() {
           <>
             <AlertCircle size={48} className="mx-auto text-vermilion" />
             <h1 className="text-2xl font-extrabold">Platba neprebehla</h1>
-            <p className="text-zinc-300 text-sm leading-relaxed font-light">
+            <p className="text-ink/80 text-sm leading-relaxed font-light">
               Platba bola zrušená alebo ju banka odmietla. Z vášho účtu sa nič nestrhlo. Môžete to skúsiť
               znova alebo použiť bankový prevod.
             </p>
@@ -153,7 +153,7 @@ function ThankYouContent() {
             </Link>
             <Link
               href="/profil#dary"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/10 text-white font-bold rounded-2xl text-sm hover:bg-white/20 transition-all"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-soft/60 border border-blue/10 text-ink font-bold rounded-2xl text-sm hover:bg-blue-soft transition-all"
             >
               <User size={16} /> Môj profil
             </Link>
@@ -168,8 +168,8 @@ export default function ThankYouPage() {
   return (
     <Suspense
       fallback={
-        <div className="relative -mt-24 lg:-mt-32 min-h-screen bg-blue-deep flex items-center justify-center">
-          <Loader2 size={48} className="text-gold-bright animate-spin" />
+        <div className="relative -mt-24 lg:-mt-32 min-h-screen bg-paper-warm flex items-center justify-center">
+          <Loader2 size={48} className="text-gold-ink animate-spin" />
         </div>
       }
     >

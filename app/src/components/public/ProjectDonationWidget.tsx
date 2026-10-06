@@ -114,12 +114,12 @@ export default function ProjectDonationWidget({
 
   if (!isOpen) {
     return (
-      <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl text-center">
-        <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
-          <CheckCircle2 size={26} className="text-emerald-300" />
+      <div className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl text-center">
+        <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/15 border border-emerald-200 flex items-center justify-center">
+          <CheckCircle2 size={26} className="text-emerald-700" />
         </div>
-        <h3 className="text-lg font-extrabold text-white">Táto výzva je uzavretá</h3>
-        <p className="text-sm text-zinc-300 font-light leading-relaxed">
+        <h3 className="text-lg font-extrabold text-ink">Táto výzva je uzavretá</h3>
+        <p className="text-sm text-ink/80 font-light leading-relaxed">
           Ďakujeme všetkým, ktorí prispeli. Pozrite si ďalšie výzvy, ktoré práve potrebujú vašu pomoc.
         </p>
         <Link
@@ -133,38 +133,38 @@ export default function ProjectDonationWidget({
   }
 
   const inputCls =
-    'w-full bg-blue-deep border border-white/10 focus:border-gold-bright rounded-xl py-3 px-4 text-white text-sm outline-none placeholder:text-zinc-500'
+    'w-full bg-white border border-blue/10 focus:border-blue rounded-xl py-3 px-4 text-ink text-sm outline-none placeholder:text-mute'
 
   return (
-    <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+    <div className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold-bright mb-1">Podporiť výzvu</p>
-        <h3 className="text-xl font-extrabold text-white leading-snug">{project.name}</h3>
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue mb-1">Podporiť výzvu</p>
+        <h3 className="text-xl font-extrabold text-ink leading-snug">{project.name}</h3>
       </div>
 
       {canRecurring && canOneTime && (
-        <div className="flex bg-blue-deep/60 p-1 rounded-xl border border-white/5">
+        <div className="flex bg-paper p-1 rounded-xl border border-blue/10">
           <button
             type="button"
             onClick={() => setRecurring(true)}
-            className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${recurring ? 'bg-blue text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
+            className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${recurring ? 'bg-blue text-white shadow-md' : 'text-mute hover:text-ink'}`}
           >
             Pravidelne (mesačne)
           </button>
           <button
             type="button"
             onClick={() => setRecurring(false)}
-            className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${!recurring ? 'bg-blue text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
+            className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${!recurring ? 'bg-blue text-white shadow-md' : 'text-mute hover:text-ink'}`}
           >
             Jednorazovo
           </button>
         </div>
       )}
-      {!canRecurring && canOneTime && <p className="text-xs text-zinc-400">Táto výzva prijíma jednorazové dary.</p>}
-      {canRecurring && !canOneTime && <p className="text-xs text-zinc-400">Táto výzva prijíma pravidelné mesačné dary.</p>}
+      {!canRecurring && canOneTime && <p className="text-xs text-mute">Táto výzva prijíma jednorazové dary.</p>}
+      {canRecurring && !canOneTime && <p className="text-xs text-mute">Táto výzva prijíma pravidelné mesačné dary.</p>}
 
       <div className="space-y-3">
-        <label className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold block">Výška daru</label>
+        <label className="text-xs uppercase tracking-widest text-mute font-extrabold block">Výška daru</label>
         <div className={`grid gap-2.5 ${presets.length >= 4 ? 'grid-cols-3' : 'grid-cols-2'} sm:grid-cols-4`}>
           {presets.map((p) => (
             <button
@@ -175,7 +175,7 @@ export default function ProjectDonationWidget({
                 setCustom('')
               }}
               className={`py-3 rounded-xl text-base font-extrabold border transition-all ${
-                preset === p ? 'bg-gold/15 border-gold text-gold-bright' : 'bg-blue-deep/80 border-white/5 hover:border-white/20 text-zinc-400 hover:text-white'
+                preset === p ? 'bg-gold/15 border-gold text-gold-ink' : 'bg-paper border-blue/10 hover:border-blue/30 text-mute hover:text-ink'
               }`}
             >
               {p} €
@@ -185,7 +185,7 @@ export default function ProjectDonationWidget({
             type="button"
             onClick={() => setPreset('custom')}
             className={`py-3 rounded-xl text-sm font-extrabold border transition-all ${
-              preset === 'custom' ? 'bg-gold/15 border-gold text-gold-bright' : 'bg-blue-deep/80 border-white/5 hover:border-white/20 text-zinc-400 hover:text-white'
+              preset === 'custom' ? 'bg-gold/15 border-gold text-gold-ink' : 'bg-paper border-blue/10 hover:border-blue/30 text-mute hover:text-ink'
             }`}
           >
             Iná
@@ -202,7 +202,7 @@ export default function ProjectDonationWidget({
               placeholder="Zadajte sumu"
               className={`${inputCls} pr-12 font-mono text-base`}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-extrabold">€</span>
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-mute font-extrabold">€</span>
           </div>
         )}
       </div>
@@ -213,10 +213,10 @@ export default function ProjectDonationWidget({
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Meno a priezvisko" className={inputCls} autoComplete="name" />
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail *" className={inputCls} autoComplete="email" required />
           </div>
-          <p className="text-[11px] text-zinc-500 leading-relaxed flex items-start gap-1.5">
+          <p className="text-[11px] text-mute leading-relaxed flex items-start gap-1.5">
             <LogIn size={12} className="shrink-0 mt-0.5" />
             <span>
-              Máte účet? <Link href={`/prihlasenie?redirect=${encodeURIComponent(`/vyzvy/${project.slug}`)}`} className="text-gold-bright hover:underline">Prihláste sa</Link>, dar sa priradí k vášmu profilu.
+              Máte účet? <Link href={`/prihlasenie?redirect=${encodeURIComponent(`/vyzvy/${project.slug}`)}`} className="text-gold-ink hover:underline">Prihláste sa</Link>, dar sa priradí k vášmu profilu.
             </span>
           </p>
         </div>
@@ -227,14 +227,14 @@ export default function ProjectDonationWidget({
       )}
 
       {recurring && otherSubs.length > 0 && (
-        <div className="flex items-start gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-zinc-300 leading-relaxed">
-          <Info size={14} className="shrink-0 mt-0.5 text-gold-bright" />
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-white border border-blue/10 text-xs text-ink/80 leading-relaxed">
+          <Info size={14} className="shrink-0 mt-0.5 text-gold-ink" />
           <span>
             Váš pravidelný dar{otherSubs.length > 1 ? 'y' : ''}{' '}
             {otherSubs.map((s, i) => (
               <span key={s.id}>
                 {i > 0 && ', '}
-                <strong className="text-white">{formatEur(s.amount)}</strong> {s.interval === 'year' ? 'ročne' : 'mesačne'} na{' '}
+                <strong className="text-ink">{formatEur(s.amount)}</strong> {s.interval === 'year' ? 'ročne' : 'mesačne'} na{' '}
                 {s.project_name ? <em>{s.project_name}</em> : 'fond KROK'}
               </span>
             ))}{' '}
@@ -244,7 +244,7 @@ export default function ProjectDonationWidget({
       )}
 
       {error && (
-        <div className="flex items-start gap-2 p-3 rounded-xl bg-vermilion/10 border border-vermilion/30 text-sm text-red-200">
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-vermilion/10 border border-vermilion/30 text-sm text-red">
           <AlertCircle size={16} className="shrink-0 mt-0.5" /> {error}
         </div>
       )}
@@ -263,32 +263,32 @@ export default function ProjectDonationWidget({
             : `Darovať ${amount > 0 ? formatEur(amount) : ''}${recurring ? ' mesačne' : ''}`}
       </button>
 
-      <p className="text-[11px] text-zinc-500 text-center leading-relaxed">
+      <p className="text-[11px] text-mute text-center leading-relaxed">
         Bezpečná platba cez Mollie (karta, Apple Pay, Google Pay). Pravidelný dar môžete kedykoľvek zrušiť vo svojom profile.
       </p>
 
       <button
         type="button"
         onClick={toggleBank}
-        className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-zinc-300 border border-white/10 rounded-xl hover:bg-white/5 hover:text-white transition-colors"
+        className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-ink/80 border border-blue/10 rounded-xl hover:bg-blue-soft/50 hover:text-ink transition-colors"
       >
         <Landmark size={14} />
         {showBank ? 'Skryť údaje na prevod' : 'Radšej bankovým prevodom'}
       </button>
 
       {showBank && (
-        <div className="space-y-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+        <div className="space-y-4 p-4 rounded-2xl bg-white border border-blue/10">
           <div className="flex flex-col sm:flex-row items-center gap-5">
             <div className="w-36 h-36 shrink-0 bg-white p-1.5 rounded-2xl flex items-center justify-center">
               {qrLoading || !qr ? (
-                <QrCode size={96} className="text-zinc-300 animate-pulse" />
+                <QrCode size={96} className="text-ink/80 animate-pulse" />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={qr.dataUrl} alt="PAY by square QR kód" className="w-full h-full object-contain" />
               )}
             </div>
-            <div className="text-xs text-zinc-400 space-y-1.5 text-center sm:text-left">
-              <p className="text-white font-bold text-sm">Naskenujte v bankovej aplikácii</p>
+            <div className="text-xs text-mute space-y-1.5 text-center sm:text-left">
+              <p className="text-ink font-bold text-sm">Naskenujte v bankovej aplikácii</p>
               <p>
                 {recurring
                   ? 'QR nastaví príjemcu, sumu a symboly. V banke platbu uložte ako trvalý príkaz (mesačne).'
@@ -297,24 +297,24 @@ export default function ProjectDonationWidget({
             </div>
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
-            <dt className="text-zinc-500 font-bold">IBAN</dt>
-            <dd className="font-mono text-zinc-200">{iban.replace(/(.{4})/g, '$1 ').trim()}</dd>
+            <dt className="text-mute font-bold">IBAN</dt>
+            <dd className="font-mono text-ink/90">{iban.replace(/(.{4})/g, '$1 ').trim()}</dd>
             {project.specific_symbol && (
               <>
-                <dt className="text-zinc-500 font-bold">Špecifický symbol</dt>
-                <dd className="font-mono text-zinc-200">{project.specific_symbol}</dd>
+                <dt className="text-mute font-bold">Špecifický symbol</dt>
+                <dd className="font-mono text-ink/90">{project.specific_symbol}</dd>
               </>
             )}
-            <dt className="text-zinc-500 font-bold">Variabilný symbol</dt>
-            <dd className="font-mono text-zinc-200">
+            <dt className="text-mute font-bold">Variabilný symbol</dt>
+            <dd className="font-mono text-ink/90">
               {variableSymbol ?? (
-                <span className="font-sans text-zinc-400">
-                  váš VS získate <Link href="/registracia" className="text-gold-bright hover:underline">registráciou</Link>
+                <span className="font-sans text-mute">
+                  váš VS získate <Link href="/registracia" className="text-gold-ink hover:underline">registráciou</Link>
                 </span>
               )}
             </dd>
           </dl>
-          <p className="text-[11px] text-zinc-500 leading-relaxed">
+          <p className="text-[11px] text-mute leading-relaxed">
             Špecifický symbol priradí dar k tejto výzve, variabilný symbol k vám ako darcovi.
           </p>
         </div>

@@ -36,7 +36,7 @@ export function useSignOut() {
 }
 
 /** Tlačidlo „Môj účet“ v navigácii s rozbaľovacím menu (desktop). */
-export default function AccountMenu({ menu, light }: { menu: AccountMenuData | null; light: boolean }) {
+export default function AccountMenu({ menu }: { menu: AccountMenuData | null }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const signOut = useSignOut()
@@ -66,14 +66,10 @@ export default function AccountMenu({ menu, light }: { menu: AccountMenuData | n
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border text-sm font-bold transition-colors cursor-pointer ${
-          light ? 'border-white/40 text-white hover:bg-white/10' : 'border-gray-200 text-gray-800 hover:bg-gray-50'
-        }`}
+        className="inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white/70 text-sm font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer"
       >
         <span
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black uppercase ${
-            light ? 'bg-white/15 text-white' : 'bg-blue-soft text-blue'
-          }`}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black uppercase bg-blue-soft text-blue"
         >
           {name.slice(0, 1)}
         </span>

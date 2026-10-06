@@ -21,7 +21,7 @@ export default function PodmienkyPage() {
       <OrgBlock role="Prevádzkovateľ webu a príjemca darov" />
       <nav className="flex flex-wrap gap-2 pt-2">
         {toc.map(([id, label]) => (
-          <a key={id} href={`#${id}`} className="!no-underline px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-sm font-bold !text-blue-50 hover:!text-gold-bright">
+          <a key={id} href={`#${id}`} className="!no-underline px-3 py-1.5 rounded-xl bg-white border border-blue/10 text-sm font-bold !text-ink/85 hover:!text-blue">
             {label}
           </a>
         ))}
@@ -190,7 +190,7 @@ export default function PodmienkyPage() {
         <li>dôvod žiadosti, číslo účtu (IBAN) na vrátenie,</li>
         <li>dátum a podpis (pri listinnej forme).</li>
       </ul>
-      <p className="text-sm text-blue-100/60">Vrátenie daru je možné len vo výnimočných a odôvodnených prípadoch.</p>
+      <p className="text-sm text-mute">Vrátenie daru je možné len vo výnimočných a odôvodnených prípadoch.</p>
     </LegalPage>
   )
 }

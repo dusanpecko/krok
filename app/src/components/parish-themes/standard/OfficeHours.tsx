@@ -11,8 +11,8 @@ function Rows({ items }: { items: PublicScheduleItem[] }) {
     <ul className="space-y-1.5">
       {items.map((i, k) => (
         <li key={k} className="flex flex-wrap items-baseline gap-x-2 text-sm">
-          <span className="font-extrabold text-white tabular-nums">{time(i)}</span>
-          {i.note && <span className="text-blue-100/60">{i.note}</span>}
+          <span className="font-extrabold text-ink tabular-nums">{time(i)}</span>
+          {i.note && <span className="text-mute">{i.note}</span>}
         </li>
       ))}
     </ul>
@@ -33,14 +33,14 @@ export default function OfficeHours({ parish }: { parish: PublicParish }) {
       </SectionHeading>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {days.map((d) => (
-          <div key={d.value} className="p-4 rounded-2xl border bg-white/[0.04] border-white/10">
-            <p className="text-xs font-black uppercase tracking-widest mb-2 text-blue-100/60">{d.label}</p>
+          <div key={d.value} className="p-4 rounded-2xl border bg-white/[0.04] border-blue/10">
+            <p className="text-xs font-black uppercase tracking-widest mb-2 text-mute">{d.label}</p>
             <Rows items={d.items} />
           </div>
         ))}
         {labels.map((l) => (
-          <div key={l} className="p-4 rounded-2xl border bg-white/[0.04] border-white/10">
-            <p className="text-xs font-black uppercase tracking-widest mb-2 text-blue-100/60">{l || 'Ďalšie'}</p>
+          <div key={l} className="p-4 rounded-2xl border bg-white/[0.04] border-blue/10">
+            <p className="text-xs font-black uppercase tracking-widest mb-2 text-mute">{l || 'Ďalšie'}</p>
             <Rows items={other.filter((i) => (i.day_label ?? '') === l)} />
           </div>
         ))}

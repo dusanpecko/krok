@@ -87,17 +87,17 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
   const shareText = `Podporte výzvu ${project.name} – KROK, Pastoračný fond Žilinskej diecézy`
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep min-h-screen text-white pb-24 overflow-hidden">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm min-h-screen text-ink pb-24 overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-32 sm:pt-40">
-        <Link href="/vyzvy" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold-bright transition-colors mb-6">
+        <Link href="/vyzvy" className="inline-flex items-center gap-2 text-sm text-mute hover:text-gold-bright transition-colors mb-6">
           <ArrowLeft size={16} /> Všetky výzvy
         </Link>
 
         {/* Hero – nízky pás, aby bol hneď viditeľný nadpis aj formulár daru (video ostáva 16:9, užšie) */}
         <div
-          className={`rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-white/5 relative ${
+          className={`rounded-3xl overflow-hidden border border-blue/10 shadow-2xl bg-white relative ${
             embed ? 'aspect-video max-w-3xl mx-auto' : 'aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1]'
           }`}
         >
@@ -113,7 +113,7 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={project.image_url} alt={project.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue/40 to-blue-deep" />
+            <div className="w-full h-full bg-gradient-to-br from-blue-soft to-paper" />
           )}
         </div>
 
@@ -122,40 +122,40 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
           <div className="lg:col-span-7 space-y-12">
             <header>
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span className="text-[10px] font-black uppercase tracking-widest bg-white/5 text-gold-bright px-2.5 py-1 rounded-lg border border-white/10">
+                <span className="text-[10px] font-black uppercase tracking-widest bg-white text-blue px-2.5 py-1 rounded-lg border border-blue/10">
                   {categoryLabel(project.category)}
                 </span>
                 {completed && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-200 px-2.5 py-1 rounded-lg border border-emerald-400/30">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg border border-emerald-200">
                     <CheckCircle2 size={11} /> Podarilo sa
                   </span>
                 )}
                 {project.location && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400"><MapPin size={12} /> {project.location}</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] text-mute"><MapPin size={12} /> {project.location}</span>
                 )}
               </div>
               <h1 className="text-3xl sm:text-5xl font-light tracking-tight leading-tight">{project.name}</h1>
-              {project.subtitle && <p className="text-blue-100/70 text-lg leading-relaxed mt-4 font-light">{project.subtitle}</p>}
+              {project.subtitle && <p className="text-mute text-lg leading-relaxed mt-4 font-light">{project.subtitle}</p>}
             </header>
 
             {/* Počítadlo */}
-            <section className="bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 space-y-5">
+            <section className="bg-white border border-blue/10 rounded-3xl p-6 sm:p-8 space-y-5">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Vyzbierané</p>
-                  <p className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-mute mb-1">Vyzbierané</p>
+                  <p className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink">
                     {formatEur(project.stats.collected_amount)}
                   </p>
                 </div>
                 {project.target_amount ? (
                   <div className="text-right">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Cieľ</p>
-                    <p className="text-xl font-bold text-white">{formatEur(project.target_amount)}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-mute mb-1">Cieľ</p>
+                    <p className="text-xl font-bold text-ink">{formatEur(project.target_amount)}</p>
                   </div>
                 ) : null}
               </div>
               {project.target_amount ? (
-                <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-3 bg-blue-soft/60 rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-gold to-gold-bright rounded-full transition-all" style={{ width: `${pct}%` }} />
                 </div>
               ) : null}
@@ -172,9 +172,9 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
 
             {/* Záverečná správa */}
             {completed && project.closing_summary && (
-              <section className="bg-emerald-500/10 border border-emerald-400/30 rounded-3xl p-6 sm:p-8">
+              <section className="bg-emerald-500/10 border border-emerald-200 rounded-3xl p-6 sm:p-8">
                 <SectionKicker>Ako to dopadlo</SectionKicker>
-                <div className="theme-dark simple-rich-editor leading-relaxed" dangerouslySetInnerHTML={{ __html: project.closing_summary }} />
+                <div className="simple-rich-editor leading-relaxed" dangerouslySetInnerHTML={{ __html: project.closing_summary }} />
               </section>
             )}
 
@@ -182,7 +182,7 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
             {project.content && (
               <section>
                 <SectionKicker>O výzve</SectionKicker>
-                <div className="theme-dark simple-rich-editor leading-relaxed max-w-none" dangerouslySetInnerHTML={{ __html: project.content }} />
+                <div className="simple-rich-editor leading-relaxed max-w-none" dangerouslySetInnerHTML={{ __html: project.content }} />
               </section>
             )}
 
@@ -190,8 +190,8 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
             {project.budget.length > 0 && (
               <section>
                 <SectionKicker>Na čo pôjdu peniaze</SectionKicker>
-                <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
-                  <ul className="divide-y divide-white/5">
+                <div className="bg-white border border-blue/10 rounded-3xl overflow-hidden">
+                  <ul className="divide-y divide-blue/10">
                     {project.budget.map((b) => {
                       const share = plannedTotal > 0 ? (b.planned_amount / plannedTotal) * 100 : 0
                       const st = BUDGET_STATUSES.find((s) => s.value === b.status)
@@ -199,23 +199,23 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
                         <li key={b.id} className="p-5 space-y-2">
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <p className="font-bold text-white">{b.title}</p>
-                              {b.description && <p className="text-xs text-zinc-400 mt-0.5">{b.description}</p>}
+                              <p className="font-bold text-ink">{b.title}</p>
+                              {b.description && <p className="text-xs text-mute mt-0.5">{b.description}</p>}
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="font-extrabold text-white">{formatEur(b.planned_amount)}</p>
+                              <p className="font-extrabold text-ink">{formatEur(b.planned_amount)}</p>
                               {b.actual_amount != null && (
-                                <p className="text-[11px] text-emerald-300">skutočnosť {formatEur(b.actual_amount)}</p>
+                                <p className="text-[11px] text-emerald-700">skutočnosť {formatEur(b.actual_amount)}</p>
                               )}
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 bg-blue-soft/60 rounded-full overflow-hidden">
                               <div className="h-full bg-gold/70 rounded-full" style={{ width: `${share}%` }} />
                             </div>
                             <span
                               className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
-                                b.status === 'done' ? 'bg-emerald-500/20 text-emerald-200' : b.status === 'in_progress' ? 'bg-gold/20 text-gold-bright' : 'bg-white/10 text-zinc-300'
+                                b.status === 'done' ? 'bg-emerald-50 text-emerald-800' : b.status === 'in_progress' ? 'bg-gold/20 text-gold-ink' : 'bg-blue-soft/60 text-ink/80'
                               }`}
                             >
                               {st?.label}
@@ -225,11 +225,11 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
                       )
                     })}
                   </ul>
-                  <div className="p-5 bg-white/5 flex items-center justify-between text-sm">
-                    <span className="text-zinc-300 font-bold">Rozpočet spolu</span>
-                    <span className="font-extrabold text-white">
+                  <div className="p-5 bg-white flex items-center justify-between text-sm">
+                    <span className="text-ink/80 font-bold">Rozpočet spolu</span>
+                    <span className="font-extrabold text-ink">
                       {formatEur(plannedTotal)}
-                      {hasActual && <span className="text-emerald-300 font-bold text-xs ml-2">· skutočnosť {formatEur(actualTotal)}</span>}
+                      {hasActual && <span className="text-emerald-700 font-bold text-xs ml-2">· skutočnosť {formatEur(actualTotal)}</span>}
                     </span>
                   </div>
                 </div>
@@ -240,17 +240,17 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
             {project.milestones.length > 0 && (
               <section>
                 <SectionKicker>Harmonogram · {milestonesDone} / {project.milestones.length} splnené</SectionKicker>
-                <ol className="relative border-l border-white/10 ml-3 space-y-6">
+                <ol className="relative border-l border-blue/10 ml-3 space-y-6">
                   {project.milestones.map((m) => (
                     <li key={m.id} className="pl-8 relative">
-                      <span className={`absolute -left-[11px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center ${m.completed_at ? 'bg-emerald-500 text-blue-deep' : 'bg-blue-deep border-2 border-white/20 text-transparent'}`}>
+                      <span className={`absolute -left-[11px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center ${m.completed_at ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-blue/20 text-transparent'}`}>
                         {m.completed_at ? <CheckCircle2 size={14} /> : <Circle size={10} />}
                       </span>
-                      <p className={`font-bold ${m.completed_at ? 'text-white' : 'text-zinc-300'}`}>{m.title}</p>
-                      <p className="text-xs text-zinc-400 mt-0.5">
+                      <p className={`font-bold ${m.completed_at ? 'text-ink' : 'text-ink/80'}`}>{m.title}</p>
+                      <p className="text-xs text-mute mt-0.5">
                         {m.completed_at ? `Splnené ${formatDate(m.completed_at)}` : m.due_date ? `Plán ${formatDate(m.due_date)}` : ''}
                       </p>
-                      {m.description && <p className="text-sm text-zinc-400 mt-1 font-light">{m.description}</p>}
+                      {m.description && <p className="text-sm text-mute mt-1 font-light">{m.description}</p>}
                     </li>
                   ))}
                 </ol>
@@ -277,16 +277,16 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
                     const src = toEmbedUrl(v.url)
                     return (
                       <div key={v.id} className="space-y-2">
-                        <div className="aspect-video rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                        <div className="aspect-video rounded-2xl overflow-hidden border border-blue/10 bg-white">
                           {src ? (
                             <iframe src={src} title={v.title ?? 'Video'} className="w-full h-full" allow="encrypted-media; picture-in-picture" allowFullScreen />
                           ) : (
-                            <a href={v.url} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center text-gold-bright gap-2 text-sm font-bold">
+                            <a href={v.url} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center text-blue gap-2 text-sm font-bold">
                               <PlayCircle size={20} /> Otvoriť video
                             </a>
                           )}
                         </div>
-                        {v.title && <p className="text-sm text-zinc-300">{v.title}</p>}
+                        {v.title && <p className="text-sm text-ink/80">{v.title}</p>}
                       </div>
                     )
                   })}
@@ -300,8 +300,8 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
                 <SectionKicker>Ako pokračujeme</SectionKicker>
                 <div className="space-y-3">
                   {project.posts.map((p) => (
-                    <Link key={p.id} href={`/aktuality/${p.slug}`} className="flex gap-4 p-4 bg-white/5 border border-white/10 hover:border-gold/40 rounded-2xl transition-all group">
-                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/5 shrink-0 flex items-center justify-center">
+                    <Link key={p.id} href={`/aktuality/${p.slug}`} className="flex gap-4 p-4 bg-white border border-blue/10 hover:border-gold/40 rounded-2xl transition-all group">
+                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-white shrink-0 flex items-center justify-center">
                         {p.featured_image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={p.featured_image} alt="" className="w-full h-full object-cover" />
@@ -310,11 +310,11 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] text-zinc-400">{formatDate(p.published_at)}</p>
-                        <p className="font-bold text-white group-hover:text-gold-bright transition-colors leading-snug mt-0.5">{p.title}</p>
-                        {p.excerpt && <p className="text-sm text-zinc-400 font-light line-clamp-2 mt-1">{p.excerpt}</p>}
+                        <p className="text-[11px] text-mute">{formatDate(p.published_at)}</p>
+                        <p className="font-bold text-ink group-hover:text-blue transition-colors leading-snug mt-0.5">{p.title}</p>
+                        {p.excerpt && <p className="text-sm text-mute font-light line-clamp-2 mt-1">{p.excerpt}</p>}
                       </div>
-                      <ArrowRight size={18} className="text-zinc-500 group-hover:text-gold-bright self-center shrink-0" />
+                      <ArrowRight size={18} className="text-mute group-hover:text-blue self-center shrink-0" />
                     </Link>
                   ))}
                 </div>
@@ -328,13 +328,13 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
                 <ul className="grid sm:grid-cols-2 gap-3">
                   {documents.map((d) => (
                     <li key={d.id}>
-                      <a href={d.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 hover:border-gold/40 rounded-2xl transition-all group">
-                        <span className="w-10 h-10 rounded-xl bg-gold/10 text-gold-bright flex items-center justify-center shrink-0"><FileText size={18} /></span>
+                      <a href={d.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-white border border-blue/10 hover:border-gold/40 rounded-2xl transition-all group">
+                        <span className="w-10 h-10 rounded-xl bg-gold/10 text-gold-ink flex items-center justify-center shrink-0"><FileText size={18} /></span>
                         <span className="min-w-0 flex-1">
-                          <span className="block font-bold text-white group-hover:text-gold-bright truncate">{d.title || d.url.split('/').pop()}</span>
-                          {d.file_size ? <span className="text-[11px] text-zinc-400">{(d.file_size / 1024 / 1024).toFixed(1)} MB</span> : null}
+                          <span className="block font-bold text-ink group-hover:text-blue truncate">{d.title || d.url.split('/').pop()}</span>
+                          {d.file_size ? <span className="text-[11px] text-mute">{(d.file_size / 1024 / 1024).toFixed(1)} MB</span> : null}
                         </span>
-                        <Download size={16} className="text-zinc-500 group-hover:text-gold-bright shrink-0" />
+                        <Download size={16} className="text-mute group-hover:text-blue shrink-0" />
                       </a>
                     </li>
                   ))}
@@ -366,11 +366,11 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
               />
 
               {(project.recipient_name || project.guarantor_name || project.parish_name) && (
-                <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-5">
+                <div className="bg-white border border-blue/10 rounded-3xl p-6 space-y-5">
                   {project.recipient_name && (
                     <InfoRow icon={<Building2 size={16} />} label="Príjemca daru">
-                      <span className="text-white font-bold">{project.recipient_name}</span>
-                      {project.recipient_address && <span className="block text-xs text-zinc-400">{project.recipient_address}</span>}
+                      <span className="text-ink font-bold">{project.recipient_name}</span>
+                      {project.recipient_address && <span className="block text-xs text-mute">{project.recipient_address}</span>}
                     </InfoRow>
                   )}
                   {project.guarantor_name && (
@@ -378,37 +378,37 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
                       <span className="flex items-center gap-3">
                         {project.guarantor_photo_url && (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={project.guarantor_photo_url} alt="" className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                          <img src={project.guarantor_photo_url} alt="" className="w-10 h-10 rounded-full object-cover border border-blue/10" />
                         )}
                         <span>
-                          <span className="text-white font-bold block">{project.guarantor_name}</span>
-                          {project.guarantor_role && <span className="text-xs text-zinc-400">{project.guarantor_role}</span>}
+                          <span className="text-ink font-bold block">{project.guarantor_name}</span>
+                          {project.guarantor_role && <span className="text-xs text-mute">{project.guarantor_role}</span>}
                         </span>
                       </span>
                     </InfoRow>
                   )}
                   {project.parish_name && (
                     <InfoRow icon={<Landmark size={16} />} label="Farnosť">
-                      <span className="text-white font-bold">{project.parish_name}</span>
+                      <span className="text-ink font-bold">{project.parish_name}</span>
                     </InfoRow>
                   )}
                 </div>
               )}
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 flex items-center gap-2"><Share2 size={12} /> Zdieľať výzvu</p>
+              <div className="bg-white border border-blue/10 rounded-3xl p-6">
+                <p className="text-[10px] font-black uppercase tracking-widest text-mute mb-3 flex items-center gap-2"><Share2 size={12} /> Zdieľať výzvu</p>
                 <div className="flex flex-wrap gap-2">
                   <a
                     href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-gold/40 text-xs font-bold text-zinc-200 hover:text-gold-bright transition-all"
+                    className="px-4 py-2 rounded-xl bg-white border border-blue/10 hover:border-gold/40 text-xs font-bold text-ink/90 hover:text-gold-bright transition-all"
                   >
                     Facebook
                   </a>
                   <a
                     href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(`${shareText}\n${pageUrl}`)}`}
-                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-gold/40 text-xs font-bold text-zinc-200 hover:text-gold-bright transition-all inline-flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-white border border-blue/10 hover:border-gold/40 text-xs font-bold text-ink/90 hover:text-gold-bright transition-all inline-flex items-center gap-1.5"
                   >
                     <Mail size={12} /> E-mail
                   </a>
@@ -428,7 +428,7 @@ function phaseTitle(phase: MediaPhase): string {
 
 function SectionKicker({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 text-gold-bright uppercase tracking-widest text-xs font-extrabold mb-5">
+    <div className="flex items-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-5">
       <span className="w-8 h-[2px] bg-gold rounded-full" />
       <span>{children}</span>
     </div>
@@ -437,10 +437,10 @@ function SectionKicker({ children }: { children: React.ReactNode }) {
 
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
-    <div className="bg-white/5 border border-white/5 rounded-2xl py-3 px-2">
-      <div className="flex items-center justify-center gap-1.5 text-gold-bright mb-1">{icon}</div>
-      <p className="text-base sm:text-lg font-extrabold text-white leading-none">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mt-1">{label}</p>
+    <div className="bg-white border border-blue/10 rounded-2xl py-3 px-2">
+      <div className="flex items-center justify-center gap-1.5 text-gold-ink mb-1">{icon}</div>
+      <p className="text-base sm:text-lg font-extrabold text-ink leading-none">{value}</p>
+      <p className="text-[10px] uppercase tracking-wider text-mute font-bold mt-1">{label}</p>
     </div>
   )
 }
@@ -448,9 +448,9 @@ function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; la
 function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
-      <span className="w-9 h-9 rounded-xl bg-white/5 text-gold-bright flex items-center justify-center shrink-0">{icon}</span>
+      <span className="w-9 h-9 rounded-xl bg-white text-gold-ink flex items-center justify-center shrink-0">{icon}</span>
       <div className="text-sm">
-        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-0.5">{label}</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-mute mb-0.5">{label}</p>
         {children}
       </div>
     </div>
@@ -460,10 +460,10 @@ function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: stri
 function Gallery({ title, items }: { title: string | null; items: { id: string; url: string; thumbnail_url: string | null; title: string | null }[] }) {
   return (
     <div className="space-y-3">
-      {title && <h3 className="text-sm font-extrabold text-zinc-300 uppercase tracking-wider">{title}</h3>}
+      {title && <h3 className="text-sm font-extrabold text-ink/80 uppercase tracking-wider">{title}</h3>}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {items.map((m) => (
-          <a key={m.id} href={m.url} target="_blank" rel="noreferrer" className="group block aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-white/5 relative">
+          <a key={m.id} href={m.url} target="_blank" rel="noreferrer" className="group block aspect-[4/3] rounded-2xl overflow-hidden border border-blue/10 bg-white relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={m.thumbnail_url || m.url} alt={m.title ?? ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
             {m.title && (

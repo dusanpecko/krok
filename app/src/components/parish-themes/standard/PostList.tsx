@@ -9,7 +9,7 @@ export default function PostList({ parish, type, posts, page, hasMore }: ParishP
     <Shell parish={parish} active={type} compact>
       <h2 className="text-3xl font-light mb-8">{type === 'announcement' ? 'Farské oznamy' : 'Aktuality'}</h2>
       {posts.length === 0 ? (
-        <p className="text-blue-100/60 py-16 text-center">{type === 'announcement' ? 'Zatiaľ tu nie sú žiadne oznamy.' : 'Zatiaľ tu nie sú žiadne aktuality.'}</p>
+        <p className="text-mute py-16 text-center">{type === 'announcement' ? 'Zatiaľ tu nie sú žiadne oznamy.' : 'Zatiaľ tu nie sú žiadne aktuality.'}</p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {posts.map((p) => (
@@ -19,8 +19,8 @@ export default function PostList({ parish, type, posts, page, hasMore }: ParishP
       )}
       {(page > 1 || hasMore) && (
         <div className="flex justify-between mt-10 text-sm font-extrabold">
-          {page > 1 ? <Link href={`${path}?strana=${page - 1}`} className="text-gold-bright hover:underline">← Novšie</Link> : <span />}
-          {hasMore && <Link href={`${path}?strana=${page + 1}`} className="text-gold-bright hover:underline">Staršie →</Link>}
+          {page > 1 ? <Link href={`${path}?strana=${page - 1}`} className="text-gold-ink hover:underline">← Novšie</Link> : <span />}
+          {hasMore && <Link href={`${path}?strana=${page + 1}`} className="text-gold-ink hover:underline">Staršie →</Link>}
         </div>
       )}
     </Shell>

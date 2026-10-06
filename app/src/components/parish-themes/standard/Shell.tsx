@@ -43,19 +43,19 @@ export default function Shell({ parish, active, children, compact = false }: { p
         manageUrl={parish.manageUrl}
         showMassTimes={hasSchedule}
       />
-      <main className="relative flex-grow bg-blue-deep text-white pb-16 overflow-hidden">
+      <main className="relative flex-grow bg-paper-warm text-ink pb-16 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
         {parish.image_url && !compact && (
           <div className="absolute inset-x-0 top-0 h-[460px] pointer-events-none">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={parish.image_url} alt="" className="w-full h-full object-cover opacity-25" />
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-deep/40 via-blue-deep/70 to-blue-deep" />
+            <div className="absolute inset-0 bg-gradient-to-b from-paper-warm/30 via-paper-warm/80 to-paper-warm" />
           </div>
         )}
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14">
           {parish.preview && (
-            <div className="mb-8 flex items-center gap-2 px-4 py-3 rounded-2xl bg-amber-400/15 border border-amber-300/40 text-amber-100 text-sm font-bold">
+            <div className="mb-8 flex items-center gap-2 px-4 py-3 rounded-2xl bg-amber-400/15 border border-amber-300/40 text-amber-900 text-sm font-bold">
               <Eye size={16} className="shrink-0" /> Náhľad – stránka farnosti zatiaľ nie je zverejnená. Vidíte ju len vy a biskupský úrad.
             </div>
           )}
@@ -63,7 +63,7 @@ export default function Shell({ parish, active, children, compact = false }: { p
           {!compact && (
             <header className="mb-10">
               <h1 className="text-4xl sm:text-5xl font-light tracking-tight">{parishDisplayName(parish)}</h1>
-              <p className="mt-3 text-blue-100/70 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <p className="mt-3 text-mute flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 {parish.patrocinium && <span>{parish.patrocinium}</span>}
                 {parish.deanery_name && <span>Dekanát {parish.deanery_name}</span>}
                 {parish.city && (
@@ -87,11 +87,11 @@ export default function Shell({ parish, active, children, compact = false }: { p
 export function SectionHeading({ id, children, icon }: { id?: string; children: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <h2 id={id} className="scroll-mt-32 flex items-center gap-3 text-xl sm:text-2xl font-light tracking-tight mb-6">
-      {icon && <span className="text-gold">{icon}</span>}
+      {icon && <span className="text-gold-ink">{icon}</span>}
       {children}
-      <span className="flex-1 h-px bg-white/10 ml-2" />
+      <span className="flex-1 h-px bg-blue-soft/60 ml-2" />
     </h2>
   )
 }
 
-export const cardCls = 'bg-white/[0.04] border border-white/10 rounded-2xl'
+export const cardCls = 'bg-white/[0.04] border border-blue/10 rounded-2xl'

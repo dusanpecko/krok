@@ -40,26 +40,26 @@ export default async function VyzvyPage({ searchParams }: PageProps) {
   const totalSupporters = all.reduce((acc, p) => acc + p.stats.supporters_count, 0)
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep min-h-screen text-white pb-24 overflow-hidden">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm min-h-screen text-ink pb-24 overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-36 sm:pt-44">
         <header className="text-center max-w-2xl mx-auto mb-10">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-gold-bright mb-4">Váš KROK má konkrétny cieľ</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-blue mb-4">Váš KROK má konkrétny cieľ</p>
           <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-5">Výzvy na podporu</h1>
-          <p className="text-blue-100/70 text-base sm:text-lg leading-relaxed">
+          <p className="text-mute text-base sm:text-lg leading-relaxed">
             Každá výzva má svoj cieľ, rozpočet a garanta. Dar sa priradí priamo k nej a vy vidíte, ako sa napĺňa.
           </p>
           {all.length > 0 && (
             <div className="flex flex-wrap justify-center gap-6 mt-8 text-sm">
-              <span className="text-zinc-300">
-                <strong className="text-white text-lg font-extrabold">{formatEur(totalCollected)}</strong> vyzbieraných
+              <span className="text-ink/80">
+                <strong className="text-ink text-lg font-extrabold">{formatEur(totalCollected)}</strong> vyzbieraných
               </span>
-              <span className="text-zinc-300">
-                <strong className="text-white text-lg font-extrabold">{totalSupporters}</strong> darcov
+              <span className="text-ink/80">
+                <strong className="text-ink text-lg font-extrabold">{totalSupporters}</strong> darcov
               </span>
-              <span className="text-zinc-300">
-                <strong className="text-white text-lg font-extrabold">{open.length}</strong> otvorených výziev
+              <span className="text-ink/80">
+                <strong className="text-ink text-lg font-extrabold">{open.length}</strong> otvorených výziev
               </span>
             </div>
           )}
@@ -70,7 +70,7 @@ export default async function VyzvyPage({ searchParams }: PageProps) {
             <Link
               href="/vyzvy"
               className={`px-4 py-2 rounded-xl text-sm font-extrabold border transition-all ${
-                !category ? 'bg-gold/15 border-gold text-gold-bright' : 'bg-white/5 border-white/10 text-blue-50 hover:border-gold/40 hover:text-gold-bright'
+                !category ? 'bg-gold/15 border-gold text-gold-ink' : 'bg-white border-blue/10 text-ink/85 hover:border-gold/40 hover:text-gold-bright'
               }`}
             >
               Všetky
@@ -80,7 +80,7 @@ export default async function VyzvyPage({ searchParams }: PageProps) {
                 key={c.value}
                 href={`/vyzvy?kategoria=${c.value}`}
                 className={`px-4 py-2 rounded-xl text-sm font-extrabold border transition-all ${
-                  category === c.value ? 'bg-gold/15 border-gold text-gold-bright' : 'bg-white/5 border-white/10 text-blue-50 hover:border-gold/40 hover:text-gold-bright'
+                  category === c.value ? 'bg-gold/15 border-gold text-gold-ink' : 'bg-white border-blue/10 text-ink/85 hover:border-gold/40 hover:text-gold-bright'
                 }`}
               >
                 {c.label}
@@ -90,9 +90,9 @@ export default async function VyzvyPage({ searchParams }: PageProps) {
         )}
 
         {filtered.length === 0 && (
-          <div className="text-center py-24 bg-white/5 border border-white/10 rounded-3xl">
+          <div className="text-center py-24 bg-white border border-blue/10 rounded-3xl">
             <HandHeart size={40} className="mx-auto text-gold/50 mb-4" />
-            <p className="text-zinc-300">
+            <p className="text-ink/80">
               {category ? `V kategórii ${categoryLabel(category)} zatiaľ nie je žiadna výzva.` : 'Zatiaľ nie je zverejnená žiadna výzva.'}
             </p>
           </div>
@@ -122,7 +122,7 @@ export default async function VyzvyPage({ searchParams }: PageProps) {
 
         {completed.length > 0 && (
           <section>
-            <SectionHeading title="Podarilo sa" subtitle="Ukončené výzvy a čo z nich vzniklo" icon={<CheckCircle2 size={16} className="text-emerald-300" />} />
+            <SectionHeading title="Podarilo sa" subtitle="Ukončené výzvy a čo z nich vzniklo" icon={<CheckCircle2 size={16} className="text-emerald-700" />} />
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {completed.map((p) => (
                 <ProjectCard key={p.id} project={p} />
@@ -138,7 +138,7 @@ export default async function VyzvyPage({ searchParams }: PageProps) {
 function SectionHeading({ title, subtitle, icon }: { title: string; subtitle: string; icon?: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <div className="flex items-center gap-3 text-gold-bright uppercase tracking-widest text-xs font-extrabold mb-2">
+      <div className="flex items-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-2">
         <span className="w-8 h-[2px] bg-gold rounded-full" />
         {icon}
         <span>{subtitle}</span>

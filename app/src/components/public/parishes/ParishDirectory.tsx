@@ -90,25 +90,25 @@ export default function ParishDirectory({ parishes, initialQuery = '' }: { paris
     })
 
   if (parishes.length === 0) {
-    return <p className="text-center py-24 bg-white/5 border border-white/10 rounded-3xl text-blue-100/70">Stránky farností pripravujeme.</p>
+    return <p className="text-center py-24 bg-white border border-blue/10 rounded-3xl text-mute">Stránky farností pripravujeme.</p>
   }
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row gap-3 max-w-3xl mx-auto mb-4">
         <label className="flex-1 relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-100/50" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-mute" />
           <input
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Obec, farnosť alebo patrón…"
             aria-label="Hľadať farnosť"
-            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder:text-blue-100/40 focus:outline-none focus:border-gold"
+            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-blue/15 text-ink placeholder:text-mute/60 focus:outline-none focus:border-gold"
           />
         </label>
         {deaneries.length > 1 && (
-          <select value={deanery} onChange={(e) => setDeanery(e.target.value)} aria-label="Dekanát" className="px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white focus:outline-none focus:border-gold">
+          <select value={deanery} onChange={(e) => setDeanery(e.target.value)} aria-label="Dekanát" className="px-4 py-3 rounded-xl bg-white border border-blue/15 text-ink focus:outline-none focus:border-gold">
             <option value="" className="text-ink">Všetky dekanáty</option>
             {deaneries.map(([id, name]) => (
               <option key={id} value={id} className="text-ink">
@@ -120,11 +120,11 @@ export default function ParishDirectory({ parishes, initialQuery = '' }: { paris
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3 mb-10 text-sm">
         {here ? (
-          <button type="button" onClick={() => setHere(null)} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/40 text-gold-bright font-extrabold hover:bg-gold/10">
+          <button type="button" onClick={() => setHere(null)} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/40 text-gold-ink font-extrabold hover:bg-gold/10">
             <X size={15} /> Zoradené podľa vzdialenosti od vás
           </button>
         ) : (
-          <button type="button" onClick={locate} disabled={locating} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 text-blue-50/90 font-extrabold hover:border-gold/40 hover:text-gold-bright disabled:opacity-60">
+          <button type="button" onClick={locate} disabled={locating} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-blue/15 text-ink/85 font-extrabold hover:border-gold/40 hover:text-gold-bright disabled:opacity-60">
             {locating ? <Loader2 size={15} className="animate-spin" /> : <LocateFixed size={15} />} Najbližšie ku mne
           </button>
         )}
@@ -132,17 +132,17 @@ export default function ParishDirectory({ parishes, initialQuery = '' }: { paris
       </div>
 
       {hits.length === 0 ? (
-        <p className="text-center text-blue-100/60 py-16">Nenašli sme farnosť pre „{q}“. Skúste iný názov obce.</p>
+        <p className="text-center text-mute py-16">Nenašli sme farnosť pre „{q}“. Skúste iný názov obce.</p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {hits.map(({ p, village, distance }) => (
-            <Link key={p.slug} href={`/farnosti/${p.slug}`} className="bg-white/4 border border-white/10 rounded-2xl p-5 hover:border-gold/40 transition-colors group">
-              <p className="font-extrabold flex items-start gap-2 group-hover:text-gold-bright">
-                <Church size={18} className="text-gold shrink-0 mt-0.5" /> <span className="flex-1">{p.official_name ?? p.name}</span>
-                {distance != null && <span className="text-xs font-bold text-gold-bright whitespace-nowrap mt-0.5">{km(distance)}</span>}
+            <Link key={p.slug} href={`/farnosti/${p.slug}`} className="bg-white border border-blue/10 rounded-2xl p-5 hover:border-gold/40 transition-colors group">
+              <p className="font-extrabold flex items-start gap-2 group-hover:text-blue">
+                <Church size={18} className="text-gold-ink shrink-0 mt-0.5" /> <span className="flex-1">{p.official_name ?? p.name}</span>
+                {distance != null && <span className="text-xs font-bold text-blue whitespace-nowrap mt-0.5">{km(distance)}</span>}
               </p>
-              {p.patrocinium && <p className="text-sm text-blue-100/60 mt-1">{p.patrocinium}</p>}
-              <p className="text-xs text-blue-100/50 mt-3 flex flex-wrap gap-x-3">
+              {p.patrocinium && <p className="text-sm text-mute mt-1">{p.patrocinium}</p>}
+              <p className="text-xs text-mute mt-3 flex flex-wrap gap-x-3">
                 {p.deanery_name && <span>Dekanát {p.deanery_name}</span>}
                 {p.city && (
                   <span className="inline-flex items-center gap-1">
@@ -150,8 +150,8 @@ export default function ParishDirectory({ parishes, initialQuery = '' }: { paris
                   </span>
                 )}
               </p>
-              {village && <p className="text-xs text-gold-bright mt-2">Obec {village} patrí do tejto farnosti</p>}
-              {!p.has_web && <p className="text-xs text-blue-100/40 mt-2">Kontakt na farský úrad · rozpis omší zatiaľ nezverejnený</p>}
+              {village && <p className="text-xs text-blue mt-2">Obec {village} patrí do tejto farnosti</p>}
+              {!p.has_web && <p className="text-xs text-mute mt-2">Kontakt na farský úrad · rozpis omší zatiaľ nezverejnený</p>}
             </Link>
           ))}
         </div>

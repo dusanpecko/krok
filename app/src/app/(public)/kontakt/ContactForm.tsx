@@ -151,16 +151,16 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep text-white font-sans selection:bg-gold-bright/35 selection:text-white min-h-screen overflow-hidden pb-24">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm text-ink font-sans selection:bg-gold-bright/35 selection:text-ink min-h-screen overflow-hidden pb-24">
       {/* Filmové zrno pre hmatateľný sakrálny retro efekt */}
       <div className="grain" />
 
       {/* Kontemplatívne pozadie - nočný prechod a svetelné závoje */}
-      <div className="absolute inset-0 bg-radial-[at_center_top] from-blue/30 via-blue-deep to-blue-deep z-0" />
+      <div className="absolute inset-0 bg-radial-[at_center_top] from-blue-soft via-paper-warm to-paper-warm z-0" />
 
       {/* Dekoratívne ambientné osvetlenie z manuálu */}
       <motion.div 
-        className="absolute top-[10%] left-[5%] w-[60vw] h-[40vh] rounded-full bg-blue/15 blur-[130px] pointer-events-none z-0"
+        className="absolute top-[10%] left-[5%] w-[60vw] h-[40vh] rounded-full bg-blue/5 blur-[130px] pointer-events-none z-0"
         animate={prefersReducedMotion ? {} : {
           scale: [1, 1.1, 1],
           opacity: [0.3, 0.45, 0.3],
@@ -197,7 +197,7 @@ export default function ContactForm() {
           transition={{ duration: 1.0, ease: "easeOut" }}
           className="mb-6"
         >
-          <span className="px-4 py-1.5 rounded-full border border-gold/25 bg-gold/5 text-gold-bright text-xs tracking-widest uppercase font-extrabold">
+          <span className="px-4 py-1.5 rounded-full border border-gold/25 bg-gold/5 text-blue text-xs tracking-widest uppercase font-extrabold">
             Otvorená komunikácia
           </span>
         </motion.div>
@@ -206,10 +206,10 @@ export default function ContactForm() {
           initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, delay: 0.1, ease: "easeOut" }}
-          className="text-4xl sm:text-5xl lg:text-6xl font-light text-white leading-tight mb-6"
+          className="text-4xl sm:text-5xl lg:text-6xl font-light text-ink leading-tight mb-6"
         >
           Spojme sa pre <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white font-extrabold">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink font-extrabold">
             spoločné dielo viery.
           </span>
         </motion.h1>
@@ -218,7 +218,7 @@ export default function ContactForm() {
           initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.4, delay: 0.4 }}
-          className="text-zinc-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-light"
+          className="text-ink/80 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-light"
         >
           Máte otázky o podpore pastoračných projektov, správe vášho účtu alebo chcete 
           prispieť vlastným nápadom? Náš tím je pripravený vám pomôcť na každom kroku.
@@ -239,14 +239,14 @@ export default function ContactForm() {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Kancelária a sídlo */}
-            <div className="p-6 bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl hover:border-white/15 hover:bg-white/8 transition-all group flex items-start gap-4 shadow-xl">
-              <div className="w-12 h-12 bg-white/5 text-gold border border-white/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:border-gold/30 transition-all">
+            <div className="p-6 bg-white border border-blue/10 backdrop-blur-sm rounded-2xl hover:border-blue/15 hover:bg-white/8 transition-all group flex items-start gap-4 shadow-xl">
+              <div className="w-12 h-12 bg-white text-gold-ink border border-blue/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:border-gold/30 transition-all">
                 <MapPin size={24} />
               </div>
               <div className="space-y-1">
-                <h4 className="font-extrabold text-gold text-xs tracking-wider uppercase">Kancelária a sídlo</h4>
-                <p className="font-extrabold text-white text-base">KROK – Pastoračný fond Žilinskej diecézy</p>
-                <p className="text-zinc-300 text-sm leading-relaxed font-light">
+                <h4 className="font-extrabold text-blue text-xs tracking-wider uppercase">Kancelária a sídlo</h4>
+                <p className="font-extrabold text-ink text-base">KROK – Pastoračný fond Žilinskej diecézy</p>
+                <p className="text-ink/80 text-sm leading-relaxed font-light">
                   Jána Kalinčiaka 1,<br />
                   010 01 Žilina
                 </p>
@@ -254,19 +254,19 @@ export default function ContactForm() {
             </div>
 
             {/* Telefón a email s kopírovaním */}
-            <div className="p-6 bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl hover:border-white/15 hover:bg-white/8 transition-all space-y-4 shadow-xl">
+            <div className="p-6 bg-white border border-blue/10 backdrop-blur-sm rounded-2xl hover:border-blue/15 hover:bg-white/8 transition-all space-y-4 shadow-xl">
               {/* Telefón */}
               <div className="flex items-center gap-4 group">
                 <button 
                   onClick={() => copyToClipboard('+421903982982', 'phone')}
-                  className="w-12 h-12 bg-white/5 text-gold border border-white/10 rounded-xl flex items-center justify-center shrink-0 hover:bg-white/10 hover:border-gold/30 group-hover:scale-105 transition-all cursor-pointer relative"
+                  className="w-12 h-12 bg-white text-gold-ink border border-blue/10 rounded-xl flex items-center justify-center shrink-0 hover:bg-blue-soft/50 hover:border-gold/30 group-hover:scale-105 transition-all cursor-pointer relative"
                   title="Kopírovať telefón"
                 >
                   {copiedField === 'phone' ? <Check size={20} className="text-green-400" /> : <Phone size={24} />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-zinc-400 text-xs tracking-wider uppercase">Telefón</h4>
-                  <a href="tel:+421903982982" className="font-bold text-white hover:text-gold transition-colors block text-base truncate">
+                  <h4 className="font-extrabold text-mute text-xs tracking-wider uppercase">Telefón</h4>
+                  <a href="tel:+421903982982" className="font-bold text-ink hover:text-blue transition-colors block text-base truncate">
                     +421 903 982 982
                   </a>
                 </div>
@@ -284,20 +284,20 @@ export default function ContactForm() {
                 </AnimatePresence>
               </div>
 
-              <hr className="border-white/10" />
+              <hr className="border-blue/10" />
 
               {/* Email */}
               <div className="flex items-center gap-4 group">
                 <button 
                   onClick={() => copyToClipboard('mojkrok@dcza.sk', 'email')}
-                  className="w-12 h-12 bg-white/5 text-gold border border-white/10 rounded-xl flex items-center justify-center shrink-0 hover:bg-white/10 hover:border-gold/30 group-hover:scale-105 transition-all cursor-pointer relative"
+                  className="w-12 h-12 bg-white text-gold-ink border border-blue/10 rounded-xl flex items-center justify-center shrink-0 hover:bg-blue-soft/50 hover:border-gold/30 group-hover:scale-105 transition-all cursor-pointer relative"
                   title="Kopírovať email"
                 >
                   {copiedField === 'email' ? <Check size={20} className="text-green-400" /> : <Mail size={24} />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-zinc-400 text-xs tracking-wider uppercase">E-mail</h4>
-                  <a href="mailto:mojkrok@dcza.sk" className="font-bold text-white hover:text-gold transition-colors block text-base truncate">
+                  <h4 className="font-extrabold text-mute text-xs tracking-wider uppercase">E-mail</h4>
+                  <a href="mailto:mojkrok@dcza.sk" className="font-bold text-ink hover:text-blue transition-colors block text-base truncate">
                     mojkrok@dcza.sk
                   </a>
                 </div>
@@ -317,56 +317,56 @@ export default function ContactForm() {
             </div>
 
             {/* Fakturačné údaje a Bankový účet */}
-            <div className="p-6 bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl hover:border-white/15 hover:bg-white/8 transition-all space-y-5 shadow-xl">
+            <div className="p-6 bg-white border border-blue/10 backdrop-blur-sm rounded-2xl hover:border-blue/15 hover:bg-white/8 transition-all space-y-5 shadow-xl">
               {/* Fakturačné info */}
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-white/5 text-gold border border-white/10 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-white text-gold-ink border border-blue/10 rounded-xl flex items-center justify-center shrink-0">
                   <Building2 size={24} />
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1">
                   <div className="col-span-2">
-                    <h4 className="font-extrabold text-gold text-xs tracking-wider uppercase mb-1">Fakturačné údaje</h4>
+                    <h4 className="font-extrabold text-blue text-xs tracking-wider uppercase mb-1">Fakturačné údaje</h4>
                   </div>
                   <div>
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider block">IČO</span>
-                    <span className="font-bold text-white text-sm">52 60 18 97</span>
+                    <span className="text-[10px] text-mute uppercase tracking-wider block">IČO</span>
+                    <span className="font-bold text-ink text-sm">52 60 18 97</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider block">DIČ</span>
-                    <span className="font-bold text-white text-sm">21 21 13 90 42</span>
+                    <span className="text-[10px] text-mute uppercase tracking-wider block">DIČ</span>
+                    <span className="font-bold text-ink text-sm">21 21 13 90 42</span>
                   </div>
                 </div>
               </div>
 
-              <hr className="border-white/10" />
+              <hr className="border-blue/10" />
 
               {/* Bankový účet Fio banky pre priame milodary */}
               <div className="space-y-3">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/5 text-gold border border-white/10 rounded-xl flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 bg-white text-gold-ink border border-blue/10 rounded-xl flex items-center justify-center shrink-0">
                     <Landmark size={24} />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-extrabold text-zinc-400 text-xs tracking-wider uppercase">Bankový účet (FIO banka)</h4>
-                    <span className="text-xs text-zinc-400 font-light block mt-0.5">Pre priame milodary mimo portálu</span>
+                    <h4 className="font-extrabold text-mute text-xs tracking-wider uppercase">Bankový účet (FIO banka)</h4>
+                    <span className="text-xs text-mute font-light block mt-0.5">Pre priame milodary mimo portálu</span>
                   </div>
                 </div>
 
-                <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                  <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block">Názov účtu</span>
-                  <span className="font-bold text-xs text-zinc-200 block mt-0.5">Pastoračný fond Žilinskej diecézy</span>
+                <div className="p-3 bg-white rounded-xl border border-blue/10">
+                  <span className="text-[10px] text-mute uppercase font-black tracking-wider block">Názov účtu</span>
+                  <span className="font-bold text-xs text-ink/90 block mt-0.5">Pastoračný fond Žilinskej diecézy</span>
                 </div>
 
-                <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between gap-3 group relative overflow-hidden">
+                <div className="p-3 bg-white rounded-xl border border-blue/10 flex items-center justify-between gap-3 group relative overflow-hidden">
                   <div className="min-w-0">
-                    <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block">IBAN kód</span>
-                    <span className="font-mono font-bold text-xs text-zinc-200 break-all select-all block mt-0.5">
+                    <span className="text-[10px] text-mute uppercase font-black tracking-wider block">IBAN kód</span>
+                    <span className="font-mono font-bold text-xs text-ink/90 break-all select-all block mt-0.5">
                       SK04 8330 0000 0029 0168 8673
                     </span>
                   </div>
                   <button
                     onClick={() => copyToClipboard('SK0483300000002901688673', 'iban')}
-                    className="p-2 px-3 bg-white/10 hover:bg-white/15 text-white border border-white/10 hover:border-white/20 rounded-lg shadow-sm transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+                    className="p-2 px-3 bg-blue-soft/60 hover:bg-blue-soft text-ink border border-blue/10 hover:border-blue/30 rounded-lg shadow-sm transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
                     title="Kopírovať IBAN"
                   >
                     {copiedField === 'iban' ? (
@@ -376,7 +376,7 @@ export default function ContactForm() {
                       </>
                     ) : (
                       <>
-                        <Copy size={14} className="text-zinc-300" />
+                        <Copy size={14} className="text-ink/80" />
                         <span className="text-xs font-bold">Kopírovať</span>
                       </>
                     )}
@@ -389,16 +389,16 @@ export default function ContactForm() {
 
           {/* PRAVÝ STĹPEC: Kontaktný formulár */}
           <div className="lg:col-span-7">
-            <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl relative">
+            <div className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl relative">
               
               {/* Form header gradient bar */}
-              <div className="bg-gradient-to-r from-blue to-blue-deep px-8 py-6 text-white flex items-center gap-3 border-b border-white/5">
-                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10">
-                  <MessageSquare size={20} className="text-gold" />
+              <div className="bg-gradient-to-r from-blue to-blue-deep px-8 py-6 text-white flex items-center gap-3 border-b border-blue/10">
+                <div className="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center border border-white/20">
+                  <MessageSquare size={20} className="text-gold-bright" />
                 </div>
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Napíšte nám správu</h2>
-                  <p className="text-xs text-zinc-300 font-light mt-0.5">Máte otázku alebo pripomienku? Radi odpovieme.</p>
+                  <p className="text-xs text-white/80 font-light mt-0.5">Máte otázku alebo pripomienku? Radi odpovieme.</p>
                 </div>
               </div>
 
@@ -416,14 +416,14 @@ export default function ContactForm() {
                         <Check size={40} className="animate-bounce" />
                       </div>
                       <div className="space-y-2">
-                        <h3 className="text-2xl font-extrabold text-white">Správa bola odoslaná!</h3>
-                        <p className="text-zinc-300 max-w-md mx-auto leading-relaxed font-light text-sm">
+                        <h3 className="text-2xl font-extrabold text-ink">Správa bola odoslaná!</h3>
+                        <p className="text-ink/80 max-w-md mx-auto leading-relaxed font-light text-sm">
                           {successMsg}
                         </p>
                       </div>
                       <button
                         onClick={() => setSuccessMsg(null)}
-                        className="px-6 py-2.5 bg-gradient-to-r from-blue to-blue-deep hover:from-blue hover:to-blue/90 border border-white/10 text-white rounded-full font-bold shadow-md transition-all cursor-pointer"
+                        className="px-6 py-2.5 bg-gradient-to-r from-blue to-blue-deep hover:from-blue hover:to-blue/90 border border-blue/10 text-white rounded-full font-bold shadow-md transition-all cursor-pointer"
                       >
                         Poslať ďalšiu správu
                       </button>
@@ -448,7 +448,7 @@ export default function ContactForm() {
                         
                         {/* Name input */}
                         <div className="space-y-2">
-                          <label htmlFor="contact-name" className="text-xs font-black uppercase tracking-wider text-zinc-400 block">
+                          <label htmlFor="contact-name" className="text-xs font-black uppercase tracking-wider text-mute block">
                             Vaše meno
                           </label>
                           <input
@@ -458,13 +458,13 @@ export default function ContactForm() {
                             onChange={(e) => setName(e.target.value)}
                             disabled={isSubmitting}
                             placeholder="napr. Ján Kováč"
-                            className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium"
+                            className="w-full px-4 py-3.5 bg-white border border-blue/10 rounded-2xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium"
                           />
                         </div>
 
                         {/* Email input */}
                         <div className="space-y-2">
-                          <label htmlFor="contact-email" className="text-xs font-black uppercase tracking-wider text-zinc-400 block">
+                          <label htmlFor="contact-email" className="text-xs font-black uppercase tracking-wider text-mute block">
                             Váš e-mail
                           </label>
                           <input
@@ -474,13 +474,13 @@ export default function ContactForm() {
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isSubmitting}
                             placeholder="napr. jan.kovac@example.com"
-                            className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium"
+                            className="w-full px-4 py-3.5 bg-white border border-blue/10 rounded-2xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium"
                           />
                         </div>
 
                         {/* Subject input */}
                         <div className="col-span-1 sm:col-span-2 space-y-2">
-                          <label htmlFor="contact-subject" className="text-xs font-black uppercase tracking-wider text-zinc-400 block">
+                          <label htmlFor="contact-subject" className="text-xs font-black uppercase tracking-wider text-mute block">
                             Predmet
                           </label>
                           <input
@@ -490,14 +490,14 @@ export default function ContactForm() {
                             onChange={(e) => setSubject(e.target.value)}
                             disabled={isSubmitting}
                             placeholder="napr. Otázka k donátorstvu / Potvrdenie pre dane"
-                            className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium"
+                            className="w-full px-4 py-3.5 bg-white border border-blue/10 rounded-2xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium"
                           />
                         </div>
 
                         {/* Message input */}
                         <div className="col-span-1 sm:col-span-2 space-y-2">
-                          <label htmlFor="contact-message" className="text-xs font-black uppercase tracking-wider text-zinc-400 block">
-                            Vaša správa <span className="text-zinc-500 font-normal lowercase">(nepovinná)</span>
+                          <label htmlFor="contact-message" className="text-xs font-black uppercase tracking-wider text-mute block">
+                            Vaša správa <span className="text-mute font-normal lowercase">(nepovinná)</span>
                           </label>
                           <textarea
                             id="contact-message"
@@ -506,7 +506,7 @@ export default function ContactForm() {
                             onChange={(e) => setMessage(e.target.value)}
                             disabled={isSubmitting}
                             placeholder="Sem napíšte text vašej otázky alebo podnetu..."
-                            className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 resize-none text-sm font-medium"
+                            className="w-full px-4 py-3.5 bg-white border border-blue/10 rounded-2xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 resize-none text-sm font-medium"
                           />
                         </div>
                       </div>
@@ -515,7 +515,7 @@ export default function ContactForm() {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-4 bg-gradient-to-r from-blue to-blue-deep hover:from-blue hover:to-blue/90 border border-white/10 text-white font-bold rounded-2xl shadow-lg hover:shadow-blue-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:pointer-events-none group"
+                        className="w-full py-4 bg-gradient-to-r from-blue to-blue-deep hover:from-blue hover:to-blue/90 border border-blue/10 text-white font-bold rounded-2xl shadow-lg hover:shadow-blue-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:pointer-events-none group"
                       >
                         {isSubmitting ? (
                           <>
@@ -525,7 +525,7 @@ export default function ContactForm() {
                         ) : (
                           <>
                             Odoslať správu
-                            <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform text-gold" />
+                            <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform text-gold-ink" />
                           </>
                         )}
                       </button>

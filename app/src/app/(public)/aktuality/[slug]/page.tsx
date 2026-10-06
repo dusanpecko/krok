@@ -32,7 +32,7 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep min-h-screen text-white pb-24 overflow-hidden">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm min-h-screen text-ink pb-24 overflow-hidden">
       {/* Dekoratívne svetelné pozadie */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
 
@@ -41,7 +41,7 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
         <div className="mb-8 select-none">
           <Link
             href="/aktuality"
-            className="inline-flex items-center gap-2 text-xs font-black text-blue-100/50 hover:text-gold-bright transition-colors uppercase tracking-widest"
+            className="inline-flex items-center gap-2 text-xs font-black text-mute hover:text-gold-bright transition-colors uppercase tracking-widest"
           >
             <ArrowLeft size={14} />
             Späť na aktuality
@@ -52,10 +52,10 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
         <article className="space-y-8">
           {/* Hlavička */}
           <div className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-white leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-ink leading-tight tracking-tight">
               {post.title}
             </h1>
-            <div className="flex items-center gap-2 text-xs font-bold text-blue-100/50 select-none">
+            <div className="flex items-center gap-2 text-xs font-bold text-mute select-none">
               <Calendar className="w-3.5 h-3.5" />
               <span>
                 Publikované:{' '}
@@ -68,16 +68,16 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
 
           {/* Hlasové predčítanie */}
           {post.audio_url && (
-            <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 flex flex-col md:flex-row items-center gap-4 relative overflow-hidden select-none">
+            <div className="bg-white/[0.04] border border-blue/10 rounded-2xl p-5 flex flex-col md:flex-row items-center gap-4 relative overflow-hidden select-none">
               <div className="flex items-center gap-3 shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gold/15 border border-gold/25 text-gold-bright flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gold/15 border border-gold/25 text-gold-ink flex items-center justify-center shrink-0">
                   <Volume2 size={20} className="animate-pulse" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-gold-bright uppercase tracking-widest">
+                  <h4 className="text-xs font-black text-blue uppercase tracking-widest">
                     Hlasové predčítanie
                   </h4>
-                  <p className="text-[10px] text-blue-100/60 font-bold mt-0.5">
+                  <p className="text-[10px] text-mute font-bold mt-0.5">
                     Profesionálny rečník Sam v3
                   </p>
                 </div>
@@ -92,7 +92,7 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
 
           {/* Titulný obrázok */}
           {post.featured_image ? (
-            <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-video">
+            <div className="rounded-2xl overflow-hidden border border-blue/10 shadow-2xl aspect-video">
               <img
                 src={post.featured_image}
                 alt={post.title}
@@ -106,7 +106,7 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
 
           {/* Samotný text príspevku */}
           <div
-            className="theme-dark simple-rich-editor pt-4 border-t border-white/10 leading-relaxed max-w-none"
+            className="simple-rich-editor pt-4 border-t border-blue/10 leading-relaxed max-w-none"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </article>

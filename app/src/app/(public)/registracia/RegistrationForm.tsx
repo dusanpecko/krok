@@ -10,8 +10,8 @@ import { NO_PARISH } from '@/lib/parishes/constants'
 
 // Tmavé polia formulára v štýle webu (rovnaké ako kontaktný formulár)
 const inputCls =
-  'w-full py-3.5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium'
-const labelCls = 'text-xs font-black uppercase tracking-wider text-zinc-400 block mb-2'
+  'w-full py-3.5 bg-white border border-blue/10 rounded-2xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all disabled:opacity-60 text-sm font-medium'
+const labelCls = 'text-xs font-black uppercase tracking-wider text-mute block mb-2'
 
 function GoogleIcon() {
   return (
@@ -134,22 +134,22 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
   // Stav po odoslaní – čaká sa na potvrdenie e-mailu
   if (emailSent) {
     return (
-      <div className="relative -mt-24 lg:-mt-32 bg-blue-deep text-white min-h-screen overflow-hidden flex items-center justify-center px-4 pt-40 pb-24">
+      <div className="relative -mt-24 lg:-mt-32 bg-paper-warm text-ink min-h-screen overflow-hidden flex items-center justify-center px-4 pt-40 pb-24">
         <div className="grain" />
-        <div className="absolute inset-0 bg-radial-[at_center_top] from-blue/30 via-blue-deep to-blue-deep z-0" />
-        <div className="relative z-10 w-full max-w-md bg-white/5 border border-white/10 backdrop-blur-sm rounded-3xl p-8 text-center shadow-2xl">
-          <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-5 bg-gold/15 border border-gold/30 text-gold-bright">
+        <div className="absolute inset-0 bg-radial-[at_center_top] from-blue-soft via-paper-warm to-paper-warm z-0" />
+        <div className="relative z-10 w-full max-w-md bg-white border border-blue/10 backdrop-blur-sm rounded-3xl p-8 text-center shadow-2xl">
+          <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-5 bg-gold/15 border border-gold/30 text-gold-ink">
             <MailCheck size={26} />
           </div>
-          <h2 className="text-2xl font-light text-white">Skontrolujte si e-mail</h2>
-          <p className="text-sm text-zinc-300 mt-3 leading-relaxed font-light">
-            Na adresu <span className="font-semibold text-white">{email}</span> sme poslali
+          <h2 className="text-2xl font-light text-ink">Skontrolujte si e-mail</h2>
+          <p className="text-sm text-ink/80 mt-3 leading-relaxed font-light">
+            Na adresu <span className="font-semibold text-ink">{email}</span> sme poslali
             potvrdzovací odkaz. Kliknutím naň dokončíte registráciu a budete prihlásený.
           </p>
-          <p className="text-xs text-zinc-500 mt-4">
+          <p className="text-xs text-mute mt-4">
             E-mail neprišiel? Skontrolujte priečinok spam alebo skúste registráciu znova.
           </p>
-          <Link href="/prihlasenie" className="inline-block mt-6 text-sm font-extrabold text-gold-bright hover:text-gold">
+          <Link href="/prihlasenie" className="inline-block mt-6 text-sm font-extrabold text-blue hover:text-blue">
             Prejsť na prihlásenie →
           </Link>
         </div>
@@ -158,30 +158,30 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
   }
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep text-white font-sans selection:bg-gold-bright/35 selection:text-white overflow-hidden">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm text-ink font-sans selection:bg-gold-bright/35 selection:text-ink overflow-hidden">
       <div className="grain" />
-      <div className="absolute inset-x-0 top-0 h-[900px] bg-radial-[at_center_top] from-blue/30 via-blue-deep to-blue-deep z-0 pointer-events-none" />
-      <div className="absolute top-[8%] left-[5%] w-[60vw] h-[40vh] rounded-full bg-blue/15 blur-[130px] pointer-events-none z-0" />
+      <div className="absolute inset-x-0 top-0 h-[900px] bg-radial-[at_center_top] from-blue-soft via-paper-warm to-paper-warm z-0 pointer-events-none" />
+      <div className="absolute top-[8%] left-[5%] w-[60vw] h-[40vh] rounded-full bg-blue/5 blur-[130px] pointer-events-none z-0" />
 
       {/* HERO + REGISTRÁCIA */}
       <section className="relative z-10 pt-36 pb-20 sm:pt-40 lg:pt-48 px-4">
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <span className="px-4 py-1.5 rounded-full border border-gold/25 bg-gold/5 text-gold-bright text-xs tracking-widest uppercase font-extrabold">
+          <span className="px-4 py-1.5 rounded-full border border-gold/25 bg-gold/5 text-blue text-xs tracking-widest uppercase font-extrabold">
             Registrácia
           </span>
-          <h1 className="text-4xl sm:text-5xl font-light text-white leading-tight mt-6">
+          <h1 className="text-4xl sm:text-5xl font-light text-ink leading-tight mt-6">
             Staňte sa súčasťou <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white font-extrabold">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink font-extrabold">
               rodiny darcov.
             </span>
           </h1>
-          <p className="text-zinc-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed font-light mt-5">
+          <p className="text-ink/80 text-base sm:text-lg max-w-xl mx-auto leading-relaxed font-light mt-5">
             S účtom získate vlastný variabilný symbol, prehľad svojich darov a potvrdenia.
             Ostatné údaje doplníte neskôr vo svojom profile – vždy dobrovoľne.
           </p>
         </div>
 
-        <div className="max-w-md mx-auto bg-white/5 border border-white/10 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="max-w-md mx-auto bg-white border border-blue/10 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl">
           {error && (
             <div className="mb-5 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3 text-red-300">
               <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-400" />
@@ -196,8 +196,8 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
             Registrovať sa cez Google
           </button>
 
-          <div className="flex items-center gap-3 my-6 text-[10px] uppercase tracking-widest text-zinc-500 font-extrabold">
-            <div className="flex-1 h-px bg-white/10" /> alebo e-mailom <div className="flex-1 h-px bg-white/10" />
+          <div className="flex items-center gap-3 my-6 text-[10px] uppercase tracking-widest text-mute font-extrabold">
+            <div className="flex-1 h-px bg-blue-soft/60" /> alebo e-mailom <div className="flex-1 h-px bg-blue-soft/60" />
           </div>
 
           <form onSubmit={handleRegister} className="space-y-5">
@@ -205,7 +205,7 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
               <div>
                 <label htmlFor="reg-first" className={labelCls}>Meno</label>
                 <div className="relative">
-                  <User2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                  <User2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-mute" />
                   <input id="reg-first" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}
                     className={`${inputCls} pl-10 pr-3`} placeholder="Jozef" required autoComplete="given-name" />
                 </div>
@@ -220,7 +220,7 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
             <div>
               <label htmlFor="reg-email" className={labelCls}>E-mail</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-mute" />
                 <input id="reg-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   className={`${inputCls} pl-10 pr-4`} placeholder="jozef@email.sk" required autoComplete="email" />
               </div>
@@ -229,12 +229,12 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
             <div>
               <label htmlFor="reg-pass" className={labelCls}>Heslo</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-mute" />
                 <input id="reg-pass" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
                   className={`${inputCls} pl-10 pr-11`} placeholder="Aspoň 8 znakov" required autoComplete="new-password" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Skryť heslo' : 'Zobraziť heslo'}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-mute hover:text-ink">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -243,35 +243,35 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
             <div>
               <label htmlFor="reg-pass2" className={labelCls}>Potvrdenie hesla</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-mute" />
                 <input id="reg-pass2" type={showPassword ? 'text' : 'password'} value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
                   className={`${inputCls} pl-10 pr-4`} placeholder="Zopakujte heslo" required autoComplete="new-password" />
               </div>
             </div>
 
             <div>
-              <label htmlFor="reg-parish" className={labelCls}>Moja farnosť <span className="text-gold-bright">*</span></label>
+              <label htmlFor="reg-parish" className={labelCls}>Moja farnosť <span className="text-gold-ink">*</span></label>
               <select id="reg-parish" value={parishId} onChange={(e) => setParishId(e.target.value)} required
                 className={`${inputCls} px-4 cursor-pointer`}>
-                <option value="" className="bg-blue-deep">Vyberte farnosť…</option>
-                {options.parishes.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
-                <option value={NO_PARISH} className="bg-blue-deep">Nepatrím do žiadnej farnosti / podporujem projekt</option>
+                <option value="" className="bg-white">Vyberte farnosť…</option>
+                {options.parishes.map((p) => <option key={p.id} value={p.id} className="bg-white">{p.name}</option>)}
+                <option value={NO_PARISH} className="bg-white">Nepatrím do žiadnej farnosti / podporujem projekt</option>
               </select>
             </div>
 
             <div>
-              <label htmlFor="reg-project" className={labelCls}>Podporujem projekt <span className="normal-case tracking-normal font-medium text-zinc-500">(nepovinné)</span></label>
+              <label htmlFor="reg-project" className={labelCls}>Podporujem projekt <span className="normal-case tracking-normal font-medium text-mute">(nepovinné)</span></label>
               <select id="reg-project" value={projectId} onChange={(e) => setProjectId(e.target.value)}
                 className={`${inputCls} px-4 cursor-pointer`}>
-                <option value="" className="bg-blue-deep">Fond KROK všeobecne</option>
-                {options.projects.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
+                <option value="" className="bg-white">Fond KROK všeobecne</option>
+                {options.projects.map((p) => <option key={p.id} value={p.id} className="bg-white">{p.name}</option>)}
               </select>
             </div>
 
             <label className="flex items-start gap-3 cursor-pointer">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-white/20 bg-white/5 accent-gold" />
-              <span className="text-xs text-zinc-400 leading-relaxed">
+                className="mt-0.5 w-4 h-4 rounded border-blue/20 bg-white accent-gold" />
+              <span className="text-xs text-mute leading-relaxed">
                 Súhlasím so spracovaním osobných údajov pre účely darcovského programu KROK.
               </span>
             </label>
@@ -282,16 +282,16 @@ export default function RegistrationForm({ initialParishId = null, parishSlug = 
             </button>
           </form>
 
-          <p className="text-center text-xs text-zinc-400 mt-6">
+          <p className="text-center text-xs text-mute mt-6">
             Už máte účet?{' '}
-            <Link href="/prihlasenie" className="font-extrabold text-gold-bright hover:text-gold">Prihláste sa</Link>
+            <Link href="/prihlasenie" className="font-extrabold text-gold-ink hover:text-blue">Prihláste sa</Link>
           </p>
         </div>
 
         {/* Odkaz na darovanie bez registrácie */}
         <div className="text-center mt-10">
-          <a href="#darovat" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white font-medium">
-            Chcete len darovať, bez registrácie? <ArrowDown size={16} className="text-gold-bright" />
+          <a href="#darovat" className="inline-flex items-center gap-2 text-sm text-ink/80 hover:text-ink font-medium">
+            Chcete len darovať, bez registrácie? <ArrowDown size={16} className="text-gold-ink" />
           </a>
         </div>
       </section>

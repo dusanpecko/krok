@@ -152,16 +152,16 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
   ]
 
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-blue-deep text-white font-sans selection:bg-gold-bright/35 selection:text-white min-h-screen overflow-hidden pb-24">
+    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm text-ink font-sans selection:bg-gold-bright/35 selection:text-ink min-h-screen overflow-hidden pb-24">
       {/* Filmové zrno pre hmatateľný sakrálny retro efekt */}
       <div className="grain" />
 
       {/* Kontemplatívne pozadie - nočný prechod a svetelné závoje */}
-      <div className="absolute inset-0 bg-radial-[at_center_top] from-blue/30 via-blue-deep to-blue-deep z-0" />
+      <div className="absolute inset-0 bg-radial-[at_center_top] from-blue-soft via-paper-warm to-paper-warm z-0" />
 
       {/* Dekoratívne ambientné osvetlenie */}
       <motion.div 
-        className="absolute top-[10%] left-[5%] w-[60vw] h-[40vh] rounded-full bg-blue/15 blur-[130px] pointer-events-none z-0"
+        className="absolute top-[10%] left-[5%] w-[60vw] h-[40vh] rounded-full bg-blue/5 blur-[130px] pointer-events-none z-0"
         animate={prefersReducedMotion ? {} : {
           scale: [1, 1.1, 1],
           opacity: [0.3, 0.45, 0.3],
@@ -198,29 +198,29 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
           initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-2xl hover:border-white/15 transition-all duration-300 group"
+          className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-2xl hover:border-blue/15 transition-all duration-300 group"
         >
           {/* Ambientný záblesk v pozadí karty pri hoveri */}
           <div className="absolute -inset-px bg-gradient-to-r from-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-3xl" />
           
           <div className="flex items-center gap-5 sm:gap-6 relative z-10">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gold/25 to-gold/5 text-gold-bright border border-gold/45 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-serif font-bold shadow-xl shadow-gold/5 group-hover:scale-105 transition-transform duration-500 shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gold/25 to-gold/5 text-gold-ink border border-gold/45 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-serif font-bold shadow-xl shadow-gold/5 group-hover:scale-105 transition-transform duration-500 shrink-0">
               {donor.first_name?.[0]}{donor.last_name?.[0]}
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-light text-white tracking-tight leading-none mb-2">
-                {donor.first_name} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white">{donor.last_name}</span>
+              <h1 className="text-2xl sm:text-3xl font-light text-ink tracking-tight leading-none mb-2">
+                {donor.first_name} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink">{donor.last_name}</span>
               </h1>
-              <p className="text-xs sm:text-sm text-zinc-400 font-medium flex items-center gap-2">
-                <Mail size={14} className="text-gold-bright" /> {donor.email}
+              <p className="text-xs sm:text-sm text-mute font-medium flex items-center gap-2">
+                <Mail size={14} className="text-gold-ink" /> {donor.email}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start md:items-center gap-4 relative z-10 self-start md:self-auto w-full sm:w-auto md:justify-end">
             <div className="flex flex-col items-start md:items-end bg-gold/5 border border-gold/25 rounded-2xl px-5 py-3.5 backdrop-blur-sm shadow-inner min-w-[180px] w-full sm:w-auto">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gold-bright/70">Variabilný symbol</span>
-              <span className="text-2xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white tracking-wider mt-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue/70">Variabilný symbol</span>
+              <span className="text-2xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink tracking-wider mt-1">
                 {donor.variable_symbol}
               </span>
             </div>
@@ -242,7 +242,7 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
           initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-          className="bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full sm:w-max backdrop-blur-md shadow-xl animate-in fade-in duration-500"
+          className="bg-white border border-blue/10 p-1.5 rounded-2xl w-full sm:w-max backdrop-blur-md shadow-xl animate-in fade-in duration-500"
         >
           {/* Mobil: tri rovnaké stĺpce, ikona nad textom (nič sa neoreže); od sm vedľa seba */}
           <div className="grid grid-cols-3 gap-1 sm:flex sm:w-auto">
@@ -257,10 +257,10 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
                     flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2.5 px-2 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition-all duration-300 cursor-pointer w-full sm:w-auto min-w-0
                     ${isActive 
                       ? 'bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep shadow-lg shadow-gold/15 sm:scale-[1.02]' 
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5'}
+                      : 'text-mute hover:text-ink hover:bg-blue-soft/50'}
                   `}
                 >
-                  <Icon size={18} className={isActive ? 'text-blue-deep' : 'text-zinc-400 group-hover:text-white'} />
+                  <Icon size={18} className={isActive ? 'text-blue-deep' : 'text-mute group-hover:text-ink'} />
                   <span>{tab.label}</span>
                 </button>
               )
@@ -284,16 +284,16 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Ľavá časť: formulár */}
                 <div className="lg:col-span-2 space-y-6">
-                  <form onSubmit={handleUpdate} className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl relative">
+                  <form onSubmit={handleUpdate} className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl relative">
                     <div className="p-6 sm:p-8 space-y-6">
                       
-                      <div className="flex items-center gap-3.5 border-b border-white/10 pb-6">
-                        <div className="w-10 h-10 bg-white/5 border border-white/10 text-gold-bright rounded-xl flex items-center justify-center shrink-0">
+                      <div className="flex items-center gap-3.5 border-b border-blue/10 pb-6">
+                        <div className="w-10 h-10 bg-white border border-blue/10 text-gold-ink rounded-xl flex items-center justify-center shrink-0">
                           <User size={20} />
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-white">Osobné informácie</h3>
-                          <p className="text-xs text-zinc-400 font-light mt-0.5">Správa vašich identifikačných údajov</p>
+                          <h3 className="text-xl font-bold text-ink">Osobné informácie</h3>
+                          <p className="text-xs text-mute font-light mt-0.5">Správa vašich identifikačných údajov</p>
                         </div>
                       </div>
 
@@ -316,72 +316,72 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Meno</label>
+                          <label className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">Meno</label>
                           <input 
                             name="first_name" 
                             value={formData.first_name} 
                             onChange={handleChange} 
-                            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none transition-all duration-300 text-sm font-semibold"
+                            className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none transition-all duration-300 text-sm font-semibold"
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Priezvisko</label>
+                          <label className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">Priezvisko</label>
                           <input 
                             name="last_name" 
                             value={formData.last_name} 
                             onChange={handleChange} 
-                            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none transition-all duration-300 text-sm font-semibold"
+                            className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none transition-all duration-300 text-sm font-semibold"
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <label className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Telefón</label>
+                          <label className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">Telefón</label>
                           <input 
                             name="phone" 
                             value={formData.phone} 
                             onChange={handleChange} 
                             placeholder="+421..."
-                            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none transition-all duration-300 text-sm font-semibold"
+                            className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none transition-all duration-300 text-sm font-semibold"
                           />
                         </div>
                       </div>
 
-                      <div className="space-y-6 pt-6 border-t border-white/10">
+                      <div className="space-y-6 pt-6 border-t border-blue/10">
                         <div className="flex items-center gap-3.5 pb-2">
-                          <div className="w-10 h-10 bg-white/5 border border-white/10 text-gold-bright rounded-xl flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 bg-white border border-blue/10 text-gold-ink rounded-xl flex items-center justify-center shrink-0">
                             <MapPin size={20} />
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-white">Kontaktná adresa</h3>
-                            <p className="text-xs text-zinc-400 font-light mt-0.5">Adresa pre doručovanie potvrdení o daroch</p>
+                            <h3 className="text-xl font-bold text-ink">Kontaktná adresa</h3>
+                            <p className="text-xs text-mute font-light mt-0.5">Adresa pre doručovanie potvrdení o daroch</p>
                           </div>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="md:col-span-2 space-y-2">
-                            <label className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Ulica a číslo</label>
+                            <label className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">Ulica a číslo</label>
                             <input 
                               name="street" 
                               value={formData.street} 
                               onChange={handleChange} 
-                              className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none transition-all duration-300 text-sm font-semibold"
+                              className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none transition-all duration-300 text-sm font-semibold"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Mesto</label>
+                            <label className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">Mesto</label>
                             <input 
                               name="city" 
                               value={formData.city} 
                               onChange={handleChange} 
-                              className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none transition-all duration-300 text-sm font-semibold"
+                              className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none transition-all duration-300 text-sm font-semibold"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">PSČ</label>
+                            <label className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">PSČ</label>
                             <input 
                               name="postal_code" 
                               value={formData.postal_code} 
                               onChange={handleChange} 
-                              className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:bg-white/8 focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none transition-all duration-300 text-sm font-semibold"
+                              className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink placeholder:text-mute/70 focus:bg-white focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none transition-all duration-300 text-sm font-semibold"
                             />
                           </div>
                         </div>
@@ -391,36 +391,36 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
                     {/* Farnosť a podporovaný projekt */}
                     <div className="px-6 sm:px-8 pb-6 sm:pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label htmlFor="profile-parish" className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Moja farnosť</label>
+                        <label htmlFor="profile-parish" className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">Moja farnosť</label>
                         <select
                           id="profile-parish"
                           name="parish_id"
                           value={formData.parish_id}
                           onChange={handleChange}
-                          className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none text-sm font-semibold cursor-pointer"
+                          className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none text-sm font-semibold cursor-pointer"
                         >
-                          <option value="" className="bg-blue-deep">Vyberte farnosť…</option>
-                          {parishes.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
-                          <option value={NO_PARISH} className="bg-blue-deep">Nepatrím do žiadnej farnosti</option>
+                          <option value="" className="bg-white">Vyberte farnosť…</option>
+                          {parishes.map((p) => <option key={p.id} value={p.id} className="bg-white">{p.name}</option>)}
+                          <option value={NO_PARISH} className="bg-white">Nepatrím do žiadnej farnosti</option>
                         </select>
-                        <p className="text-[11px] text-zinc-500">Vaše dary sa započítavajú do príspevku tejto farnosti do fondu.</p>
+                        <p className="text-[11px] text-mute">Vaše dary sa započítavajú do príspevku tejto farnosti do fondu.</p>
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="profile-project" className="text-xs font-extrabold text-gold-bright/70 uppercase tracking-wider block">Podporujem projekt</label>
+                        <label htmlFor="profile-project" className="text-xs font-extrabold text-blue/70 uppercase tracking-wider block">Podporujem projekt</label>
                         <select
                           id="profile-project"
                           name="project_id"
                           value={formData.project_id}
                           onChange={handleChange}
-                          className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl text-white focus:border-gold-bright/60 focus:ring-1 focus:ring-gold-bright/60 outline-none text-sm font-semibold cursor-pointer"
+                          className="w-full p-3.5 bg-white border border-blue/10 rounded-xl text-ink focus:border-blue/60 focus:ring-1 focus:ring-blue/60 outline-none text-sm font-semibold cursor-pointer"
                         >
-                          <option value="" className="bg-blue-deep">Fond KROK všeobecne</option>
-                          {projects.map((p) => <option key={p.id} value={p.id} className="bg-blue-deep">{p.name}</option>)}
+                          <option value="" className="bg-white">Fond KROK všeobecne</option>
+                          {projects.map((p) => <option key={p.id} value={p.id} className="bg-white">{p.name}</option>)}
                         </select>
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white/[0.02] border-t border-white/10 flex justify-end">
+                    <div className="p-6 bg-white/[0.02] border-t border-blue/10 flex justify-end">
                       <button 
                         type="submit"
                         disabled={loading}
@@ -439,29 +439,29 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
 
                 {/* Pravá časť: sumár darcu */}
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-b from-blue/25 to-blue-deep/45 border border-white/10 backdrop-blur-md p-8 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-gold/30 transition-all duration-500">
+                  <div className="bg-gradient-to-b from-blue-soft/70 to-white border border-blue/10 backdrop-blur-md p-8 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-gold/30 transition-all duration-500">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-2xl pointer-events-none group-hover:bg-gold/10 transition-colors" />
                     
-                    <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-gold pl-4 text-gold-bright mb-6">Zhrnutie darcu</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-gold pl-4 text-blue mb-6">Zhrnutie darcu</h3>
                     
                     <div className="space-y-4 relative z-10">
-                      <div className="flex justify-between items-center py-3.5 border-b border-white/5 hover:border-white/10 transition-colors">
-                        <span className="text-zinc-400 text-sm font-light">Registrovaný od</span>
-                        <span className="font-bold text-white">
+                      <div className="flex justify-between items-center py-3.5 border-b border-blue/10 hover:border-blue/10 transition-colors">
+                        <span className="text-mute text-sm font-light">Registrovaný od</span>
+                        <span className="font-bold text-ink">
                           {donor.registered_at ? new Date(donor.registered_at).toLocaleDateString('sk-SK') : 
                            donor.created_at ? new Date(donor.created_at).toLocaleDateString('sk-SK') : 'Neznáme'}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-3.5 border-b border-white/5 hover:border-white/10 transition-colors">
-                        <span className="text-zinc-400 text-sm font-light">Farnosť</span>
-                        <span className="font-bold text-white">{donor.parishes?.name || 'Bez farnosti'}</span>
+                      <div className="flex justify-between items-center py-3.5 border-b border-blue/10 hover:border-blue/10 transition-colors">
+                        <span className="text-mute text-sm font-light">Farnosť</span>
+                        <span className="font-bold text-ink">{donor.parishes?.name || 'Bez farnosti'}</span>
                       </div>
                       <div className="flex justify-between items-center py-3.5">
-                        <span className="text-zinc-400 text-sm font-light">Status</span>
+                        <span className="text-mute text-sm font-light">Status</span>
                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
                           donor.status === 'active' 
                             ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                            : 'bg-zinc-500/20 text-zinc-400 border border-zinc-500/30'
+                            : 'bg-zinc-500/20 text-mute border border-zinc-500/30'
                         }`}>
                           {donor.status === 'active' ? 'Aktívny' : 'Neaktívny'}
                         </span>
@@ -473,53 +473,53 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
             )}
 
             {activeTab === 'donations' && (
-              <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl overflow-hidden p-6 sm:p-8 space-y-8 shadow-2xl">
+              <div className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl overflow-hidden p-6 sm:p-8 space-y-8 shadow-2xl">
                 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-blue/10 pb-6">
                   <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 bg-white/5 border border-white/10 text-gold-bright rounded-xl flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-white border border-blue/10 text-gold-ink rounded-xl flex items-center justify-center shrink-0">
                       <History size={20} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">História príspevkov</h3>
-                      <p className="text-xs text-zinc-400 font-light mt-0.5">Prehľad všetkých vašich darov pre fond KROK</p>
+                      <h3 className="text-xl font-bold text-ink">História príspevkov</h3>
+                      <p className="text-xs text-mute font-light mt-0.5">Prehľad všetkých vašich darov pre fond KROK</p>
                     </div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 px-5 py-3 rounded-2xl self-start sm:self-auto min-w-[150px]">
-                     <p className="text-[10px] font-black text-gold-bright/70 uppercase tracking-widest leading-none mb-1.5">Spolu darované</p>
-                     <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white leading-none">
+                  <div className="bg-white border border-blue/10 px-5 py-3 rounded-2xl self-start sm:self-auto min-w-[150px]">
+                     <p className="text-[10px] font-black text-blue/70 uppercase tracking-widest leading-none mb-1.5">Spolu darované</p>
+                     <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink leading-none">
                        {donations.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString('sk-SK', { style: 'currency', currency: 'EUR' })}
                      </p>
                   </div>
                 </div>
 
                 {donations.length === 0 ? (
-                  <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-3xl animate-in fade-in">
+                  <div className="text-center py-20 bg-white/[0.02] border border-blue/10 rounded-3xl animate-in fade-in">
                      <Landmark size={48} className="mx-auto text-zinc-600 mb-4 animate-pulse" />
-                     <p className="text-zinc-400 font-bold">Zatiaľ ste neposlali žiadne príspevky.</p>
+                     <p className="text-mute font-bold">Zatiaľ ste neposlali žiadne príspevky.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                      {donations.map((donation) => (
-                       <div key={donation.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 bg-white/5 hover:bg-white/8 border border-white/5 hover:border-gold/25 rounded-2xl transition-all duration-300 group shadow-md gap-4">
+                       <div key={donation.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 bg-white hover:bg-white/8 border border-blue/10 hover:border-gold/25 rounded-2xl transition-all duration-300 group shadow-md gap-4">
                           <div className="flex items-center gap-4">
-                             <div className="w-12 h-12 rounded-xl bg-white/5 text-gold-bright border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:border-gold/30 transition-all">
+                             <div className="w-12 h-12 rounded-xl bg-white text-gold-ink border border-blue/10 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:border-gold/30 transition-all">
                                 <Landmark size={20} />
                              </div>
                              <div>
-                                <p className="text-sm font-bold text-white tracking-wide group-hover:text-gold-bright transition-colors">
+                                <p className="text-sm font-bold text-ink tracking-wide group-hover:text-blue transition-colors">
                                   {donation.projects?.name || 'Všeobecný dar'}
                                 </p>
-                                <p className="text-xs text-zinc-400 mt-0.5">
+                                <p className="text-xs text-mute mt-0.5">
                                   {new Date(donation.donation_date).toLocaleDateString('sk-SK')}
                                 </p>
                              </div>
                           </div>
-                          <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t border-white/5 sm:border-0 pt-3 sm:pt-0">
-                             <p className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white">
+                          <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t border-blue/10 sm:border-0 pt-3 sm:pt-0">
+                             <p className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink">
                                +{donation.amount.toFixed(2)} €
                              </p>
-                             <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mt-0.5">
+                             <p className="text-[10px] font-extrabold text-mute uppercase tracking-widest mt-0.5">
                                {paymentMethodLabel(donation.payment_method)}
                              </p>
                           </div>
@@ -533,14 +533,14 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
             {activeTab === 'support' && (
               <div className="max-w-3xl mx-auto space-y-10 py-4 sm:py-8">
                  <div className="text-center space-y-4 animate-in fade-in duration-700">
-                    <div className="w-20 h-20 bg-gold/10 text-gold border border-gold/25 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-gold/5 relative overflow-hidden group">
+                    <div className="w-20 h-20 bg-gold/10 text-gold-ink border border-gold/25 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-gold/5 relative overflow-hidden group">
                        <div className="absolute inset-0 bg-gold/5 animate-pulse rounded-full" />
-                       <Heart size={36} fill="currentColor" className="text-gold-bright relative z-10" />
+                       <Heart size={36} fill="currentColor" className="text-gold-ink relative z-10" />
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-light text-white tracking-tight leading-tight">
-                       Chcem <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-bright to-white">podporiť</span>
+                    <h2 className="text-3xl sm:text-4xl font-light text-ink tracking-tight leading-tight">
+                       Chcem <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink">podporiť</span>
                     </h2>
-                    <p className="text-zinc-300 text-sm max-w-lg mx-auto leading-relaxed font-light">
+                    <p className="text-ink/80 text-sm max-w-lg mx-auto leading-relaxed font-light">
                       Vaša pomoc nám umožňuje rásť a pomáhať tam, kde je to najviac potrebné. Zaplaťte kartou
                       online alebo pošlite dar prevodom s vaším variabilným symbolom.
                     </p>
@@ -553,11 +553,11 @@ export default function ProfileContent({ donor, donations, subscriptions = [], p
                    subscriptions={subscriptions}
                  />
 
-                 <div className="bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative shadow-2xl hover:border-white/15 transition-all">
+                 <div className="bg-white border border-blue/10 backdrop-blur-md p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative shadow-2xl hover:border-blue/15 transition-all">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
                     <div className="relative z-10 text-center md:text-left">
-                       <h4 className="text-xl font-bold text-white">Potrebujete pomoc?</h4>
-                       <p className="text-zinc-400 text-sm font-light mt-1">Naši pracovníci sú tu pre vás, neváhajte nás kontaktovať.</p>
+                       <h4 className="text-xl font-bold text-ink">Potrebujete pomoc?</h4>
+                       <p className="text-mute text-sm font-light mt-1">Naši pracovníci sú tu pre vás, neváhajte nás kontaktovať.</p>
                     </div>
                     <Link href="/kontakt" className="relative z-10 px-8 py-3.5 bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep rounded-2xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-gold/15 cursor-pointer shrink-0">
                        Kontaktujte nás

@@ -103,34 +103,34 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
     <div className="space-y-8">
       {/* Aktívne pravidelné dary */}
       {subscriptions.length > 0 && (
-        <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl">
+        <div className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/5 border border-white/10 text-gold-bright rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-white border border-blue/10 text-gold-ink rounded-xl flex items-center justify-center shrink-0">
               <Repeat size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Vaše pravidelné dary</h3>
-              <p className="text-xs text-zinc-400 font-light">Sťahujú sa automaticky z vašej karty</p>
+              <h3 className="text-lg font-bold text-ink">Vaše pravidelné dary</h3>
+              <p className="text-xs text-mute font-light">Sťahujú sa automaticky z vašej karty</p>
             </div>
           </div>
           <div className="space-y-3">
             {subscriptions.map((s) => (
               <div
                 key={s.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white border border-blue/10 rounded-2xl"
               >
                 <div>
-                  <p className="text-white font-bold">
-                    {formatEur(s.amount)} <span className="text-zinc-400 font-normal text-sm">{s.interval === 'year' ? 'ročne' : 'mesačne'}</span>
+                  <p className="text-ink font-bold">
+                    {formatEur(s.amount)} <span className="text-mute font-normal text-sm">{s.interval === 'year' ? 'ročne' : 'mesačne'}</span>
                   </p>
-                  <p className="text-xs text-gold-bright/90 mt-0.5">
+                  <p className="text-xs text-blue/90 mt-0.5">
                     {s.project_name && s.project_slug ? (
                       <Link href={`/vyzvy/${s.project_slug}`} className="hover:underline">Výzva: {s.project_name}</Link>
                     ) : (
                       'Všeobecná podpora fondu'
                     )}
                   </p>
-                  <p className="text-xs text-zinc-400 mt-0.5 flex items-center gap-1.5">
+                  <p className="text-xs text-mute mt-0.5 flex items-center gap-1.5">
                     <CalendarClock size={12} />
                     {s.status === 'past_due'
                       ? 'Posledná platba zlyhala – skúsime ju znova'
@@ -142,7 +142,7 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
                 <button
                   onClick={() => handleCancel(s.id)}
                   disabled={cancelling === s.id}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-zinc-300 border border-white/15 rounded-xl hover:bg-white/10 hover:text-white disabled:opacity-50 self-start sm:self-auto"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-ink/80 border border-blue/15 rounded-xl hover:bg-blue-soft/50 hover:text-ink disabled:opacity-50 self-start sm:self-auto"
                 >
                   {cancelling === s.id ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
                   Zrušiť
@@ -154,12 +154,12 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
       )}
 
       {/* Nový dar */}
-      <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-        <div className="flex bg-blue-deep/60 p-1 rounded-xl border border-white/5">
+      <div className="bg-white border border-blue/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+        <div className="flex bg-paper p-1 rounded-xl border border-blue/10">
           <button
             onClick={() => setRecurring(true)}
             className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${
-              recurring ? 'bg-blue text-white shadow-md' : 'text-zinc-400 hover:text-white'
+              recurring ? 'bg-blue text-white shadow-md' : 'text-mute hover:text-ink'
             }`}
           >
             Pravidelne (mesačne)
@@ -167,7 +167,7 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
           <button
             onClick={() => setRecurring(false)}
             className={`flex-1 py-3 text-sm font-extrabold rounded-lg transition-all ${
-              !recurring ? 'bg-blue text-white shadow-md' : 'text-zinc-400 hover:text-white'
+              !recurring ? 'bg-blue text-white shadow-md' : 'text-mute hover:text-ink'
             }`}
           >
             Jednorazovo
@@ -175,7 +175,7 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
         </div>
 
         <div className="space-y-3">
-          <label className="text-xs uppercase tracking-widest text-zinc-400 font-extrabold block">Výška daru</label>
+          <label className="text-xs uppercase tracking-widest text-mute font-extrabold block">Výška daru</label>
           <div className="grid grid-cols-4 gap-3">
             {PRESETS.map((p) => (
               <button
@@ -186,8 +186,8 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
                 }}
                 className={`py-3.5 rounded-xl text-base font-extrabold border transition-all ${
                   preset === p
-                    ? 'bg-gold/15 border-gold text-gold-bright'
-                    : 'bg-blue-deep/80 border-white/5 hover:border-white/20 text-zinc-400 hover:text-white'
+                    ? 'bg-gold/15 border-gold text-gold-ink'
+                    : 'bg-paper border-blue/10 hover:border-blue/30 text-mute hover:text-ink'
                 }`}
               >
                 {p} €
@@ -197,8 +197,8 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
               onClick={() => setPreset('custom')}
               className={`py-3.5 rounded-xl text-sm font-extrabold border transition-all ${
                 preset === 'custom'
-                  ? 'bg-gold/15 border-gold text-gold-bright'
-                  : 'bg-blue-deep/80 border-white/5 hover:border-white/20 text-zinc-400 hover:text-white'
+                  ? 'bg-gold/15 border-gold text-gold-ink'
+                  : 'bg-paper border-blue/10 hover:border-blue/30 text-mute hover:text-ink'
               }`}
             >
               Iná
@@ -213,9 +213,9 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
                 value={custom}
                 onChange={(e) => setCustom(e.target.value)}
                 placeholder="Zadajte sumu"
-                className="w-full bg-blue-deep border border-white/10 focus:border-gold-bright rounded-xl py-3 px-4 text-white text-base outline-none pr-12 font-mono"
+                className="w-full bg-white border border-blue/10 focus:border-blue rounded-xl py-3 px-4 text-ink text-base outline-none pr-12 font-mono"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-extrabold">€</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-mute font-extrabold">€</span>
             </div>
           )}
         </div>
@@ -224,13 +224,13 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
           <RecurringChoice subscriptions={generalSubs} newAmount={amount} value={choice} onChange={setChoice} />
         )}
         {recurring && subscriptions.length > generalSubs.length && (
-          <p className="text-[11px] text-zinc-400 leading-relaxed">
+          <p className="text-[11px] text-mute leading-relaxed">
             Pravidelné dary na konkrétne výzvy ostávajú bez zmeny. Upravíte ich na stránke danej výzvy.
           </p>
         )}
 
         {error && (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-vermilion/10 border border-vermilion/30 text-sm text-red-200">
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-vermilion/10 border border-vermilion/30 text-sm text-red">
             <AlertCircle size={16} className="shrink-0 mt-0.5" /> {error}
           </div>
         )}
@@ -248,11 +248,11 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
               : `Zaplatiť kartou ${amount > 0 ? formatEur(amount) : ''}${recurring ? ' mesačne' : ''}`}
         </button>
 
-        <p className="text-[11px] text-zinc-500 text-center leading-relaxed">
+        <p className="text-[11px] text-mute text-center leading-relaxed">
           Bezpečná platba cez Mollie (karta, Apple Pay, Google Pay). Pravidelný dar môžete kedykoľvek zrušiť.
           {variableSymbol && (
             <>
-              {' '}Radšej prevodom? Použite variabilný symbol <span className="font-mono text-zinc-300">{variableSymbol}</span>.
+              {' '}Radšej prevodom? Použite variabilný symbol <span className="font-mono text-ink/80">{variableSymbol}</span>.
             </>
           )}
         </p>
@@ -260,31 +260,31 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
         <button
           type="button"
           onClick={toggleQr}
-          className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-zinc-300 border border-white/10 rounded-xl hover:bg-white/5 hover:text-white transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-ink/80 border border-blue/10 rounded-xl hover:bg-blue-soft/50 hover:text-ink transition-colors"
         >
           <QrCode size={14} />
           {showQr ? 'Skryť QR kód na prevod' : 'Zobraziť QR kód na prevod (PAY by square)'}
         </button>
 
         {showQr && (
-          <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-white/5 border border-white/10">
+          <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-white border border-blue/10">
             <div className="w-36 h-36 shrink-0 bg-white p-1.5 rounded-2xl flex items-center justify-center">
               {qrLoading || !qr ? (
-                <QrCode size={96} className="text-zinc-300 animate-pulse" />
+                <QrCode size={96} className="text-ink/80 animate-pulse" />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={qr.dataUrl} alt="PAY by square QR kód" className="w-full h-full object-contain" />
               )}
             </div>
-            <div className="text-xs text-zinc-400 space-y-1.5 text-center sm:text-left">
-              <p className="text-white font-bold text-sm">Naskenujte v bankovej aplikácii</p>
+            <div className="text-xs text-mute space-y-1.5 text-center sm:text-left">
+              <p className="text-ink font-bold text-sm">Naskenujte v bankovej aplikácii</p>
               <p>
                 {recurring
                   ? `QR nastaví príjemcu, sumu ${amount > 0 ? formatEur(amount) : ''} a váš VS – v banke platbu uložte ako trvalý príkaz (mesačne).`
                   : `QR nastaví príjemcu, sumu ${amount > 0 ? formatEur(amount) : ''} a váš variabilný symbol.`}
               </p>
               {qr && (
-                <p className="font-mono text-zinc-300">
+                <p className="font-mono text-ink/80">
                   IBAN {qr.iban.replace(/(.{4})/g, '$1 ').trim()}
                   {qr.variableSymbol && <> · VS {qr.variableSymbol}</>}
                 </p>

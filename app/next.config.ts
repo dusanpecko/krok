@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   // Povolené LAN adresy na testovanie z iných zariadení (len vývoj, na produkciu nemá vplyv).
   allowedDevOrigins: ['10.130.2.107', '192.168.*.*', '10.*.*.*'],
   // Staré adresy výziev z mojkrok.dcza.sk (WordPress) → nové /vyzvy/[slug]
+  // Mimo produkcie (staging / preview) – žiadne indexovanie ani pri odkaze odinakiaľ
+  async headers() {
+    if (process.env.VERCEL_ENV === 'production') return []
+    return [{ source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+  },
   async redirects() {
     return [
       { source: '/grantove-vyzvy', destination: '/vyzvy', permanent: true },

@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Landmark, Users, HandHeart, MessageCircle, Download, Gift } from 'lucide-react'
+import { Menu, X, Landmark, Users, HandHeart, MessageCircle, Download, Gift, Church } from 'lucide-react'
 import KrokLogo from '@/components/KrokLogo'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 
 const navLinks = [
   { href: '/vyzvy', label: 'Výzvy', icon: HandHeart },
+  { href: '/farnosti', label: 'Farnosti', icon: Church },
   { href: '/podporene-projekty', label: 'Podporené projekty', icon: Landmark },
   { href: '/aktuality', label: 'Aktuality', icon: MessageCircle },
   { href: '/sutaz', label: 'Súťaž', icon: Gift },
@@ -29,6 +30,9 @@ export default function NavBar() {
   const [scrolled, setScrolled] = useState(false)
   const { session, supabase } = useSupabase()
   const [isAdmin, setIsAdmin] = useState(false)
+  // stránka farnosti, ktorú si darca vybral v profile – odkaz „Moja farnosť“
+  const [myParish, setMyParish] = useState<{ userId: string; slug: string | null } | null>(null)
+  const myParishSlug = session?.user && myParish?.userId === session.user.id ? myParish.slug : null
   // Prihlásený darca ide rovno na kartu Podporiť vo svojom profile, inak na registráciu
   const supportHref = session ? '/profil#podporit' : '/registracia'
 
@@ -61,6 +65,20 @@ export default function NavBar() {
     }
 
     checkAdmin()
+  }, [session, supabase])
+
+  useEffect(() => {
+    const userId = session?.user?.id
+    if (!userId) return
+    supabase
+      .from('donors')
+      .select('parishes(slug, is_active)')
+      .eq('auth_user_id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const parish = (data as { parishes: { slug: string | null; is_active: boolean } | null } | null)?.parishes
+        setMyParish({ userId, slug: parish?.is_active && parish.slug ? parish.slug : null })
+      })
   }, [session, supabase])
 
   // Dynamické štýly podľa podstránky a stavu skrolovania
@@ -125,6 +143,11 @@ export default function NavBar() {
                 >
                   Profil
                 </Link>
+                {myParishSlug && (
+                  <Link href={`/farnosti/${myParishSlug}`} className={profileLinkClass}>
+                    Moja farnosť
+                  </Link>
+                )}
                 {isAdmin && (
                   <Link 
                     href="/admin"
@@ -186,6 +209,15 @@ export default function NavBar() {
               >
                 Môj Profil
               </Link>
+              {myParishSlug && (
+                <Link
+                  href={`/farnosti/${myParishSlug}`}
+                  className="block w-full text-center py-3 bg-gray-50 text-gray-900 font-bold rounded-xl"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Moja farnosť
+                </Link>
+              )}
               {isAdmin && (
                 <Link 
                   href="/admin"

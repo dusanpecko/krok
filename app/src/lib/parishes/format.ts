@@ -49,6 +49,11 @@ export function googleMapsUrl(p: { latitude: number | null; longitude: number | 
 }
 
 /** Úradné hodiny pre aktuálny režim (v lete letné, ak sú zadané; inak „cez rok“), zoradené podľa času. */
+/** Má farnosť vyplnené bohoslužby (nie len úradné hodiny)? */
+export function hasParishSchedule(p: { schedules: Partial<Record<'regular' | 'summer', { items: { service_type: string }[] }>> }): boolean {
+  return Object.values(p.schedules).some((s) => s?.items.some((i) => i.service_type !== 'office'))
+}
+
 export function officeHoursFor<T extends { service_type: string; time_from: string | null }>(p: {
   currentSeason: 'regular' | 'summer'
   schedules: Partial<Record<'regular' | 'summer', { items: T[] }>>

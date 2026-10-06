@@ -15,7 +15,7 @@ import {
 import ParishScheduleTab from '@/components/admin/parishes/ParishScheduleTab'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
-import { getMyParishTraffic, deleteMyPost, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
+import { getMyParishTraffic, deleteMyPost, setMyWebVisibility, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
 import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
 import ParishTrafficCard from '@/components/parishes/ParishTrafficCard'
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS } from '@/lib/parishes/fields'
@@ -95,6 +95,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
       {tab === 'sacraments' && <ParishSacramentsTab parishId={p.id} rows={view.sacraments} save={saveMySacrament} />}
       {tab === 'presentation' && (
         <div className="space-y-6">
+          <WebVisibilityCard view={view} />
           <PresentationTab view={view} />
           <SocialLinksEditor parishId={p.id} initial={p.social_links ?? []} save={saveMySocialLinks} />
         </div>
@@ -237,6 +238,38 @@ function OfficialTab({ view }: { view: MyParishView }) {
 
 // ------------------------------------------------------------ Prezentácia (hneď)
 
+/** Verejná stránka zapnutá / len základná stránka – mení správca farnosti. */
+function WebVisibilityCard({ view }: { view: MyParishView }) {
+  const router = useRouter()
+  const p = view.parish
+  const canEdit = view.role === 'admin'
+  const [msg, setMsg] = useState<Msg>(null)
+  const [pending, startTransition] = useTransition()
+  const toggle = (visible: boolean) =>
+    startTransition(async () => {
+      const res = await setMyWebVisibility(p.id, visible)
+      if (res.success) {
+        setMsg({ kind: 'success', text: visible ? 'Stránka farnosti je zverejnená.' : 'Verejne sa zobrazuje len základná stránka.' })
+        router.refresh()
+      } else setMsg({ kind: 'error', text: res.error })
+    })
+  return (
+    <div className={`${cardCls} space-y-4`}>
+      <SectionTitle
+        title="Verejná stránka farnosti"
+        description="Kým stránka nie je zapnutá, návštevníci vidia základnú stránku: kontakt na farský úrad, kňazov, obce, vyplnené bohoslužby a tlačidlo na podporu. Oznamy, aktuality a sviatosti sa zobrazia až po zapnutí – dovtedy ich vidíte v náhľade len vy a biskupský úrad."
+      />
+      {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
+      <label className={`flex items-center gap-2 text-sm font-bold text-gray-700 ${canEdit ? 'cursor-pointer' : 'opacity-60'}`}>
+        <input type="checkbox" checked={p.visible_on_web} disabled={pending || !canEdit} onChange={(e) => toggle(e.target.checked)} className={checkboxCls} />
+        Verejná stránka farnosti zapnutá
+        {pending && <Loader2 size={14} className="animate-spin" />}
+      </label>
+      {!canEdit && <p className="text-xs text-gray-500">Zapnúť ju môže správca farnosti.</p>}
+    </div>
+  )
+}
+
 function PresentationTab({ view }: { view: MyParishView }) {
   const router = useRouter()
   const p = view.parish
@@ -244,16 +277,16 @@ function PresentationTab({ view }: { view: MyParishView }) {
     intro: p.intro ?? '', feast_day: p.feast_day ?? '', feast_day_note: p.feast_day_note ?? '',
     adoration_date: p.adoration_date ?? '', adoration_note: p.adoration_note ?? '',
     latitude: p.latitude != null ? String(p.latitude) : '', longitude: p.longitude != null ? String(p.longitude) : '',
-    image_url: p.image_url ?? '',
+    image_url: p.image_url ?? '', logo_url: p.logo_url ?? '',
   })
-  const [uploading, setUploading] = useState(false)
-  const uploadPhoto = async (file: File) => {
-    setUploading(true)
+  const [uploading, setUploading] = useState<'image_url' | 'logo_url' | null>(null)
+  const uploadPhoto = async (file: File, field: 'image_url' | 'logo_url' = 'image_url') => {
+    setUploading(field)
     const fd = new FormData()
     fd.append('file', file)
     const res = await uploadMyParishFile(p.id, fd)
-    setUploading(false)
-    if (res.url && !file.type.includes('pdf')) set('image_url', res.url)
+    setUploading(null)
+    if (res.url && !file.type.includes('pdf')) set(field, res.url)
     else setMsg({ kind: 'error', text: res.error ?? 'Nahrajte obrázok (JPG, PNG, WebP).' })
   }
   const [msg, setMsg] = useState<Msg>(null)
@@ -281,8 +314,22 @@ function PresentationTab({ view }: { view: MyParishView }) {
           </div>
         ) : (
           <label className={`${btnSecondary} w-fit`}>
-            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Nahrať fotku
+            {uploading === 'image_url' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Nahrať fotku
             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
+          </label>
+        )}
+      </Field>
+      <Field label="Erb alebo logo farnosti" hint="Zobrazí sa v hlavičke stránky namiesto titulnej fotky. Najlepšie PNG s priehľadným pozadím, štvorcové, aspoň 400 px.">
+        {form.logo_url ? (
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={form.logo_url} alt="" className="h-16 w-16 object-contain rounded-lg border bg-gray-50 p-1" />
+            <button type="button" onClick={() => set('logo_url', '')} className={btnSecondary}><X size={14} /> Odstrániť</button>
+          </div>
+        ) : (
+          <label className={`${btnSecondary} w-fit`}>
+            {uploading === 'logo_url' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Nahrať erb / logo
+            <input type="file" accept="image/png,image/webp,image/jpeg" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0], 'logo_url')} />
           </label>
         )}
       </Field>
@@ -294,7 +341,7 @@ function PresentationTab({ view }: { view: MyParishView }) {
         <Field label="GPS šírka (farský kostol)"><input value={form.latitude} onChange={(e) => set('latitude', e.target.value)} className={inputCls} inputMode="decimal" /></Field>
         <Field label="GPS dĺžka"><input value={form.longitude} onChange={(e) => set('longitude', e.target.value)} className={inputCls} inputMode="decimal" /></Field>
       </div>
-      <div className="flex justify-end"><button onClick={save} disabled={pending || uploading} className={btnPrimary}>{pending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Uložiť</button></div>
+      <div className="flex justify-end"><button onClick={save} disabled={pending || uploading !== null} className={btnPrimary}>{pending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Uložiť</button></div>
     </div>
   )
 }

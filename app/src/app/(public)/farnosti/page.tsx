@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   },
 }
 
-/** Zoznam zverejnených farností + vyhľadávanie podľa obce (návrh § 4.2). */
-export default async function FarnostiPage() {
-  const parishes = await getPublicParishList()
+/** Zoznam všetkých aktívnych farností + vyhľadávanie podľa obce, patróna a polohy (návrh § 4.2). */
+export default async function FarnostiPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const [parishes, { q }] = await Promise.all([getPublicParishList(), searchParams])
   return (
     <div className="relative -mt-24 lg:-mt-32 bg-blue-deep min-h-screen text-white pb-24 overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
@@ -28,7 +28,7 @@ export default async function FarnostiPage() {
             Rozpis svätých omší, farské oznamy a kontakty. Hľadajte podľa názvu farnosti alebo podľa obce, v ktorej bývate.
           </p>
         </header>
-        <ParishDirectory parishes={parishes} />
+        <ParishDirectory parishes={parishes} initialQuery={typeof q === 'string' ? q.slice(0, 100) : ''} />
       </div>
     </div>
   )

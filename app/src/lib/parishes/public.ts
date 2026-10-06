@@ -12,7 +12,7 @@ import { normalizeSocialLinks, type SocialLink } from './social'
 
 const PUBLIC_PARISH_COLUMNS =
   'id, slug, name, official_name, kind, deanery_id, patrocinium, street, postal_code, city, phone, email, website, ' +
-  'feast_day, feast_day_note, adoration_date, adoration_note, latitude, longitude, image_url, intro, social_links, theme, visible_on_web, is_active, updated_at'
+  'feast_day, feast_day_note, adoration_date, adoration_note, latitude, longitude, image_url, logo_url, intro, social_links, theme, visible_on_web, is_active, updated_at'
 
 export interface PublicScheduleItem {
   service_type: ParishServiceType
@@ -42,7 +42,12 @@ export interface PublicClergy {
   phone: string | null
   email: string | null
   photo_url: string | null
+  /** vedie farnosť (farár, administrátor, duchovný správca) – na stránke prvý a zvýraznený */
+  is_head: boolean
 }
+
+/** Farár (aj „farár, dekan“), administrátor alebo duchovný správca – kto vedie farnosť / duchovnú správu. */
+const isParishHead = (position: string | null) => /^(farár|farský administrátor|administrátor|duchovný správca)\b/i.test((position ?? '').trim())
 
 export interface PublicPostSummary {
   id: string
@@ -93,6 +98,8 @@ export interface PublicParish {
   latitude: number | null
   longitude: number | null
   image_url: string | null
+  /** erb / logo – v hlavičke a pätičke má prednosť pred titulnou fotkou */
+  logo_url: string | null
   intro: string | null
   social_links: SocialLink[]
   theme: string
@@ -100,6 +107,8 @@ export interface PublicParish {
   updated_at: string | null
   /** stránku vidí diecéza / farnosť pred zverejnením */
   preview: boolean
+  /** verejná stránka nie je zapnutá – základná stránka bez oznamov a aktualít (bohoslužby len ak sú vyplnené) */
+  basic: boolean
   /** prihlásený spravuje farnosť – odkaz do zóny farnosti */
   manageUrl: string | null
   villages: { name: string; church_name: string | null; is_seat: boolean }[]
@@ -108,7 +117,7 @@ export interface PublicParish {
   clergy: PublicClergy[]
 }
 
-type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'manageUrl' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'latitude' | 'longitude'> & {
+type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'basic' | 'manageUrl' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'latitude' | 'longitude'> & {
   deanery_id: string | null
   is_active: boolean
   latitude: string | number | null
@@ -146,8 +155,9 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
   const row = data as unknown as ParishDbRow | null
   if (!row || !row.is_active) return null
   const viewer = await viewerAccess(row.id)
-  if (!row.visible_on_web && !viewer.preview) return null
-  const preview = !row.visible_on_web
+  // nezverejnená farnosť má verejne základnú stránku; plnú (náhľad) vidí len jej účet a diecéza
+  const basic = !row.visible_on_web && !viewer.preview
+  const preview = !row.visible_on_web && viewer.preview
 
   const [{ data: deanery }, { data: villages }, { data: schedules }, { data: clergy }] = await Promise.all([
     row.deanery_id ? db.from('deaneries').select('name').eq('id', row.deanery_id).maybeSingle() : Promise.resolve({ data: null }),
@@ -186,20 +196,25 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
     longitude: row.longitude != null ? Number(row.longitude) : null,
     deanery_name: (deanery as { name: string } | null)?.name ?? null,
     preview,
+    basic,
     manageUrl: viewer.manage ? `/moja-farnost/${row.id}` : null,
     villages: (villages ?? []).map((v) => ({ name: v.name, church_name: v.church_name, is_seat: v.is_seat })),
     schedules: out,
     currentSeason,
     // meno a funkcia sú verejné (schematizmus); kontakt len so súhlasom (§ 3.8, GDPR)
-    clergy: (clergy ?? []).map((c) => ({
-      full_name: c.full_name,
-      title_before: c.title_before,
-      title_after: c.title_after,
-      position: c.position,
-      phone: c.is_public ? c.phone : null,
-      email: c.is_public ? c.email : null,
-      photo_url: c.photo_url,
-    })),
+    clergy: (clergy ?? [])
+      .map((c) => ({
+        full_name: c.full_name,
+        title_before: c.title_before,
+        title_after: c.title_after,
+        position: c.position,
+        phone: c.is_public ? c.phone : null,
+        email: c.is_public ? c.email : null,
+        photo_url: c.photo_url,
+        is_head: isParishHead(c.position),
+      }))
+      // vedúci farnosti prvý, ostatní v poradí zo správy farnosti (sort je stabilný)
+      .sort((a, b) => Number(b.is_head) - Number(a.is_head)),
   }
 })
 
@@ -265,19 +280,28 @@ export interface PublicParishListItem {
   deanery_id: string | null
   deanery_name: string | null
   patrocinium: string | null
+  latitude: number | null
+  longitude: number | null
+  /** má zapnutú verejnú stránku (bohoslužby, oznamy); inak len základná stránka */
+  has_web: boolean
   villages: string[]
 }
 
-/** Zverejnené farnosti pre /farnosti (vyhľadávanie podľa obce robí stránka nad týmto zoznamom). */
+/** Všetky aktívne farnosti – vyhľadávanie podľa obce musí nájsť aj tie, ktoré ešte nemajú zapnutú stránku. */
 export async function getPublicParishList(): Promise<PublicParishListItem[]> {
   const db = serviceDb()
   const { data } = await db
     .from('parishes')
-    .select('id, slug, name, official_name, kind, city, deanery_id, patrocinium, deaneries(name), parish_villages(name, sort_order)')
+    .select('id, slug, name, official_name, kind, city, deanery_id, patrocinium, latitude, longitude, visible_on_web, deaneries(name), parish_villages(name, sort_order)')
     .eq('is_active', true)
-    .eq('visible_on_web', true)
     .not('slug', 'is', null)
-  type Row = PublicParishListItem & { id: string; deaneries: { name: string } | null; parish_villages: { name: string; sort_order: number }[] }
+  type Row = Omit<PublicParishListItem, 'latitude' | 'longitude' | 'has_web' | 'villages' | 'deanery_name'> & {
+    latitude: string | number | null
+    longitude: string | number | null
+    visible_on_web: boolean
+    deaneries: { name: string } | null
+    parish_villages: { name: string; sort_order: number }[]
+  }
   return ((data ?? []) as unknown as Row[])
     .map((r) => ({
       slug: r.slug,
@@ -288,16 +312,19 @@ export async function getPublicParishList(): Promise<PublicParishListItem[]> {
       deanery_id: r.deanery_id,
       deanery_name: r.deaneries?.name ?? null,
       patrocinium: r.patrocinium,
+      latitude: r.latitude != null ? Number(r.latitude) : null,
+      longitude: r.longitude != null ? Number(r.longitude) : null,
+      has_web: r.visible_on_web,
       villages: (r.parish_villages ?? []).sort((a, b) => a.sort_order - b.sort_order).map((v) => v.name),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'sk'))
 }
 
-/** Slugy zverejnených farností a ich príspevkov – sitemap. */
+/** Slugy aktívnych farností (aj základné stránky) a príspevkov zverejnených farností – sitemap. */
 export async function getSitemapParishEntries() {
   const db = serviceDb()
-  const { data: parishes } = await db.from('parishes').select('id, slug, updated_at').eq('is_active', true).eq('visible_on_web', true).not('slug', 'is', null)
-  const ids = (parishes ?? []).map((p) => p.id)
+  const { data: parishes } = await db.from('parishes').select('id, slug, updated_at, visible_on_web').eq('is_active', true).not('slug', 'is', null)
+  const ids = (parishes ?? []).filter((p) => p.visible_on_web).map((p) => p.id)
   const { data: posts } = ids.length
     ? await db.from('parish_posts').select('parish_id, type, slug, updated_at').in('parish_id', ids).eq('published', true).is('taken_down_at', null)
     : { data: [] as { parish_id: string; type: string; slug: string; updated_at: string }[] }

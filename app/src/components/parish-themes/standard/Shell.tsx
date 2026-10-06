@@ -1,6 +1,6 @@
 import { Eye, MapPin } from 'lucide-react'
 import type { PublicParish } from '@/lib/parishes/public'
-import { officeHoursFor, parishDisplayName } from '@/lib/parishes/format'
+import { hasParishSchedule, officeHoursFor, parishDisplayName } from '@/lib/parishes/format'
 import ParishHeader, { type ParishNavItem } from './ParishHeader'
 import ParishFooter from './ParishFooter'
 import MobileBar from './MobileBar'
@@ -11,12 +11,18 @@ type Section = 'home' | 'announcement' | 'news'
 export default function Shell({ parish, active, children, compact = false }: { parish: PublicParish; active: Section; children: React.ReactNode; compact?: boolean }) {
   const base = `/farnosti/${parish.slug}`
   const hasOffice = officeHoursFor(parish).items.length > 0
+  // základná stránka (nezverejnená): bez oznamov, aktualít a sviatostí, bohoslužby len ak sú vyplnené
+  const hasSchedule = !parish.basic || hasParishSchedule(parish)
   const items: ParishNavItem[] = [
-    { label: 'Bohoslužby', href: `${base}#bohosluzby` },
+    ...(hasSchedule ? [{ label: 'Bohoslužby', href: `${base}#bohosluzby` }] : []),
     ...(hasOffice ? [{ label: 'Úradné hodiny', href: `${base}#uradne-hodiny` }] : []),
-    { label: 'Oznamy', href: `${base}/oznamy`, page: true, active: active === 'announcement' },
-    { label: 'Aktuality', href: `${base}/aktuality`, page: true, active: active === 'news' },
-    { label: 'Sviatosti', href: `${base}#sviatosti` },
+    ...(parish.basic
+      ? []
+      : [
+          { label: 'Oznamy', href: `${base}/oznamy`, page: true, active: active === 'announcement' },
+          { label: 'Aktuality', href: `${base}/aktuality`, page: true, active: active === 'news' },
+          { label: 'Sviatosti', href: `${base}#sviatosti` },
+        ]),
     { label: 'Kontakt', href: `${base}#kontakt` },
   ]
   const name = parishDisplayName(parish)
@@ -30,10 +36,12 @@ export default function Shell({ parish, active, children, compact = false }: { p
         name={name}
         subtitle={subtitle}
         imageUrl={parish.image_url}
+        logoUrl={parish.logo_url}
         homeHref={base}
         items={items}
         supportHref={`/registracia?farnost=${parish.slug}`}
         manageUrl={parish.manageUrl}
+        showMassTimes={hasSchedule}
       />
       <main className="relative flex-grow bg-blue-deep text-white pb-16 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
@@ -71,7 +79,7 @@ export default function Shell({ parish, active, children, compact = false }: { p
         </div>
       </main>
       <ParishFooter parish={parish} />
-      <MobileBar base={base} phone={parish.phone} />
+      <MobileBar base={base} phone={parish.phone} massTimes={hasSchedule} posts={!parish.basic} supportHref={`/registracia?farnost=${parish.slug}`} />
     </>
   )
 }

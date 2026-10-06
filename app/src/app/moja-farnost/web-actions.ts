@@ -110,6 +110,21 @@ export async function setMyTheme(parishId: string, theme: string): Promise<Resul
   return { success: true }
 }
 
+/**
+ * Zapnutie verejnej stránky farnosti – rozhoduje správca farnosti (rola admin), diecéza to vie aj v admine.
+ * Vypnutá farnosť má verejne len základnú stránku (kontakt, kňazi, podpora) bez bohoslužieb a príspevkov.
+ */
+export async function setMyWebVisibility(parishId: string, visible: boolean): Promise<Result> {
+  const { user, db, role } = await requireParishMember(parishId)
+  if (role !== 'admin') return { success: false, error: 'Stránku môže zapnúť len správca farnosti.' }
+  const { error } = await db.from('parishes').update({ visible_on_web: visible }).eq('id', parishId)
+  if (error) return { success: false, error: 'Uloženie zlyhalo.' }
+  await logParishChange(db, parishId, user.id, 'parish', 'parish_update', { visible_on_web: visible })
+  await revalidateParishWeb(db, parishId)
+  revalidatePath('/farnosti')
+  return { success: true }
+}
+
 /** Sociálne siete – farnosť ich mení hneď (prezentácia). */
 export async function saveMySocialLinks(parishId: string, links: SocialLink[]): Promise<Result> {
   const { user, db } = await requireParishMember(parishId)

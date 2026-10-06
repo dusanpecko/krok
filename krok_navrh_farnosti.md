@@ -124,6 +124,7 @@ Cieľ modulu:
 | O40 | Potvrdenie prečítania (K2) | **Nie.** Zóna je archív; každý dokument sa kňazom posiela aj **e-mailom**. |
 | O41 | Kto pridáva dokumenty (K3) | **Len kúria.** |
 | O42 | Archív (K4) | Starý archív sa neimportuje – **všetko sa pridáva ručne**. Obežníky sú **platné stále**; čo diecéza archivuje, presunie sa do **Archívu**. |
+| O43 | Vyhľadávanie farností a nezverejnené farnosti (2026-10-05) | Stránku `/farnosti/[slug]` má **každá aktívna farnosť**. Kým nie je zapnutá „Verejná stránka farnosti“, je to **základná stránka**: kontakt, kňazi, obce, hody/poklona, **bohoslužby a úradné hodiny, ak sú vyplnené**, podpora fondu cez farnosť (+ e-kasička, keď bude). Bez úvodného textu „zatiaľ nezverejnila…“, bez oznamov, aktualít a sviatostí. Stránku si zapína aj **správca farnosti** v zóne farnosti (Prezentácia). Vyhľadávanie: odkaz v menu a pätičke, blok na domovskej stránke, „Moja farnosť“ pre darcu, hľadanie podľa obce/filiálky/patróna, `?q=` v adrese, „Najbližšie ku mne“ (GPS), obce v popise stránky (SEO). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
 

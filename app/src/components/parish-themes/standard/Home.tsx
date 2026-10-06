@@ -10,7 +10,7 @@ import SacramentsSection from './SacramentsSection'
 import OfficeHours from './OfficeHours'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
-import { clergyName, dayMonth, formatDateTime, googleMapsUrl, validRange } from '@/lib/parishes/format'
+import { clergyName, dayMonth, formatDateTime, googleMapsUrl, hasParishSchedule, validRange } from '@/lib/parishes/format'
 
 export default function Home({ parish, announcements, news, events, sacraments }: ParishHomeProps) {
   const base = `/farnosti/${parish.slug}`
@@ -20,58 +20,71 @@ export default function Home({ parish, announcements, news, events, sacraments }
   const hasGps = parish.latitude != null && parish.longitude != null
   const address = [parish.street, [parish.postal_code, parish.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   const filials = parish.villages.filter((v) => !v.is_seat)
+  const hasFeasts = Boolean(feast || parish.feast_day_note || adoration || parish.adoration_note)
+  // základná stránka: bohoslužby len ak ich farnosť má vyplnené
+  const showSchedule = !parish.basic || hasParishSchedule(parish)
 
   return (
     <Shell parish={parish} active="home">
-      {/* Úvod + najnovší oznam */}
-      <div className="grid lg:grid-cols-5 gap-6 mb-16">
-        <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
-          {parish.intro ? (
-            <p className="text-lg text-blue-50/90 leading-relaxed whitespace-pre-line">{parish.intro}</p>
-          ) : (
-            <p className="text-lg text-blue-50/80 leading-relaxed">
-              Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
-            </p>
-          )}
-        </div>
-        {latest && (
-          <Link href={`${base}/oznamy/${latest.slug}`} className={`${cardCls} lg:col-span-2 p-6 hover:border-gold/40 transition-colors group`}>
-            <p className="text-xs font-black uppercase tracking-widest text-gold-bright flex items-center gap-2 mb-3">
-              <Bell size={14} /> Farské oznamy
-            </p>
-            <h3 className="text-xl font-light group-hover:text-gold-bright">{latest.title}</h3>
-            {validRange(latest.valid_from, latest.valid_to) && <p className="text-sm text-blue-100/60 mt-1">{validRange(latest.valid_from, latest.valid_to)}</p>}
-            {latest.excerpt && <p className="text-sm text-blue-100/70 mt-3 line-clamp-3">{latest.excerpt}</p>}
-            <p className="mt-4 text-sm font-extrabold text-gold-bright inline-flex items-center gap-1">
-              Čítať oznamy <ArrowRight size={14} />
-            </p>
-          </Link>
-        )}
-      </div>
-
-      {/* Bohoslužby */}
-      <section className="mb-16">
-        <SectionHeading id="bohosluzby" icon={<Clock size={22} />}>Bohoslužby</SectionHeading>
-        <ScheduleView schedules={parish.schedules} current={parish.currentSeason} />
-        {(feast || parish.feast_day_note || adoration || parish.adoration_note) && (
-          <div className="grid sm:grid-cols-2 gap-3 mt-6">
-            {(feast || parish.feast_day_note) && (
-              <div className={`${cardCls} p-4`}>
-                <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-1">Hody</p>
-                <p className="font-extrabold">{feast ?? parish.feast_day_note}</p>
-                {feast && parish.feast_day_note && <p className="text-sm text-blue-100/60">{parish.feast_day_note}</p>}
-              </div>
-            )}
-            {(adoration || parish.adoration_note) && (
-              <div className={`${cardCls} p-4`}>
-                <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-1">Výročná celodenná poklona</p>
-                <p className="font-extrabold">{adoration ?? parish.adoration_note}</p>
-                {adoration && parish.adoration_note && <p className="text-sm text-blue-100/60">{parish.adoration_note}</p>}
-              </div>
+      {/* Úvod + najnovší oznam (základná stránka bez vlastného textu ho nemá) */}
+      {(parish.intro || !parish.basic || latest) && (
+        <div className="grid lg:grid-cols-5 gap-6 mb-16">
+          <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
+            {parish.intro ? (
+              <p className="text-lg text-blue-50/90 leading-relaxed whitespace-pre-line">{parish.intro}</p>
+            ) : parish.basic ? null : (
+              <p className="text-lg text-blue-50/80 leading-relaxed">
+                Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
+              </p>
             )}
           </div>
-        )}
-      </section>
+          {latest && (
+            <Link href={`${base}/oznamy/${latest.slug}`} className={`${cardCls} lg:col-span-2 p-6 hover:border-gold/40 transition-colors group`}>
+              <p className="text-xs font-black uppercase tracking-widest text-gold-bright flex items-center gap-2 mb-3">
+                <Bell size={14} /> Farské oznamy
+              </p>
+              <h3 className="text-xl font-light group-hover:text-gold-bright">{latest.title}</h3>
+              {validRange(latest.valid_from, latest.valid_to) && <p className="text-sm text-blue-100/60 mt-1">{validRange(latest.valid_from, latest.valid_to)}</p>}
+              {latest.excerpt && <p className="text-sm text-blue-100/70 mt-3 line-clamp-3">{latest.excerpt}</p>}
+              <p className="mt-4 text-sm font-extrabold text-gold-bright inline-flex items-center gap-1">
+                Čítať oznamy <ArrowRight size={14} />
+              </p>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Bohoslužby (základná stránka bez vyplneného rozpisu: len hody a poklona) */}
+      {(showSchedule || hasFeasts) && (
+        <section className="mb-16">
+          {!showSchedule ? (
+            <SectionHeading icon={<CalendarDays size={22} />}>Hody a výročná poklona</SectionHeading>
+          ) : (
+            <>
+              <SectionHeading id="bohosluzby" icon={<Clock size={22} />}>Bohoslužby</SectionHeading>
+              <ScheduleView schedules={parish.schedules} current={parish.currentSeason} />
+            </>
+          )}
+          {hasFeasts && (
+            <div className={`grid sm:grid-cols-2 gap-3 ${showSchedule ? 'mt-6' : ''}`}>
+              {(feast || parish.feast_day_note) && (
+                <div className={`${cardCls} p-4`}>
+                  <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-1">Hody</p>
+                  <p className="font-extrabold">{feast ?? parish.feast_day_note}</p>
+                  {feast && parish.feast_day_note && <p className="text-sm text-blue-100/60">{parish.feast_day_note}</p>}
+                </div>
+              )}
+              {(adoration || parish.adoration_note) && (
+                <div className={`${cardCls} p-4`}>
+                  <p className="text-xs font-black uppercase tracking-widest text-blue-100/60 mb-1">Výročná celodenná poklona</p>
+                  <p className="font-extrabold">{adoration ?? parish.adoration_note}</p>
+                  {adoration && parish.adoration_note && <p className="text-sm text-blue-100/60">{parish.adoration_note}</p>}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       <OfficeHours parish={parish} />
 
@@ -114,18 +127,18 @@ export default function Home({ parish, announcements, news, events, sacraments }
           <SectionHeading icon={<Users size={22} />}>Kňazi vo farnosti</SectionHeading>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {parish.clergy.map((c, i) => (
-              <div key={i} className={`${cardCls} p-4 flex gap-4 items-start`}>
+              <div key={i} className={`${c.is_head ? 'bg-gold/[0.07] border border-gold/50 rounded-2xl' : cardCls} p-4 flex gap-4 items-start`}>
                 {c.photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.photo_url} alt={c.full_name} className="w-14 h-14 rounded-full object-cover border border-white/10" />
+                  <img src={c.photo_url} alt={c.full_name} className={`w-14 h-14 rounded-full object-cover shrink-0 ${c.is_head ? 'border-2 border-gold' : 'border border-white/10'}`} />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gold shrink-0">
+                  <div className={`w-14 h-14 rounded-full bg-white/5 flex items-center justify-center text-gold shrink-0 ${c.is_head ? 'border-2 border-gold' : 'border border-white/10'}`}>
                     <Church size={22} />
                   </div>
                 )}
                 <div className="min-w-0">
                   <p className="font-extrabold">{clergyName(c)}</p>
-                  {c.position && <p className="text-sm text-blue-100/60">{c.position}</p>}
+                  {c.position && <p className={`text-sm ${c.is_head ? 'text-gold-bright font-bold' : 'text-blue-100/60'}`}>{c.position}</p>}
                   {c.phone && (
                     <a href={`tel:${c.phone.replace(/\s/g, '')}`} className="text-sm text-gold-bright hover:underline block mt-1">
                       {c.phone}

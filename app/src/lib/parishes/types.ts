@@ -83,6 +83,7 @@ export interface ParishRow {
   longitude: number | null
   intro: string | null
   image_url: string | null
+  logo_url: string | null
   social_links: SocialLink[]
   notes: string | null
   is_active: boolean

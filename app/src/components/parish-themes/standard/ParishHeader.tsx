@@ -16,14 +16,18 @@ interface Props {
   name: string
   subtitle: string | null
   imageUrl: string | null
+  /** erb / logo – má prednosť pred fotkou, zobrazí sa celý (bez orezania do kruhu) */
+  logoUrl?: string | null
   homeHref: string
   items: ParishNavItem[]
   supportHref: string
   manageUrl: string | null
+  /** tlačidlo „Časy omší“ – základná stránka bohoslužby nemá */
+  showMassTimes?: boolean
 }
 
 /** Hlavička stránky farnosti (návrh A): tenký pás KROK + lepkavá lišta farnosti, na mobile vysúvacie menu. */
-export default function ParishHeader({ name, subtitle, imageUrl, homeHref, items, supportHref, manageUrl }: Props) {
+export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHref, items, supportHref, manageUrl, showMassTimes = true }: Props) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -74,7 +78,10 @@ export default function ParishHeader({ name, subtitle, imageUrl, homeHref, items
       <header className={`sticky top-0 z-40 border-b transition-colors ${scrolled ? 'bg-blue-deep/95 backdrop-blur border-white/10 shadow-lg shadow-black/20' : 'bg-blue-deep border-transparent'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link href={homeHref} className="flex items-center gap-3 min-w-0">
-            {imageUrl ? (
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="h-11 w-11 object-contain shrink-0" />
+            ) : imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={imageUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-gold/40 shrink-0" />
             ) : (
@@ -92,9 +99,11 @@ export default function ParishHeader({ name, subtitle, imageUrl, homeHref, items
             {items.map((it) => (
               <NavLink key={it.href} it={it} className={linkCls(it.active)} />
             ))}
-            <a href={items.find((i) => i.href.endsWith('#bohosluzby'))?.href ?? `${homeHref}#bohosluzby`} className="ml-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gold text-blue-deep font-black text-sm hover:bg-gold-bright">
-              <Clock size={15} /> Časy omší
-            </a>
+            {showMassTimes && (
+              <a href={items.find((i) => i.href.endsWith('#bohosluzby'))?.href ?? `${homeHref}#bohosluzby`} className="ml-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gold text-blue-deep font-black text-sm hover:bg-gold-bright">
+                <Clock size={15} /> Časy omší
+              </a>
+            )}
           </nav>
 
           <button type="button" onClick={() => setOpen((o) => !o)} className="lg:hidden p-2 -mr-2 text-white" aria-label={open ? 'Zavrieť menu' : 'Menu'} aria-expanded={open}>

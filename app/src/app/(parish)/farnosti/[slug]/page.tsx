@@ -23,12 +23,15 @@ export default async function ParishPage({ params }: PageProps) {
   const parish = await getPublicParishBySlug(slug)
   if (!parish) notFound()
 
-  const [announcements, news, events, sacraments] = await Promise.all([
-    getParishPosts(parish.id, 'announcement', 2),
-    getParishPosts(parish.id, 'news', 6),
-    getUpcomingEvents(parish.id),
-    getParishSacraments(parish.id),
-  ])
+  // základná stránka (verejná stránka nie je zapnutá) – bez oznamov, aktualít a sviatostí
+  const [announcements, news, events, sacraments] = parish.basic
+    ? [[], [], [], []]
+    : await Promise.all([
+        getParishPosts(parish.id, 'announcement', 2),
+        getParishPosts(parish.id, 'news', 6),
+        getUpcomingEvents(parish.id),
+        getParishSacraments(parish.id),
+      ])
   const { Home } = getParishTheme(parish.theme)
 
   return (

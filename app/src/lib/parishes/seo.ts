@@ -1,17 +1,25 @@
 import type { Metadata } from 'next'
 import type { PublicParish, PublicPost } from './public'
-import { officeHoursFor, parishDisplayName } from './format'
+import { hasParishSchedule, officeHoursFor, parishDisplayName } from './format'
 import { getBaseUrl } from '@/lib/mollie/client'
 
 /** SEO stránok farností (návrh § 4.2): metadata, OG a schema.org CatholicChurch. */
 
 export function parishMetadata(parish: PublicParish, opts: { title?: string; description?: string; path?: string; image?: string | null } = {}): Metadata {
   const name = parishDisplayName(parish)
-  const place = parish.city ? ` – ${parish.city}` : ''
-  const title = opts.title ? `${opts.title} | ${name}` : `${name}${place} – bohoslužby, oznamy, kontakt`
-  const description =
+  // bez opakovania („Martin – Martin“), ak je obec už v názve
+  const place = parish.city && !name.toLowerCase().includes(parish.city.toLowerCase()) ? ` – ${parish.city}` : ''
+  const hasSchedule = hasParishSchedule(parish)
+  const topics = parish.basic ? (hasSchedule ? 'bohoslužby, kontakt' : 'kontakt, farský úrad') : 'bohoslužby, oznamy, kontakt'
+  const title = opts.title ? `${opts.title} | ${name}` : `${name}${place} – ${topics}`
+  // ľudia hľadajú svoju obec („omše Šuja“) – obce farnosti patria do popisu
+  const villages = parish.villages.map((v) => v.name)
+  const villagesText = villages.length > 1 ? ` Obce farnosti: ${villages.join(', ')}.` : ''
+  const summary =
     opts.description ??
-    `Sväté omše, spovedanie, farské oznamy a kontakt na farský úrad – ${name}${parish.deanery_name ? `, dekanát ${parish.deanery_name}` : ''}, Žilinská diecéza.`
+    `${parish.basic ? (hasSchedule ? 'Sväté omše, spovedanie a kontakt na farský úrad' : 'Kontakt na farský úrad a kňazov') : 'Sväté omše, spovedanie, farské oznamy a kontakt na farský úrad'} – ${name}${parish.deanery_name ? `, dekanát ${parish.deanery_name}` : ''}, Žilinská diecéza.`
+  // úvodná stránka farnosti (bez path) nesie aj zoznam obcí, podstránky nie
+  const description = opts.path ? summary : `${summary.trim()}${villagesText}`
   const url = `${getBaseUrl()}/farnosti/${parish.slug}${opts.path ?? ''}`
   const image = opts.image ?? parish.image_url
   return {

@@ -31,6 +31,7 @@ export default function Footer() {
             <ul className="space-y-4 text-gray-400">
               <li><Link href="/o-nas" className="hover:text-white transition-colors">O nás</Link></li>
               <li><Link href="/vyzvy" className="hover:text-white transition-colors">Výzvy na podporu</Link></li>
+              <li><Link href="/farnosti" className="hover:text-white transition-colors">Farnosti – omše a kontakty</Link></li>
               <li><Link href="/podporene-projekty" className="hover:text-white transition-colors">Podporené projekty</Link></li>
               <li><Link href="/registracia" className="hover:text-white transition-colors">Chcem podporiť</Link></li>
               <li><Link href="/kontakt" className="hover:text-white transition-colors">Kontakt</Link></li>

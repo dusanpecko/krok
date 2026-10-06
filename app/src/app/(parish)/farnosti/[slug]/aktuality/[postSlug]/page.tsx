@@ -14,7 +14,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, postSlug } = await params
   const parish = await getPublicParishBySlug(slug)
-  if (!parish) return { title: 'Farnosť nenájdená | KROK' }
+  if (!parish || parish.basic) return { title: 'Farnosť nenájdená | KROK' }
   const post = await getParishPost(parish.id, 'news', postSlug)
   if (!post) return { title: 'Príspevok nenájdený | KROK' }
   return parishMetadata(parish, {
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ParishPostPage({ params }: PageProps) {
   const { slug, postSlug } = await params
   const parish = await getPublicParishBySlug(slug)
-  if (!parish) notFound()
+  if (!parish || parish.basic) notFound()
   const post = await getParishPost(parish.id, 'news', postSlug)
   if (!post) notFound()
   const related = (await getParishPosts(parish.id, 'news', 4)).filter((p) => p.id !== post.id).slice(0, 3)

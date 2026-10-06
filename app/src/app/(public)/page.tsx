@@ -22,6 +22,7 @@ import { getPublicStats } from './actions';
 import FeaturedProjects from '@/components/public/FeaturedProjects';
 import SponsorsStrip from '@/components/public/SponsorsStrip';
 import DonationSection from '@/components/public/DonationSection';
+import ParishFinder from '@/components/public/parishes/ParishFinder';
 
 // ==========================================
 // 1. DYNAMICKÉ PLACEHOLDERY A NASTAVENIE DÁT
@@ -866,6 +867,9 @@ export default function KrokLandingPage() {
 
       {/* Aktuálne výzvy na podporu (featured) */}
       <FeaturedProjects />
+
+      {/* Nájdite svoju farnosť – vyhľadávanie podľa obce */}
+      <ParishFinder />
 
       {/* SEKCIA 5: POZVANIE – darovací formulár */}
       <DonationSection />

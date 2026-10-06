@@ -153,7 +153,7 @@ export default function DonationSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <div className="flex items-center justify-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-3">
+          <div className="flex items-center justify-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-3">
             <span className="w-8 h-[2px] bg-gold rounded-full" />
             <span>{kicker}</span>
             <span className="w-8 h-[2px] bg-gold rounded-full" />
@@ -222,7 +222,7 @@ export default function DonationSection({
                 onClick={() => setSelectedTier('custom')}
                 className={`w-full py-3.5 rounded-xl text-sm font-extrabold border transition-all ${
                   selectedTier === 'custom'
-                    ? 'bg-gold/15 border-gold text-gold-ink'
+                    ? 'bg-gold/15 border-gold text-blue'
                     : 'bg-paper border-blue/10 text-mute hover:text-ink'
                 }`}
               >
@@ -457,7 +457,7 @@ export default function DonationSection({
                     <span className="text-xs text-mute font-mono">Číslo účtu (IBAN)</span>
                     <button 
                       onClick={() => copyToClipboard(KROK_IBAN)}
-                      className="text-xs text-gold-ink hover:text-blue flex items-center gap-1.5 font-medium"
+                      className="text-xs text-blue hover:text-blue flex items-center gap-1.5 font-medium"
                     >
                       <Copy size={12} />
                       {copiedIBAN ? 'Skopírované!' : 'Kopírovať'}

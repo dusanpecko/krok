@@ -28,7 +28,7 @@ export default function ParishFinder() {
             Hľadať
           </button>
         </form>
-        <Link href="/farnosti" className="inline-block mt-5 text-sm font-extrabold text-gold-ink hover:underline">
+        <Link href="/farnosti" className="inline-block mt-5 text-sm font-extrabold text-blue hover:underline">
           Zoznam všetkých farností
         </Link>
       </div>

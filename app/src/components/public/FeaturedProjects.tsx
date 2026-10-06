@@ -36,18 +36,18 @@ export default function FeaturedProjects() {
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="max-w-2xl">
-            <div className="flex items-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-4">
+            <div className="flex items-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-4">
               <span className="w-8 h-[2px] bg-gold rounded-full" />
               <span>Aktuálne výzvy</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-light text-ink tracking-tight leading-tight">
-              Konkrétne diela, ktoré <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue to-gold-ink">čakajú na váš KROK</span>
+              Konkrétne diela, ktoré <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink">čakajú na váš KROK</span>
             </h2>
             <p className="text-ink/80 text-base font-light leading-relaxed mt-4">
               Vyberte si výzvu, ktorá vám leží na srdci. Každý dar sa priradí priamo k nej a vy uvidíte, ako projekt rastie.
             </p>
           </div>
-          <Link href="/vyzvy" className="inline-flex items-center gap-2 text-sm font-extrabold text-gold-ink hover:gap-3 transition-all shrink-0">
+          <Link href="/vyzvy" className="inline-flex items-center gap-2 text-sm font-extrabold text-blue hover:gap-3 transition-all shrink-0">
             Všetky výzvy <ArrowRight size={16} />
           </Link>
         </div>

@@ -32,7 +32,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-ink/25 via-transparent to-transparent" />
-        <span className="absolute top-3 left-3 text-[10px] font-black uppercase tracking-widest bg-paper backdrop-blur text-gold-ink px-2.5 py-1 rounded-lg border border-blue/10">
+        <span className="absolute top-3 left-3 text-[10px] font-black uppercase tracking-widest bg-paper backdrop-blur text-blue px-2.5 py-1 rounded-lg border border-blue/10">
           {categoryLabel(project.category)}
         </span>
         {completed && (
@@ -51,7 +51,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
 
         <div className="mt-auto space-y-2">
           <div className="flex items-end justify-between gap-3">
-            <span className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue to-gold-ink">
+            <span className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink">
               {formatEur(project.stats.collected_amount)}
             </span>
             {project.target_amount ? (
@@ -77,7 +77,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
           </div>
         </div>
 
-        <span className="inline-flex items-center gap-2 text-sm font-extrabold text-gold-ink group-hover:gap-3 transition-all">
+        <span className="inline-flex items-center gap-2 text-sm font-extrabold text-blue group-hover:gap-3 transition-all">
           {open ? 'Podporiť výzvu' : 'Zobraziť výzvu'} <ArrowRight size={16} />
         </span>
       </div>

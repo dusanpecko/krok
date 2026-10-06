@@ -138,7 +138,7 @@
   --color-vermilion: #EF3F38;
   --color-gold: #CBBB2D;
   --color-gold-bright: #F5E300;
-  --color-gold-ink: #8b6914;      /* Tmavá (bronzová) zlatá pre text na svetlom pozadí (kontrast 4,8 : 1) */
+  --color-gold-ink: #bf9b1b;      /* Zlatá pre VEĽKÝ text a akcenty na svetlom pozadí (nadpisy, sumy); drobný text = modrá */
   --color-white: #FFFFFF;
   --color-ink: #051b30;
   --color-mute: #4b6b8b;

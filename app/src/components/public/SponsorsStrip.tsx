@@ -46,7 +46,7 @@ export default function SponsorsStrip() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-gold/5 blur-[120px] pointer-events-none rounded-full" />
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="flex items-center justify-center gap-3 text-gold-ink uppercase tracking-widest text-xs font-extrabold mb-4">
+          <div className="flex items-center justify-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-4">
             <span className="w-8 h-[2px] bg-gold rounded-full" />
             <span>Partneri fondu</span>
             <span className="w-8 h-[2px] bg-gold rounded-full" />
@@ -162,13 +162,13 @@ function SponsorModal({ sponsor, onClose }: { sponsor: PublicSponsor; onClose: (
 
         <div className="p-6 sm:p-8 space-y-4 text-ink">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold-ink mb-1">Partner fondu KROK</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue mb-1">Partner fondu KROK</p>
             <h3 id="sponsor-modal-title" className="text-2xl font-extrabold leading-tight">{sponsor.name}</h3>
           </div>
           {sponsor.description && <p className="text-sm text-ink/80 font-light leading-relaxed">{sponsor.description}</p>}
           {sponsor.amount != null && (
             <p className="text-sm text-ink/80">
-              Výška podpory: <strong className="text-gold-ink font-extrabold">{formatSponsorAmount(sponsor.amount)}</strong>
+              Výška podpory: <strong className="text-blue font-extrabold">{formatSponsorAmount(sponsor.amount)}</strong>
             </p>
           )}
           {sponsor.website_url && (

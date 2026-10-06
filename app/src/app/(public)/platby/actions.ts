@@ -23,6 +23,7 @@ import {
   type PaymentMetadata,
   type SubscriptionInterval,
 } from '@/lib/mollie/process-payment'
+import { getActiveBox } from '@/lib/parish-box/server'
 
 /**
  * Verejné server actions pre online dary (Mollie).
@@ -52,6 +53,8 @@ export interface StartDonationInput {
   projectId?: string | null
   /** Pri pravidelnom dare: id existujúceho pravidelného daru, ktorý sa má po úspešnej platbe zrušiť (zmena výšky). */
   replaceSubscriptionId?: string | null
+  /** E-zvonček: dar pre farnosť (nie do fondu) – id farnosti so zapnutým e-zvončekom */
+  parishBoxId?: string | null
 }
 
 export type StartDonationResult = { success: true; url: string } | { success: false; error: string }
@@ -90,7 +93,16 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
   ).trim().slice(0, 100)
   const parishId = input.parishId && UUID_RE.test(input.parishId) ? input.parishId : null
   const interval: SubscriptionInterval = input.interval === 'year' ? 'year' : 'month'
-  const projectId = input.projectId && UUID_RE.test(input.projectId) ? input.projectId : null
+
+  // E-zvonček farnosti (O31): dar ide farnosti, nie do fondu ani na výzvu
+  let box: Awaited<ReturnType<typeof getActiveBox>> = null
+  if (input.parishBoxId) {
+    if (!UUID_RE.test(input.parishBoxId)) return { success: false, error: 'Neplatná farnosť.' }
+    box = await getActiveBox(input.parishBoxId)
+    if (!box) return { success: false, error: 'E-zvonček tejto farnosti nie je dostupný.' }
+  }
+  const boxParishId = box ? input.parishBoxId! : null
+  const projectId = !box && input.projectId && UUID_RE.test(input.projectId) ? input.projectId : null
 
   // Prihlásený darca → priradíme dar k jeho profilu
   const user = await getSessionUser()
@@ -133,20 +145,20 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
   // Nahradenie existujúceho pravidelného daru – len pre prihláseného vlastníka
   // a len s rovnakým účelom (fond vs. konkrétna výzva), aby zámenou nezanikla iná podpora.
   let replaceSubscriptionId: string | null = null
-  if (input.recurring && input.replaceSubscriptionId) {
+  if (input.recurring && input.replaceSubscriptionId && !box) {
     if (!user || !UUID_RE.test(input.replaceSubscriptionId)) {
       return { success: false, error: 'Zmena výšky pravidelného daru vyžaduje prihlásenie.' }
     }
     const { data: old } = await admin
       .from('online_subscriptions')
-      .select('id, auth_user_id, donor_id, status, project_id')
+      .select('id, auth_user_id, donor_id, status, project_id, purpose')
       .eq('id', input.replaceSubscriptionId)
       .maybeSingle()
     const owns = !!old && (old.auth_user_id === user.id || (!!donorId && old.donor_id === donorId))
     if (!owns || !['active', 'past_due'].includes(old!.status)) {
       return { success: false, error: 'Pravidelný dar, ktorý chcete nahradiť, sa nenašiel.' }
     }
-    if ((old!.project_id ?? null) !== projectId) {
+    if ((old!.project_id ?? null) !== projectId || old!.purpose !== 'fund') {
       return { success: false, error: 'Nahradiť možno len pravidelný dar s rovnakým účelom.' }
     }
     replaceSubscriptionId = old!.id
@@ -167,7 +179,9 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
     donor_name: donorName || undefined,
     parish_id: parishId ?? undefined,
     project_id: projectId ?? undefined,
+    ...(box ? { purpose: 'parish_box' as const, box_parish_id: boxParishId! } : {}),
   }
+  const purposeCols = { purpose: box ? 'parish_box' : 'fund', box_parish_id: boxParishId }
 
   try {
     let paymentId: string
@@ -180,7 +194,9 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
 
     if (!input.recurring) {
       kind = 'one_time'
-      description = projectName ? `Dar – KROK – ${projectName}` : 'Dar pre Pastoračný fond KROK'
+      description = box
+        ? `Dar pre farnosť – ${box.parishName.slice(0, 100)} (e-zvonček)`
+        : projectName ? `Dar – KROK – ${projectName}` : 'Dar pre Pastoračný fond KROK'
       const metadata: PaymentMetadata = { kind, ...baseMeta }
       const payment = await mollie.payments.create({
         amount: { currency: 'EUR', value },
@@ -194,7 +210,7 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
       status = String(payment.status)
     } else {
       kind = 'recurring_first'
-      description = `${subscriptionDescription(interval, projectName)} (prvá platba)`
+      description = `${subscriptionDescription(interval, projectName, box?.parishName)} (prvá platba)`
 
       // Existujúci Mollie zákazník toho istého darcu / e-mailu
       let query = admin
@@ -230,6 +246,7 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
           interval,
           status: 'pending',
           project_id: projectId,
+          ...purposeCols,
           metadata: replaceSubscriptionId ? { replace_subscription_id: replaceSubscriptionId } : {},
         })
         .select('id')
@@ -267,6 +284,7 @@ export async function startOnlineDonation(input: StartDonationInput): Promise<St
       email,
       donor_name: donorName || null,
       project_id: projectId,
+      ...purposeCols,
       online_subscription_id: subscriptionRowId,
       metadata: { kind, ...baseMeta, interval: input.recurring ? interval : undefined },
     })
@@ -297,6 +315,9 @@ export type OnlinePaymentStatus =
       interval: SubscriptionInterval | null
       projectName: string | null
       projectSlug: string | null
+      /** E-zvonček: dar pre farnosť */
+      parishName: string | null
+      parishSlug: string | null
     }
 
 /**
@@ -313,7 +334,7 @@ export async function getOnlinePaymentStatus(ref: string): Promise<OnlinePayment
   const admin = serviceClient()
   const { data: row } = await admin
     .from('online_payments')
-    .select('mollie_payment_id, status, kind, amount, donation_id, online_subscriptions(interval), projects(name, slug)')
+    .select('mollie_payment_id, status, kind, amount, donation_id, purpose, parish_box_gift_id, online_subscriptions!online_payments_online_subscription_id_fkey(interval), projects(name, slug), box_parish:parishes!online_payments_box_parish_id_fkey(name, slug)')
     .eq('id', ref)
     .maybeSingle()
   if (!row) return { found: false }
@@ -323,7 +344,8 @@ export async function getOnlinePaymentStatus(ref: string): Promise<OnlinePayment
   let kind = row.kind as PaymentKind
   const isPaidNow = status === 'paid'
 
-  if (!isTerminalStatus(status) || (isPaidNow && !row.donation_id)) {
+  const recorded = row.purpose === 'parish_box' ? !!row.parish_box_gift_id : !!row.donation_id
+  if (!isTerminalStatus(status) || (isPaidNow && !recorded)) {
     try {
       const result = await processMolliePayment(row.mollie_payment_id)
       status = result.status
@@ -339,6 +361,8 @@ export async function getOnlinePaymentStatus(ref: string): Promise<OnlinePayment
   type ProjectRel = { name?: string; slug?: string }
   const projRel = row.projects as ProjectRel | ProjectRel[] | null
   const proj = Array.isArray(projRel) ? projRel[0] : projRel
+  const boxRel = row.box_parish as ProjectRel | ProjectRel[] | null
+  const boxParish = Array.isArray(boxRel) ? boxRel[0] : boxRel
 
   return {
     found: true,
@@ -350,6 +374,8 @@ export async function getOnlinePaymentStatus(ref: string): Promise<OnlinePayment
     interval: subInterval === 'year' || subInterval === 'month' ? subInterval : null,
     projectName: proj?.name ?? null,
     projectSlug: proj?.slug ?? null,
+    parishName: boxParish?.name ?? null,
+    parishSlug: boxParish?.slug ?? null,
   }
 }
 
@@ -365,6 +391,10 @@ export interface MyOnlineSubscription {
   project_id: string | null
   project_name: string | null
   project_slug: string | null
+  /** E-zvonček: pravidelný dar pre farnosť (nie do fondu) */
+  box_parish_id: string | null
+  box_parish_name: string | null
+  box_parish_slug: string | null
 }
 
 /** Pravidelné online dary prihláseného darcu (aktívne alebo s neúspešnou platbou). */
@@ -378,7 +408,7 @@ export async function getMyOnlineSubscriptions(): Promise<MyOnlineSubscription[]
 
   const { data, error } = await admin
     .from('online_subscriptions')
-    .select('id, amount, interval, status, started_at, next_payment_at, created_at, project_id, projects(name, slug)')
+    .select('id, amount, interval, status, started_at, next_payment_at, created_at, project_id, purpose, box_parish_id, projects(name, slug), box_parish:parishes!online_subscriptions_box_parish_id_fkey(name, slug)')
     .or(ownership)
     .in('status', ['active', 'past_due'])
     .order('created_at', { ascending: false })
@@ -390,6 +420,9 @@ export async function getMyOnlineSubscriptions(): Promise<MyOnlineSubscription[]
   return (data ?? []).map((s) => {
     const rel = s.projects as ProjectRel | ProjectRel[] | null
     const proj = Array.isArray(rel) ? rel[0] : rel
+    const boxRel = s.box_parish as ProjectRel | ProjectRel[] | null
+    const boxParish = Array.isArray(boxRel) ? boxRel[0] : boxRel
+    const isBox = s.purpose === 'parish_box'
     return {
       id: s.id,
       amount: Number(s.amount),
@@ -401,6 +434,9 @@ export async function getMyOnlineSubscriptions(): Promise<MyOnlineSubscription[]
       project_id: s.project_id ?? null,
       project_name: proj?.name ?? null,
       project_slug: proj?.slug ?? null,
+      box_parish_id: isBox ? s.box_parish_id ?? null : null,
+      box_parish_name: isBox ? boxParish?.name ?? null : null,
+      box_parish_slug: isBox ? boxParish?.slug ?? null : null,
     } as MyOnlineSubscription
   })
 }

@@ -104,9 +104,10 @@ export default function OnlinePaymentsAdminPage() {
   }
 
   const stuck = payments.filter(isSubscriptionStuck)
-  const paidTotal = payments.filter((p) => p.status === 'paid').reduce((acc, p) => acc + p.amount, 0)
+  const paidTotal = payments.filter((p) => p.status === 'paid' && p.purpose !== 'parish_box').reduce((acc, p) => acc + p.amount, 0)
   const activeSubs = subscriptions.filter((s) => s.status === 'active')
-  const monthlyEquivalent = activeSubs.reduce((acc, s) => acc + (s.interval === 'year' ? s.amount / 12 : s.amount), 0)
+  // len dary do fondu – e-zvonček farností sa farnostiam vypláca (nie je príjem fondu)
+  const monthlyEquivalent = activeSubs.filter((s) => s.purpose !== 'parish_box').reduce((acc, s) => acc + (s.interval === 'year' ? s.amount / 12 : s.amount), 0)
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -285,14 +286,17 @@ export default function OnlinePaymentsAdminPage() {
                         {KIND_LABELS[p.kind] ?? p.kind}
                         {p.method ? <span className="text-xs text-gray-400"> · {p.method}</span> : null}
                         {p.mode === 'test' && <span className="ml-2 text-[9px] font-black text-amber-600 uppercase">test</span>}
+                        {p.purpose === 'parish_box' && (
+                          <div className="text-[10px] font-black text-blue-700 uppercase tracking-wider mt-0.5">E-zvonček · {p.box_parish?.name ?? 'farnosť'}</div>
+                        )}
                       </td>
                       <td className="px-5 py-3 text-right font-black text-gray-900 whitespace-nowrap">
                         {p.amount.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR' })}
                       </td>
                       <td className="px-5 py-3">
                         <StatusBadge status={p.status} />
-                        {p.status === 'paid' && !p.donation_id && (
-                          <span className="ml-2 text-[10px] text-red-600 font-bold" title="Dar nie je zapísaný v donations">
+                        {p.status === 'paid' && !(p.purpose === 'parish_box' ? p.parish_box_gift_id : p.donation_id) && (
+                          <span className="ml-2 text-[10px] text-red-600 font-bold" title="Dar nie je zapísaný (donations / e-zvonček)">
                             bez daru
                           </span>
                         )}
@@ -357,7 +361,12 @@ export default function OnlinePaymentsAdminPage() {
                     <td className="px-5 py-3 text-right font-black text-gray-900 whitespace-nowrap">
                       {s.amount.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR' })}
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{s.interval === 'year' ? 'Ročne' : 'Mesačne'}</td>
+                    <td className="px-5 py-3 text-gray-600">
+                      {s.interval === 'year' ? 'Ročne' : 'Mesačne'}
+                      {s.purpose === 'parish_box' && (
+                        <div className="text-[10px] font-black text-blue-700 uppercase tracking-wider mt-0.5">E-zvonček · {s.box_parish?.name ?? 'farnosť'}</div>
+                      )}
+                    </td>
                     <td className="px-5 py-3">
                       <StatusBadge status={s.status} />
                     </td>

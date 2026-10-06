@@ -1,4 +1,6 @@
 import { cache } from 'react'
+import { getActiveBox } from '@/lib/parish-box/server'
+import type { PublicParishBox } from '@/lib/parish-box/types'
 import { serviceDb } from './access'
 import { getSessionUser, getUserAccess } from '@/lib/auth'
 import type { ParishKind, ParishOccasion, ParishSeason, ParishServiceType } from './types'
@@ -115,9 +117,11 @@ export interface PublicParish {
   schedules: Partial<Record<ParishSeason, PublicSchedule>>
   currentSeason: ParishSeason
   clergy: PublicClergy[]
+  /** E-zvonček farnosti – len ak ho diecéza zapla a farnosť má IBAN (aj na základnej stránke, O43) */
+  box: PublicParishBox | null
 }
 
-type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'basic' | 'manageUrl' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'latitude' | 'longitude'> & {
+type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'basic' | 'manageUrl' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'box' | 'latitude' | 'longitude'> & {
   deanery_id: string | null
   is_active: boolean
   latitude: string | number | null
@@ -159,13 +163,14 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
   const basic = !row.visible_on_web && !viewer.preview
   const preview = !row.visible_on_web && viewer.preview
 
-  const [{ data: deanery }, { data: villages }, { data: schedules }, { data: clergy }] = await Promise.all([
+  const [{ data: deanery }, { data: villages }, { data: schedules }, { data: clergy }, activeBox] = await Promise.all([
     row.deanery_id ? db.from('deaneries').select('name').eq('id', row.deanery_id).maybeSingle() : Promise.resolve({ data: null }),
     db.from('parish_villages').select('id, name, church_name, is_seat, sort_order').eq('parish_id', row.id).order('sort_order'),
     db.from('parish_schedules')
       .select('season, is_active, valid_from, valid_to, note, parish_schedule_items(service_type, occasion, day_of_week, day_label, time_from, time_to, relative_note, note, village_id, sort_order)')
       .eq('parish_id', row.id),
     db.from('parish_clergy').select('full_name, title_before, title_after, position, phone, email, photo_url, is_public, sort_order').eq('parish_id', row.id).order('sort_order'),
+    getActiveBox(row.id),
   ])
 
   const villageName = new Map((villages ?? []).map((v) => [v.id as string, v.name as string]))
@@ -215,6 +220,7 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
       }))
       // vedúci farnosti prvý, ostatní v poradí zo správy farnosti (sort je stabilný)
       .sort((a, b) => Number(b.is_head) - Number(a.is_head)),
+    box: activeBox ? { title: activeBox.title, description: activeBox.description } : null,
   }
 })
 

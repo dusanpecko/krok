@@ -10,6 +10,7 @@ import ParishScheduleTab from './ParishScheduleTab'
 import ParishClergyTab from './ParishClergyTab'
 import ParishDonationsTab from './ParishDonationsTab'
 import ParishAccessTab from './ParishAccessTab'
+import ParishBoxTab from './ParishBoxTab'
 import type { ChangeRequestRow, ParishAccessRow } from '@/app/admin/farnosti/actions'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
@@ -20,7 +21,7 @@ import type { ParishPostRow, SacramentEditRow } from '@/lib/parishes/posts'
 
 const POST_ACTIONS = { save: adminSaveParishPost, remove: adminDeleteParishPost, upload: adminUploadParishFile, uploadEditorImage: adminUploadEditorImage }
 
-type TabKey = 'basic' | 'villages' | 'schedule' | 'posts' | 'sacraments' | 'clergy' | 'donations' | 'traffic' | 'access'
+type TabKey = 'basic' | 'villages' | 'schedule' | 'posts' | 'sacraments' | 'clergy' | 'donations' | 'box' | 'traffic' | 'access'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'basic', label: 'Základné údaje' },
@@ -30,6 +31,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'sacraments', label: 'Sviatosti' },
   { key: 'clergy', label: 'Kňazi' },
   { key: 'donations', label: 'Dary a história' },
+  { key: 'box', label: 'E-zvonček' },
   { key: 'traffic', label: 'Návštevnosť' },
   { key: 'access', label: 'Prístupy a návrhy' },
 ]
@@ -117,6 +119,7 @@ export default function ParishDetailView({
       {tab === 'posts' && <ParishPostsTab parishId={parish.id} parishSlug={parish.slug} posts={web.posts} actions={POST_ACTIONS} />}
       {tab === 'sacraments' && <ParishSacramentsTab parishId={parish.id} rows={web.sacraments} save={adminSaveParishSacrament} />}
       {tab === 'clergy' && <ParishClergyTab parishId={parish.id} initial={detail.clergy} />}
+      {tab === 'box' && <ParishBoxTab parishId={parish.id} parishSlug={parish.slug} />}
       {tab === 'traffic' && <ParishTrafficCard parishId={parish.id} load={adminGetParishTraffic} />}
       {tab === 'donations' && <ParishDonationsTab summary={detail.summary} log={detail.log} donorsCount={detail.donorsCount} />}
       {tab === 'access' && <ParishAccessTab parishId={parish.id} access={access} requests={requests} defaultEmail={parish.email} />}

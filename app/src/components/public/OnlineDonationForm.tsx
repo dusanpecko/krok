@@ -33,7 +33,7 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
   const router = useRouter()
   // Formulár v profile je všeobecná podpora fondu – nahradiť možno len predplatné bez výzvy.
   // Pravidelné dary na konkrétne výzvy sa menia na stránke danej výzvy.
-  const generalSubs = subscriptions.filter((s) => !s.project_id)
+  const generalSubs = subscriptions.filter((s) => !s.project_id && !s.box_parish_id)
   const [recurring, setRecurring] = useState(true)
   const [preset, setPreset] = useState<number | 'custom'>(14)
   const [custom, setCustom] = useState('')
@@ -124,7 +124,13 @@ export default function OnlineDonationForm({ defaultEmail, defaultName, variable
                     {formatEur(s.amount)} <span className="text-mute font-normal text-sm">{s.interval === 'year' ? 'ročne' : 'mesačne'}</span>
                   </p>
                   <p className="text-xs text-blue/90 mt-0.5">
-                    {s.project_name && s.project_slug ? (
+                    {s.box_parish_id ? (
+                      s.box_parish_slug ? (
+                        <Link href={`/farnosti/${s.box_parish_slug}`} className="hover:underline">E-zvonček: {s.box_parish_name}</Link>
+                      ) : (
+                        `E-zvonček: ${s.box_parish_name ?? 'farnosť'}`
+                      )
+                    ) : s.project_name && s.project_slug ? (
                       <Link href={`/vyzvy/${s.project_slug}`} className="hover:underline">Výzva: {s.project_name}</Link>
                     ) : (
                       'Všeobecná podpora fondu'

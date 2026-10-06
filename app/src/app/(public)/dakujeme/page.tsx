@@ -58,7 +58,9 @@ function ThankYouContent() {
   const recurring = state?.found && state.kind !== 'one_time'
   const projectSlug = state?.found ? state.projectSlug : null
   const projectName = state?.found ? state.projectName : null
-  const backHref = projectSlug ? `/vyzvy/${projectSlug}` : failed ? '/#dar' : '/'
+  const parishSlug = state?.found ? state.parishSlug : null
+  const parishName = state?.found ? state.parishName : null
+  const backHref = parishSlug ? `/farnosti/${parishSlug}` : projectSlug ? `/vyzvy/${projectSlug}` : failed ? '/#dar' : '/'
 
   return (
     <div className="relative -mt-24 lg:-mt-32 min-h-screen bg-paper-warm text-ink flex items-center justify-center px-4 py-32">
@@ -99,13 +101,18 @@ function ThankYouContent() {
               ) : (
                 <>
                   Váš dar vo výške <strong className="text-ink">{formatEur(state.amount)}</strong> sme prijali.
-                  Vďaka vám môže pastoračná služba v našej diecéze rásť.
+                  {parishName ? 'Ďakujeme, že podporujete život svojej farnosti.' : 'Vďaka vám môže pastoračná služba v našej diecéze rásť.'}
                 </>
               )}
             </p>
             {projectName && (
               <p className="text-sm text-blue font-bold">
                 Dar je určený na výzvu „{projectName}“.
+              </p>
+            )}
+            {parishName && (
+              <p className="text-sm text-blue font-bold">
+                Dar je určený pre {parishName} (e-zvonček). Fond ho spolu s ďalšími darmi mesačne odovzdá farnosti.
               </p>
             )}
           </>
@@ -149,7 +156,7 @@ function ThankYouContent() {
               href={backHref}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-gold via-gold-bright to-gold text-blue-deep font-extrabold rounded-2xl text-sm shadow-xl hover:shadow-gold/20 transition-all"
             >
-              {failed ? 'Skúsiť znova' : projectSlug ? 'Späť na výzvu' : 'Späť na hlavnú stránku'} <ArrowRight size={16} />
+              {failed ? 'Skúsiť znova' : parishSlug ? 'Späť na stránku farnosti' : projectSlug ? 'Späť na výzvu' : 'Späť na hlavnú stránku'} <ArrowRight size={16} />
             </Link>
             <Link
               href="/profil#dary"

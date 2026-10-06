@@ -9,6 +9,8 @@ import { sanitizeRichHtml } from '@/lib/html/sanitize'
 import { loadParishTraffic, type TrafficResult } from '@/lib/parishes/traffic'
 import { uploadImage } from '@/lib/storage'
 import { isParishTheme } from '@/components/parish-themes/meta'
+import { getBoxSettings } from '@/lib/parish-box/server'
+import { bratislavaMidnightIso } from '@/lib/parish-box/types'
 
 /**
  * Web farnosti v zóne /moja-farnost (fáza F5): oznamy, aktuality, sviatosti, motív.
@@ -137,4 +139,56 @@ export async function saveMySocialLinks(parishId: string, links: SocialLink[]): 
 export async function getMyParishTraffic(parishId: string, days: number): Promise<TrafficResult> {
   const { db } = await requireParishMember(parishId)
   return loadParishTraffic(db, parishId, days)
+}
+
+// ------------------------------------------------------------
+// E-zvonček (§ 12) – farnosť vidí len súhrny a výplaty, bez mien darcov (O3); zapína ho diecéza
+// ------------------------------------------------------------
+
+export interface MyParishBoxView {
+  enabled: boolean
+  mollie_fee_pct: number
+  fund_fee_pct: number
+  thisMonth: { count: number; gross: number }
+  waiting: { count: number; gross: number }
+  activeRecurring: number
+  payouts: { id: string; period_month: string; gift_count: number; gross_amount: number; mollie_fee: number; fund_fee: number; net_amount: number; status: string; sent_at: string | null }[]
+}
+
+export async function getMyParishBox(parishId: string): Promise<Result<{ view: MyParishBoxView }>> {
+  try {
+    const { role, db } = await requireParishMember(parishId)
+    if (role !== 'admin') return { success: false, error: 'E-zvonček vidí len správca farnosti.' }
+    const settings = await getBoxSettings(parishId)
+    const now = new Date()
+    const monthStart = bratislavaMidnightIso(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`)
+    const [{ data: gifts }, { data: payouts }, { count }] = await Promise.all([
+      db.from('parish_box_gifts').select('amount, paid_at').eq('parish_id', parishId).is('payout_id', null),
+      db.from('parish_payouts').select('id, period_month, gift_count, gross_amount, mollie_fee, fund_fee, net_amount, status, sent_at').eq('parish_id', parishId).order('period_month', { ascending: false }).limit(24),
+      db.from('online_subscriptions').select('id', { count: 'exact', head: true }).eq('purpose', 'parish_box').eq('box_parish_id', parishId).in('status', ['active', 'past_due']),
+    ])
+    const sum = (rows: { amount: number | string }[]) => Math.round(rows.reduce((a, g) => a + Number(g.amount) * 100, 0)) / 100
+    const waiting = gifts ?? []
+    const thisMonth = waiting.filter((g) => new Date(g.paid_at) >= new Date(monthStart))
+    return {
+      success: true,
+      view: {
+        enabled: settings.enabled,
+        mollie_fee_pct: settings.mollie_fee_pct,
+        fund_fee_pct: settings.fund_fee_pct,
+        thisMonth: { count: thisMonth.length, gross: sum(thisMonth) },
+        waiting: { count: waiting.length, gross: sum(waiting) },
+        activeRecurring: count ?? 0,
+        payouts: (payouts ?? []).map((p) => ({
+          ...p,
+          gross_amount: Number(p.gross_amount),
+          mollie_fee: Number(p.mollie_fee),
+          fund_fee: Number(p.fund_fee),
+          net_amount: Number(p.net_amount),
+        })),
+      },
+    }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Neznáma chyba' }
+  }
 }

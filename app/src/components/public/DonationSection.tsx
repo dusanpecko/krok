@@ -75,7 +75,7 @@ export default function DonationSection({
     getMyOnlineSubscriptions().then((subs) => {
       if (cancelled) return;
       // Modál na domovskej je všeobecná podpora fondu – predplatné na výzvy sa nenahrádzajú
-      const general = subs.filter((s) => !s.project_id);
+      const general = subs.filter((s) => !s.project_id && !s.box_parish_id);
       setMySubs(general);
       setRecurringChoice({ mode: 'replace', replaceId: general[0]?.id ?? null });
     });

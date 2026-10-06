@@ -17,6 +17,7 @@ export type EmailTemplateKey =
   | 'donation_project'
   | 'donation_anonymous'
   | 'newsletter_welcome'
+  | 'parish_box_gift'
 
 export interface EmailTemplate {
   id: string
@@ -55,6 +56,8 @@ export const EMAIL_VARIABLE_HELP: Record<string, string> = {
   next_payment_date: 'Dátum najbližšej pravidelnej platby',
   project_name: 'Názov výzvy',
   project_url: 'Odkaz na výzvu',
+  parish_name: 'Názov farnosti (e-zvonček)',
+  parish_url: 'Odkaz na stránku farnosti',
   profile_url: 'Odkaz na profil darcu',
   register_url: 'Odkaz na registráciu',
   site_url: 'Odkaz na web KROK',
@@ -76,6 +79,8 @@ export const SAMPLE_EMAIL_VARIABLES: EmailVariables = {
   next_payment_date: '6. novembra 2026',
   project_name: 'Oprava strechy kostola',
   project_url: 'https://mojkrok.sk/vyzvy/ukazka',
+  parish_name: 'Farnosť Rajec',
+  parish_url: 'https://mojkrok.sk/farnosti/rajec',
   profile_url: 'https://mojkrok.sk/profil',
   register_url: 'https://mojkrok.sk/registracia',
   site_url: 'https://mojkrok.sk',

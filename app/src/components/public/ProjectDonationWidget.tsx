@@ -235,7 +235,7 @@ export default function ProjectDonationWidget({
               <span key={s.id}>
                 {i > 0 && ', '}
                 <strong className="text-ink">{formatEur(s.amount)}</strong> {s.interval === 'year' ? 'ročne' : 'mesačne'} na{' '}
-                {s.project_name ? <em>{s.project_name}</em> : 'fond KROK'}
+                {s.box_parish_name ? <em>e-zvonček {s.box_parish_name}</em> : s.project_name ? <em>{s.project_name}</em> : 'fond KROK'}
               </span>
             ))}{' '}
             ostáva bez zmeny. Tento dar pribudne ako ďalší.

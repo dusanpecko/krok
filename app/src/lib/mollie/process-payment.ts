@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { allocateDonorVs } from '@/lib/donors/vs'
-import { sendDonationThankYouEmail } from '@/lib/email/notifications'
+import { sendDonationThankYouEmail, sendParishBoxThankYouEmail } from '@/lib/email/notifications'
 import type { Payment } from '@mollie/api-client'
 import { formatMollieAmount, getMollieClient, getMollieMode, getWebhookUrl } from './client'
 
@@ -32,6 +32,9 @@ export interface PaymentMetadata {
   parish_id?: string
   project_id?: string
   interval?: SubscriptionInterval
+  /** E-zvonček: dar pre farnosť (nie do fondu) – box_parish_id = cieľová farnosť */
+  purpose?: 'fund' | 'parish_box'
+  box_parish_id?: string
 }
 
 export interface ProcessResult {
@@ -52,6 +55,9 @@ interface PaymentRow {
   project_id: string | null
   online_subscription_id: string | null
   donation_id: string | null
+  purpose: string | null
+  box_parish_id: string | null
+  parish_box_gift_id: string | null
 }
 
 export interface SubscriptionRow {
@@ -67,6 +73,8 @@ export interface SubscriptionRow {
   currency: string
   interval: SubscriptionInterval
   status: string
+  purpose: string | null
+  box_parish_id: string | null
   metadata: { replace_subscription_id?: string; last_activation_error?: string; last_activation_at?: string } | null
 }
 
@@ -96,7 +104,8 @@ function intervalLabel(interval: SubscriptionInterval): string {
   return interval === 'year' ? 'ročný' : 'mesačný'
 }
 
-export function subscriptionDescription(interval: SubscriptionInterval, projectName?: string | null): string {
+export function subscriptionDescription(interval: SubscriptionInterval, projectName?: string | null, boxParishName?: string | null): string {
+  if (boxParishName) return `Pravidelný ${intervalLabel(interval)} dar pre farnosť – ${boxParishName.slice(0, 100)} (e-zvonček)`
   const base = `Pravidelný ${intervalLabel(interval)} dar – Pastoračný fond KROK`
   return projectName ? `${base} – ${projectName.slice(0, 100)}` : base
 }
@@ -219,6 +228,11 @@ async function activateSubscription(
       const { data: project } = await admin.from('projects').select('name').eq('id', sub.project_id).maybeSingle()
       projectName = project?.name ?? null
     }
+    let boxParishName: string | null = null
+    if (sub.purpose === 'parish_box' && sub.box_parish_id) {
+      const { data: parish } = await admin.from('parishes').select('name').eq('id', sub.box_parish_id).maybeSingle()
+      boxParishName = parish?.name ?? 'farnosť'
+    }
 
     const metadata: PaymentMetadata = {
       kind: 'recurring',
@@ -229,6 +243,7 @@ async function activateSubscription(
       donor_name: sub.donor_name || undefined,
       project_id: sub.project_id || undefined,
       interval: sub.interval,
+      ...(sub.purpose === 'parish_box' && sub.box_parish_id ? { purpose: 'parish_box' as const, box_parish_id: sub.box_parish_id } : {}),
     }
     const created = await mollie.customerSubscriptions.create({
       customerId: sub.mollie_customer_id,
@@ -237,7 +252,7 @@ async function activateSubscription(
       startDate: toDateString(startDate),
       // Mollie vyžaduje JEDINEČNÝ popis medzi predplatnými jedného zákazníka
       // (422 pri zmene výšky alebo druhom pravidelnom dare) → suma + skrátené id.
-      description: `${subscriptionDescription(sub.interval, projectName)} – ${formatMollieAmount(Number(sub.amount))} € (${sub.id.slice(0, 8)})`,
+      description: `${subscriptionDescription(sub.interval, projectName, boxParishName)} – ${formatMollieAmount(Number(sub.amount))} € (${sub.id.slice(0, 8)})`,
       ...(payment.mandateId ? { mandateId: payment.mandateId } : {}),
       ...(getWebhookUrl() ? { webhookUrl: getWebhookUrl() } : {}),
       metadata,
@@ -327,7 +342,7 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
   // Existujúci riadok platby + predplatné, ku ktorému patrí
   const { data: existingRaw } = await admin
     .from('online_payments')
-    .select('id, donor_id, auth_user_id, email, donor_name, project_id, online_subscription_id, donation_id')
+    .select('id, donor_id, auth_user_id, email, donor_name, project_id, online_subscription_id, donation_id, purpose, box_parish_id, parish_box_gift_id')
     .eq('mollie_payment_id', payment.id)
     .maybeSingle()
   const existing = (existingRaw as PaymentRow | null) ?? null
@@ -349,6 +364,9 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
     parish_id: meta.parish_id ?? null,
     project_id: existing?.project_id ?? meta.project_id ?? sub?.project_id ?? null,
   }
+  // E-zvonček: účel a cieľová farnosť (z riadku platby, metadát alebo predplatného)
+  const boxParishId = existing?.box_parish_id ?? meta.box_parish_id ?? sub?.box_parish_id ?? null
+  const isBox = (existing?.purpose ?? meta.purpose ?? sub?.purpose) === 'parish_box' && !!boxParishId
 
   const paidAtIso = payment.paidAt ? new Date(payment.paidAt).toISOString() : isPaid ? new Date().toISOString() : null
 
@@ -372,6 +390,8 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
     email: identity.email,
     donor_name: identity.donor_name,
     project_id: identity.project_id,
+    purpose: isBox ? 'parish_box' : 'fund',
+    box_parish_id: isBox ? boxParishId : null,
   }
 
   let paymentRow: PaymentRow
@@ -380,7 +400,7 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
       .from('online_payments')
       .update(rowValues)
       .eq('id', existing.id)
-      .select('id, donor_id, auth_user_id, email, donor_name, project_id, online_subscription_id, donation_id')
+      .select('id, donor_id, auth_user_id, email, donor_name, project_id, online_subscription_id, donation_id, purpose, box_parish_id, parish_box_gift_id')
       .single()
     if (error) throw new Error(`online_payments update zlyhal: ${error.message}`)
     paymentRow = data as PaymentRow
@@ -388,7 +408,7 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
     const { data, error } = await admin
       .from('online_payments')
       .insert({ ...rowValues, ...(meta.online_payment_id ? { id: meta.online_payment_id } : {}) })
-      .select('id, donor_id, auth_user_id, email, donor_name, project_id, online_subscription_id, donation_id')
+      .select('id, donor_id, auth_user_id, email, donor_name, project_id, online_subscription_id, donation_id, purpose, box_parish_id, parish_box_gift_id')
       .single()
     if (error) throw new Error(`online_payments insert zlyhal: ${error.message}`)
     paymentRow = data as PaymentRow
@@ -398,8 +418,47 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
   // Dar zapísaný TÝMTO volaním → poďakovanie e-mailom (presne raz, aj pri súbežnom webhooku a návrate)
   let newDonationId: string | null = null
 
+  // === E-ZVONČEK: ZAPLATENÉ → dar pre farnosť do parish_box_gifts (raz), NIE do donations ===
+  let newBoxGiftId: string | null = null
+  if (isBox && isPaid && !paymentRow.parish_box_gift_id) {
+    // darcu fondu nezakladáme – len prepojíme existujúceho (prihlásený darca)
+    if (!donorId && identity.auth_user_id) {
+      const { data } = await admin.from('donors').select('id').eq('auth_user_id', identity.auth_user_id).maybeSingle()
+      donorId = data?.id ?? null
+    }
+    const { data: gift, error } = await admin
+      .from('parish_box_gifts')
+      .insert({
+        parish_id: boxParishId,
+        online_payment_id: paymentRow.id,
+        online_subscription_id: sub?.id ?? null,
+        kind,
+        amount,
+        paid_at: paidAtIso ?? new Date().toISOString(),
+        donor_id: donorId,
+        auth_user_id: identity.auth_user_id,
+        email: identity.email,
+        donor_name: identity.donor_name,
+      })
+      .select('id')
+      .single()
+    if (error) {
+      // 23505 = UNIQUE(online_payment_id): súbežné volanie dar už vložilo
+      if (error.code === '23505') {
+        const { data: dup } = await admin.from('parish_box_gifts').select('id').eq('online_payment_id', paymentRow.id).maybeSingle()
+        if (dup) await admin.from('online_payments').update({ parish_box_gift_id: dup.id }).eq('id', paymentRow.id)
+      } else {
+        console.error('[mollie] Vloženie daru do e-zvončeka zlyhalo:', error.message)
+      }
+    } else {
+      await admin.from('online_payments').update({ parish_box_gift_id: gift.id, donor_id: donorId }).eq('id', paymentRow.id)
+      newBoxGiftId = gift.id
+      console.log(`[mollie] E-zvonček: dar ${amount} € pre farnosť ${boxParishId} (platba ${payment.id})`)
+    }
+  }
+
   // === ZAPLATENÉ → dar do donations (raz) ===
-  if (isPaid && !paymentRow.donation_id) {
+  if (!isBox && isPaid && !paymentRow.donation_id) {
     donorId = await ensureDonor(admin, identity)
     if (donorId) {
       const donationDate = (paidAtIso ?? new Date().toISOString()).slice(0, 10)
@@ -482,6 +541,19 @@ export async function processMolliePayment(molliePaymentId: string): Promise<Pro
       interval: sub?.interval ?? meta.interval ?? null,
       projectId: identity.project_id,
       fallbackEmail: identity.email,
+    })
+  }
+
+  if (newBoxGiftId && boxParishId && kind !== 'recurring') {
+    await sendParishBoxThankYouEmail({
+      parishId: boxParishId,
+      donorId,
+      amount,
+      paidAt: paidAtIso ?? new Date().toISOString(),
+      recurring: kind === 'recurring_first',
+      interval: sub?.interval ?? meta.interval ?? null,
+      email: identity.email,
+      donorName: identity.donor_name,
     })
   }
 

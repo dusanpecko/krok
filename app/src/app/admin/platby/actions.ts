@@ -37,6 +37,10 @@ export interface AdminOnlinePayment {
   donor_name: string | null
   donor_id: string | null
   donation_id: string | null
+  /** E-zvonček: dar pre farnosť (zapisuje sa do parish_box_gifts, nie do donations) */
+  purpose: string
+  parish_box_gift_id: string | null
+  box_parish: { name: string } | null
   paid_at: string | null
   created_at: string
   donors: { first_name: string; last_name: string; variable_symbol: string | null } | null
@@ -53,7 +57,7 @@ export async function getOnlinePaymentsAdmin(limit = 200): Promise<AdminOnlinePa
   const { data, error } = await serviceClient()
     .from('online_payments')
     .select(
-      'id, mode, mollie_payment_id, kind, status, amount, method, email, donor_name, donor_id, donation_id, paid_at, created_at, donors(first_name, last_name, variable_symbol), online_subscriptions(status, mollie_subscription_id, metadata)'
+      'id, mode, mollie_payment_id, kind, status, amount, method, email, donor_name, donor_id, donation_id, purpose, parish_box_gift_id, paid_at, created_at, donors!online_payments_donor_id_fkey(first_name, last_name, variable_symbol), online_subscriptions!online_payments_online_subscription_id_fkey(status, mollie_subscription_id, metadata), box_parish:parishes!online_payments_box_parish_id_fkey(name)'
     )
     .order('created_at', { ascending: false })
     .limit(limit)
@@ -67,6 +71,7 @@ export async function getOnlinePaymentsAdmin(limit = 200): Promise<AdminOnlinePa
       ...p,
       amount: Number(p.amount),
       donors: Array.isArray(p.donors) ? (p.donors[0] ?? null) : p.donors,
+      box_parish: Array.isArray(p.box_parish) ? (p.box_parish[0] ?? null) : p.box_parish,
       subscription: sub,
     }
   }) as AdminOnlinePayment[]
@@ -86,6 +91,8 @@ export interface AdminOnlineSubscription {
   next_payment_at: string | null
   cancelled_at: string | null
   created_at: string
+  purpose: string
+  box_parish: { name: string } | null
   donors: { first_name: string; last_name: string; variable_symbol: string | null } | null
 }
 
@@ -94,7 +101,7 @@ export async function getOnlineSubscriptionsAdmin(): Promise<AdminOnlineSubscrip
   const { data, error } = await serviceClient()
     .from('online_subscriptions')
     .select(
-      'id, mode, mollie_subscription_id, status, amount, interval, email, donor_name, donor_id, started_at, next_payment_at, cancelled_at, created_at, donors(first_name, last_name, variable_symbol)'
+      'id, mode, mollie_subscription_id, status, amount, interval, email, donor_name, donor_id, started_at, next_payment_at, cancelled_at, created_at, purpose, donors!online_subscriptions_donor_id_fkey(first_name, last_name, variable_symbol), box_parish:parishes!online_subscriptions_box_parish_id_fkey(name)'
     )
     .neq('status', 'pending')
     .order('created_at', { ascending: false })
@@ -107,6 +114,7 @@ export async function getOnlineSubscriptionsAdmin(): Promise<AdminOnlineSubscrip
     ...s,
     amount: Number(s.amount),
     donors: Array.isArray(s.donors) ? (s.donors[0] ?? null) : s.donors,
+    box_parish: Array.isArray(s.box_parish) ? (s.box_parish[0] ?? null) : s.box_parish,
   })) as AdminOnlineSubscription[]
 }
 

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import ParishBoxWidget from './ParishBoxWidget'
 import {
   Bell, CalendarDays, Clock, ExternalLink, FileText, Globe, HandHeart, Mail, MapPin, Newspaper, Phone, Sparkles, Users, ArrowRight, Church, BookOpen,
 } from 'lucide-react'
@@ -246,17 +247,33 @@ export default function Home({ parish, announcements, news, events, sacraments }
         )}
       </section>
 
-      {/* Podpora */}
-      <section className="rounded-3xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-8 sm:p-10 text-center">
-        <HandHeart className="mx-auto text-gold-ink mb-4" size={36} />
-        <h2 className="text-2xl sm:text-3xl font-light mb-3">Podporte pastoráciu v našej diecéze</h2>
-        <p className="text-mute max-w-xl mx-auto mb-6">
-          Pastoračný fond KROK podporuje kňazov, farnosti a diecézne diela. Pri registrácii bude predvolená {parish.kind === 'chaplaincy' ? 'táto duchovná správa' : 'táto farnosť'}.
-        </p>
-        <Link href={`/registracia?farnost=${parish.slug}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold text-blue-deep font-black hover:bg-gold-bright">
-          <Sparkles size={18} /> Podporujem Pastoračný fond
-        </Link>
-      </section>
+      {/* Podpora: e-zvonček farnosti (ak ho diecéza zapla) + Pastoračný fond (O31) */}
+      {parish.box ? (
+        <section className="grid lg:grid-cols-2 gap-6 items-stretch">
+          <ParishBoxWidget parishId={parish.id} parishName={parish.name} box={parish.box} />
+          <div className="rounded-3xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-6 sm:p-8 text-center flex flex-col items-center justify-center">
+            <HandHeart className="text-gold-ink mb-4" size={36} />
+            <h2 className="text-2xl font-light mb-3">Podporte pastoráciu v celej diecéze</h2>
+            <p className="text-mute max-w-md mb-6">
+              Pastoračný fond KROK podporuje kňazov, farnosti a diecézne diela. Pri registrácii bude predvolená {parish.kind === 'chaplaincy' ? 'táto duchovná správa' : 'táto farnosť'}.
+            </p>
+            <Link href={`/registracia?farnost=${parish.slug}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue text-white font-black hover:bg-blue-deep">
+              <Sparkles size={18} /> Podporujem Pastoračný fond
+            </Link>
+          </div>
+        </section>
+      ) : (
+        <section className="rounded-3xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-8 sm:p-10 text-center">
+          <HandHeart className="mx-auto text-gold-ink mb-4" size={36} />
+          <h2 className="text-2xl sm:text-3xl font-light mb-3">Podporte pastoráciu v našej diecéze</h2>
+          <p className="text-mute max-w-xl mx-auto mb-6">
+            Pastoračný fond KROK podporuje kňazov, farnosti a diecézne diela. Pri registrácii bude predvolená {parish.kind === 'chaplaincy' ? 'táto duchovná správa' : 'táto farnosť'}.
+          </p>
+          <Link href={`/registracia?farnost=${parish.slug}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold text-blue-deep font-black hover:bg-gold-bright">
+            <Sparkles size={18} /> Podporujem Pastoračný fond
+          </Link>
+        </section>
+      )}
 
       {announcements.length > 1 && (
         <p className="mt-10 text-center text-sm">

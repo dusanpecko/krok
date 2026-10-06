@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, AlertTriangle, ChevronRight, Loader2, X, Target, Newspaper, BookOpen } from 'lucide-react'
+import { Search, Plus, AlertTriangle, ChevronRight, Loader2, X, Target, Newspaper, BookOpen, Bell } from 'lucide-react'
 import { createParish } from '@/app/admin/farnosti/actions'
 import { KIND_LABEL, type ParishKind, type ParishListItem } from '@/lib/parishes/types'
 import { btnPrimary, btnSecondary, inputCls, Field, Notice } from '@/components/admin/projects/ui'
@@ -61,6 +61,9 @@ export default function ParishTable({ parishes, deaneries }: { parishes: ParishL
         </Link>
         <Link href="/admin/farnosti/sviatosti" className={btnSecondary}>
           <BookOpen size={14} /> Sviatosti
+        </Link>
+        <Link href="/admin/farnosti/e-zvoncek" className={btnSecondary}>
+          <Bell size={14} /> E-zvonček
         </Link>
         <button type="button" onClick={() => setCreating(true)} className={btnPrimary}>
           <Plus size={16} /> Nová

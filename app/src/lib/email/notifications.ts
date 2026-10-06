@@ -166,3 +166,55 @@ export async function sendNewsletterWelcomeEmail(input: { email: string; firstNa
     variables: { first_name: firstName, has_name: !!firstName, email: input.email },
   })
 }
+
+/** Poďakovanie za dar do e-zvončeka farnosti (jednorazový alebo prvá platba pravidelného). */
+export async function sendParishBoxThankYouEmail(input: {
+  parishId: string
+  donorId: string | null
+  amount: number
+  paidAt: string
+  recurring: boolean
+  interval?: string | null
+  email: string | null
+  donorName: string | null
+}): Promise<void> {
+  try {
+    const admin = serviceClient()
+    const [{ data: parish }, donor] = await Promise.all([
+      admin.from('parishes').select('name, slug').eq('id', input.parishId).maybeSingle(),
+      input.donorId ? loadDonor(admin, input.donorId) : Promise.resolve(null),
+    ])
+    const to = donor?.email || input.email
+    if (!parish || !to) return
+
+    const base = getBaseUrl()
+    const names = donor
+      ? donorNameVars(donor)
+      : (() => {
+          const parts = (input.donorName || '').trim().split(/\s+/).filter(Boolean)
+          const first = parts[0] || ''
+          return { first_name: first, last_name: parts.slice(1).join(' '), full_name: parts.join(' '), has_name: !!first }
+        })()
+
+    await sendTemplateEmail({
+      templateKey: 'parish_box_gift',
+      to,
+      toName: names.full_name || null,
+      donorId: donor?.id ?? null,
+      variables: {
+        ...names,
+        email: to,
+        amount: formatEur(input.amount),
+        donation_date: formatDate(input.paidAt),
+        interval: input.recurring ? intervalText(input.interval) : '',
+        parish_name: parish.name,
+        parish_url: parish.slug ? `${base}/farnosti/${parish.slug}` : `${base}/farnosti`,
+        profile_url: `${base}/profil`,
+        is_recurring: input.recurring,
+        is_registered: !!donor?.auth_user_id,
+      },
+    })
+  } catch (err) {
+    console.error('[email] Poďakovanie za dar do e-zvončeka:', err instanceof Error ? err.message : err)
+  }
+}

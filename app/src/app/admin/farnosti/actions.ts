@@ -223,6 +223,8 @@ export async function saveClergy(parishId: string, clergy: ClergyMember[]): Prom
         position: c.position?.trim() || '',
         phone: c.phone || null,
         email: c.email || null,
+        // foto si nahráva kňaz v zóne farnosti – zoznam sa ukladá nanovo, preto ho treba preniesť
+        photo_url: c.photo_url && /^https:\/\//i.test(c.photo_url) ? c.photo_url : null,
         is_public: c.is_public,
         source: c.source || 'ručne',
         sort_order: i,

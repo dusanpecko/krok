@@ -141,6 +141,7 @@ export interface ClergyMember {
   position: string
   phone: string | null
   email: string | null
+  photo_url: string | null
   is_public: boolean
   source: string | null
 }

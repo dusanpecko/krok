@@ -19,6 +19,7 @@ import {
   type ClergyRecord,
   type ClergyStatus,
 } from '@/lib/clergy/types'
+import { KIND_LABEL as ANNIVERSARY_LABEL, computeAnniversaries, dayLabel, type AnniversaryPerson } from '@/lib/clergy/anniversaries'
 
 /**
  * Schematizmus kňazov – admin (krok_navrh_farnosti.md § 16, fáza K1).
@@ -476,4 +477,102 @@ export async function exportClergyXlsx(scope: 'active' | 'all'): Promise<Result<
   } catch (err) {
     return { success: false, error: errorMessage(err) }
   }
+}
+
+// ------------------------------------------------------------ výročia a meniny (K2, § 16.5)
+
+export async function getAnniversaryPeople(): Promise<AnniversaryPerson[]> {
+  await requirePermission(VIEW)
+  const { data, error } = await db()
+    .from('clergy')
+    .select(`id, first_name, last_name, title_before, title_after, status, birth_date, ordination_date, death_date, name_day, clergy_assignments(${ASSIGNMENT_COLUMNS})`)
+    .in('category', ['priest', 'bishop', 'deacon', 'permanent_deacon'])
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((c) => {
+    const p = primaryOf(((c.clergy_assignments ?? []) as unknown as AssignmentRow[]).map(mapAssignment))
+    return {
+      id: c.id,
+      name: clergyDisplayName(c),
+      role: p?.role ?? null,
+      place: p ? p.parish_name ?? p.organization ?? p.deanery_name : null,
+      status: c.status,
+      birth_date: c.birth_date,
+      ordination_date: c.ordination_date,
+      death_date: c.death_date,
+      name_day: c.name_day,
+    }
+  })
+}
+
+export async function exportAnniversariesXlsx(year: number, month: number | null): Promise<Result<{ fileName: string; base64: string }>> {
+  try {
+    const people = await getAnniversaryPeople()
+    const list = computeAnniversaries(people, year).filter((a) => month == null || Number(a.day.slice(0, 2)) === month)
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet(`Výročia ${year}`, { views: [{ state: 'frozen', ySplit: 1 }] })
+    ws.columns = [
+      { header: 'Dátum', key: 'day', width: 9 },
+      { header: 'Druh', key: 'kind', width: 20 },
+      { header: 'Rokov', key: 'years', width: 7 },
+      { header: 'Meno', key: 'name', width: 36 },
+      { header: 'Funkcia', key: 'role', width: 22 },
+      { header: 'Miesto', key: 'place', width: 30 },
+    ]
+    ws.getRow(1).font = { bold: true }
+    for (const a of list) {
+      const r = ws.addRow({ day: dayLabel(a.day), kind: ANNIVERSARY_LABEL[a.kind], years: a.years ?? '', name: a.person.name, role: a.person.role ?? '', place: a.person.place ?? '' })
+      if (a.major) r.font = { bold: true }
+    }
+    const buf = await wb.xlsx.writeBuffer()
+    return { success: true, fileName: `vyrocia-knazov-${year}${month ? '-' + String(month).padStart(2, '0') : ''}.xlsx`, base64: Buffer.from(buf).toString('base64') }
+  } catch (err) {
+    return { success: false, error: errorMessage(err) }
+  }
+}
+
+// ------------------------------------------------------------ adresné štítky (K2)
+
+export interface ClergyLabel {
+  id: string
+  lines: string[]
+}
+
+const CURIA_ADDRESS = ['Biskupský úrad Žilina', 'Jána Kalinčiaka 1', '010 01 Žilina']
+
+/**
+ * Štítky na hromadnú poštu: oslovenie + meno s titulmi, adresa hlavného pôsobenia (farský úrad),
+ * pri kúrii adresa biskupského úradu, inak trvalý pobyt.
+ */
+export async function getClergyLabels(scope: 'service' | 'living', deaneryId: string | null): Promise<ClergyLabel[]> {
+  await requirePermission(VIEW)
+  const { data, error } = await db()
+    .from('clergy')
+    .select(`id, first_name, last_name, title_before, title_after, salutation, status, category, permanent_address, clergy_assignments(${ASSIGNMENT_COLUMNS})`)
+    .in('status', scope === 'service' ? ['active'] : ['active', 'retired', 'studying'])
+    .in('category', ['priest', 'bishop', 'deacon', 'permanent_deacon'])
+    .order('last_name')
+    .order('first_name')
+  if (error) throw new Error(error.message)
+
+  const people = (data ?? []).map((c) => ({ c, p: primaryOf(((c.clergy_assignments ?? []) as unknown as AssignmentRow[]).map(mapAssignment)) }))
+  const filtered = deaneryId ? people.filter(({ p }) => p?.deanery_id === deaneryId) : people
+  const parishIds = [...new Set(filtered.map(({ p }) => p?.parish_id).filter(Boolean))] as string[]
+  const { data: parishes } = parishIds.length
+    ? await db().from('parishes').select('id, name, official_name, street, postal_code, city').in('id', parishIds)
+    : { data: [] as { id: string; name: string; official_name: string | null; street: string | null; postal_code: string | null; city: string | null }[] }
+  const parishOf = new Map((parishes ?? []).map((p) => [p.id, p]))
+
+  return filtered.map(({ c, p }) => {
+    const nameLine = [c.salutation, clergyDisplayName(c)].filter(Boolean).join(' ')
+    let address: string[] = []
+    const parish = p?.parish_id ? parishOf.get(p.parish_id) : null
+    if (parish) {
+      address = [`Rímskokatolícka cirkev, ${parish.official_name ?? parish.name}`, parish.street ?? '', [parish.postal_code, parish.city].filter(Boolean).join(' ')]
+    } else if (p && /biskupsk|kúri/i.test(`${p.organization ?? ''} ${p.role}`)) {
+      address = CURIA_ADDRESS
+    } else if (c.permanent_address) {
+      address = c.permanent_address.split(',').map((x: string) => x.trim())
+    }
+    return { id: c.id, lines: [nameLine, ...address].filter(Boolean) }
+  })
 }

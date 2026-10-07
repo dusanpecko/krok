@@ -66,7 +66,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] Rozhodnúť K1–K9 – § 16.8, O44–O52
 - [x] K0: migrácia 043 (register `clergy`, pôsobenia, číselníky, `deaneries.code`, oprávnenia) + import (2026-10-07: 440 osôb, 1 698 pôsobení, 259/267 spárovaných so schematizmom dcza.sk, 224/232 `parish_clergy` prepojených; 288 bodov na kontrolu v `data/import-clergy-report.csv`) – § 16.2, § 16.6
 - [x] K1: admin `/admin/knazi` (zoznam s farebnými stavmi a filtrami, detail so záložkami, zmena stavu bohoslovec → diakon → kňaz, nové menovanie / ukončenie / hlavné pôsobenie, história zmien, export XLSX v službe / všetci) – § 16.4
-- [ ] K2: výročia, meniny, adresné štítky – § 16.5
+- [x] K2: výročia (kňazstvo od 10. každých 5 r., život od 40., úmrtie 1. a každých 5 r.), meniny, export XLSX pre KN, adresné štítky 3 × 8 – `/admin/knazi/vyrocia`, `/admin/knazi/stitky` – § 16.5
 - [x] K3: kňazi na stránkach farností z registra – verejne len meno, tituly, funkcia (O47); v zóne farnosti a v admine farnosti len na čítanie, úprava kontaktu a fotky kňaza odstránená (O48); doplnené väzby 11 duchovných správ / farností (`scripts/link-clergy-parishes.ts`). `parish_clergy` ostáva len ako archív starého importu – zmazať neskôr – § 16.2
 - [ ] K4: kňazská zóna – účet kňaza z registra – § 15
 - [ ] K5: verejný schematizmus pre web diecézy – § 14

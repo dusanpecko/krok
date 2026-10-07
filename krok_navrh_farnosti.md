@@ -70,7 +70,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] K3: kňazi na stránkach farností z registra (`parish_clergy` zaniká) – § 16.2
 - [ ] K4: kňazská zóna – účet kňaza z registra – § 15
 - [ ] K5: verejný schematizmus pre web diecézy – § 14
-- [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 (dodať ukážku dnešného celebretu)
+- [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 (obsah dnešného celebretu zmapovaný)
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
 - [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13
@@ -1269,12 +1269,39 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 
 **Rozhodnutia:** K1 áno, povinne (O44) · K2 len aktuálny ročník, automaticky +1 k 1. 9., stav na výber s farbou (O45) · K3 zatiaľ len KROK a diecéza (O46) · K4 ako dcza.sk/schematizmus, bez fotky a kontaktov (O47) · K5 kňaz register nevidí ani nemení (O48) · K6 register = hlavný zdroj pravdy (O49) · K7 osobné číslo prideľuje diecéza (O50) · K8 Excel vypadne, exporty áno (O51) · K9 celebrety (O52, § 16.9).
 
-### 16.9 Digitálne celebrety (O52) – návrh, ⬜ upresniť
+### 16.9 Digitálne celebrety (O52) – návrh, ⬜ neskôr (fáza K6)
 
-**Celebret** (*litterae commendatitiae*) potvrdzuje, že kňaz je v riadnom postavení a môže sláviť sviatosti. Dnes sa vyrába v programe na vizitky a overuje na `celebret.dcza.sk/<meno>` (stránka bola 2026-10-07 nedostupná – 504, ukážku dodá diecéza). Návrh zjednotenia v Kroku:
+**Celebret** (*litterae commendatitiae*) potvrdzuje, že kňaz je v riadnom postavení a môže sláviť sviatosti. Dnes sa vyrába v aplikácii na digitálne vizitky (mypro.one, doména `celebret.dcza.sk/<meno>`) – obsah nižšie. Návrh zjednotenia v Kroku:
 
 - **Celebret = záznam k osobe v registri** – `clergy_celebrets`: číslo, dátum vydania, **platnosť do**, stav (platný / zrušený / vypršaný), vydal (ordinár / kancelár), jazyky, fotka (snímka v čase vydania), poznámka; história všetkých vydaných celebretov.
 - **Verejné overenie** cez **QR kód**: `mojkrok.sk/celebret/<token>` (alebo zachovať `celebret.dcza.sk` cez presmerovanie) – zobrazí meno s titulmi, fotku, diecézu, kategóriu, **platnosť a stav veľkým písmom** (platný / neplatný), viacjazyčne. Token je náhodný (nedá sa uhádnuť z mena).
 - **Výstupy:** karta vo formáte platobnej karty / vizitky na tlač (PDF, aj hromadne), A4 verzia a **digitálny celebret** do mobilu (PDF / obrázok), poslanie kňazovi e-mailom.
 - **Admin:** vydať / predĺžiť / zrušiť celebret z detailu kňaza, hromadné predĺženie (napr. všetkým v službe k 1. 1.), zoznam končiacich platnosť.
-- **Upresniť s diecézou:** presný text a jazyky (latinčina, slovenčina, angličtina, taliančina…?), kto podpisuje, pečiatka/podpis ako obrázok, dĺžka platnosti, či celebret majú aj diakoni, čo presne je na overovacej stránke dnes.
+- **Upresniť s diecézou:** či majú celebret aj diakoni (variant textu), či pribudne aj iný jazyk ako latinčina, kto podpisuje (dnes obrázok podpisu bez mena), dĺžka platnosti (dnes do 31. 12. nasledujúceho roka?).
+
+**Dnešný celebret – obsah (z DB aplikácie mypro.one, 2026-10-07, vzor Dušan Pecko):**
+
+| Prvok | Hodnota / poznámka | Zdroj v registri |
+|---|---|---|
+| Fotka (zaoblená) | portrét kňaza | `clergy.photo_url` (snímka k celebretu) |
+| Podnadpis | **Sacerdos** | z kategórie (diakon → *Diaconus*) |
+| Hlavička | **Dioecesis Žilinensis, Slovachia** · **LITTERAE COMMENDATICIAE** · **CELEBRET** | pevný text |
+| Logo diecézy | obrázok (dnes na images.sk) | súbor v Kroku |
+| *Nomen et cognomen* | Mgr. Dušan Pecko | meno s titulmi |
+| *Dies editionis* | 23. 03. 2024 | `clergy_celebrets.issued_on` |
+| *Dies nativitatis* | 14. 07. 1982 | `clergy.birth_date` |
+| *Dies ordinationis* | 13. 06. 2009 | `clergy.ordination_date` |
+| *Valet ad* | 31. 12. 2026 | `clergy_celebrets.valid_until` |
+| Vydal | *Curia dioecesana Žilinensis edidit* | pevný text |
+| Text odporúčania | *Reverendus Dominus, harum litterarum possessor, Dioecesis Žilinensis presbyter, iurisdictione ad confessiones audiendas præditus, nulla censura ecclesiastica innodatus, omnibus, ad quos in itinere prevenerit, impense commendatur, ut præprimis ad Sacrosanctum Missæ Sacrificium celebrandum admittetur.* | šablóna; časť o spovednej jurisdikcii len ak ju kňaz má (príznak na celebrete) |
+| Pečiatka + podpis | obrázky, pod podpisom *subscriptio* | súbory v Kroku (nahrá kúria) |
+| Odkaz *sacerdos profile* | dcza.sk/schematizmus/knazi/… | verejný profil (O47, fáza K5) |
+| Kontakt kúrie | Jána Kalinčiaka 1, 010 01 Žilina · +421 41 500 22 15 · sekretariat@dcza.sk (nadpis dnes *Oratio Dioecesis:* – asi preklep, vhodnejšie *Curia dioecesana*) | pevný text |
+| Sociálne siete diecézy | Instagram, Facebook, YouTube | pevné odkazy |
+| QR kód | `/<meno>/qr` | QR na overovaciu adresu |
+
+**Čo zlepšiť oproti dnešku:**
+- **Adresa podľa mena** (`celebret.dcza.sk/dusan-pecko`) sa dá uhádnuť a je na nej **dátum narodenia** → nová overovacia adresa s **náhodným tokenom**, `noindex`; dátum narodenia ostáva (slúži na identifikáciu), ale stránka nebude dohľadateľná vyhľadávačom ani podľa mena.
+- **Stav platnosti viditeľne:** zelené *VALET* / červené *NON VALET* (vypršaný alebo zrušený celebret) – dnes stránka platnosť len vypisuje.
+- Obrázky (logo, pečiatka, podpis) dnes ležia na cudzom hostingu images.sk → uložiť v Kroku.
+- Dnešná stránka sa načítava vyše minúty (504 – pomalý server mypro.one, 2026-10-07) → v Kroku ide o rýchlu statickú stránku.

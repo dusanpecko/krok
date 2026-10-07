@@ -145,6 +145,12 @@ Cieľ modulu:
 | O49 | Zdroj pravdy (K6) | **Register je hlavný zdroj pravdy.** Preloženie kňaza robí diecéza záznamom v registri a stránky farností ukážu aktuálny stav automaticky. |
 | O50 | Osobné číslo (K7) | **Prideľuje diecéza.** |
 | O51 | Excel (K8) | Po dokončení **Excel vypadne**, potrebné sú **exporty** z registra. |
+| O53 | Celebret pre diakonov (2026-10-07) | **Nie** – celebret majú len kňazi. |
+| O54 | Jazyk celebretu | **Latinčina**; prepínač do **angličtiny a španielčiny** by bol fajn, **nie je priorita**. |
+| O55 | Platnosť celebretu | **Vždy na rok** od vydania. |
+| O56 | Overovacia adresa | **Náhodný kód** v adrese (dnes je pri celebrete aj kód na odomknutie – nahradí ho náhodná adresa), **zákaz indexovania** vyhľadávačmi. |
+| O57 | Logo, pečiatka, podpis | Presunúť do Kroku a **dať ich meniť v admine** (zmena biskupa → nový podpis bez programovania). |
+| O58 | Kontakt na celebrete | Nadpis **Curia dioecesana** (dnešné „Oratio Dioecesis“ bol preklep). |
 | O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
@@ -1277,7 +1283,8 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 - **Verejné overenie** cez **QR kód**: `mojkrok.sk/celebret/<token>` (alebo zachovať `celebret.dcza.sk` cez presmerovanie) – zobrazí meno s titulmi, fotku, diecézu, kategóriu, **platnosť a stav veľkým písmom** (platný / neplatný), viacjazyčne. Token je náhodný (nedá sa uhádnuť z mena).
 - **Výstupy:** karta vo formáte platobnej karty / vizitky na tlač (PDF, aj hromadne), A4 verzia a **digitálny celebret** do mobilu (PDF / obrázok), poslanie kňazovi e-mailom.
 - **Admin:** vydať / predĺžiť / zrušiť celebret z detailu kňaza, hromadné predĺženie (napr. všetkým v službe k 1. 1.), zoznam končiacich platnosť.
-- **Upresniť s diecézou:** či majú celebret aj diakoni (variant textu), či pribudne aj iný jazyk ako latinčina, kto podpisuje (dnes obrázok podpisu bez mena), dĺžka platnosti (dnes do 31. 12. nasledujúceho roka?).
+- **Rozhodnuté (O53–O58):** len kňazi (nie diakoni) · latinčina, neskôr voliteľne prepínač EN / ES · platnosť **vždy 1 rok** od vydania · overovacia adresa s **náhodným kódom** + `noindex` · logo, pečiatka a podpis **nahrá a mení kúria v admine** – pri zmene biskupa sa nahrá nový podpis; každý vydaný celebret si pamätá, ktorý podpis a pečiatku použil (starší celebret sa nezmení) · nadpis kontaktu **Curia dioecesana**.
+- **Nastavenia celebretu v admine:** logo, pečiatka, podpis (obrázky s históriou verzií), meno a funkcia podpisujúceho (voliteľne), kontakt kúrie, texty šablóny.
 
 **Dnešný celebret – obsah (z DB aplikácie mypro.one, 2026-10-07, vzor Dušan Pecko):**
 
@@ -1294,9 +1301,9 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 | *Valet ad* | 31. 12. 2026 | `clergy_celebrets.valid_until` |
 | Vydal | *Curia dioecesana Žilinensis edidit* | pevný text |
 | Text odporúčania | *Reverendus Dominus, harum litterarum possessor, Dioecesis Žilinensis presbyter, iurisdictione ad confessiones audiendas præditus, nulla censura ecclesiastica innodatus, omnibus, ad quos in itinere prevenerit, impense commendatur, ut præprimis ad Sacrosanctum Missæ Sacrificium celebrandum admittetur.* | šablóna; časť o spovednej jurisdikcii len ak ju kňaz má (príznak na celebrete) |
-| Pečiatka + podpis | obrázky, pod podpisom *subscriptio* | súbory v Kroku (nahrá kúria) |
+| Pečiatka + podpis | obrázky, pod podpisom *subscriptio* | nastavenia celebretu – nahrá a mení kúria (O57) |
 | Odkaz *sacerdos profile* | dcza.sk/schematizmus/knazi/… | verejný profil (O47, fáza K5) |
-| Kontakt kúrie | Jána Kalinčiaka 1, 010 01 Žilina · +421 41 500 22 15 · sekretariat@dcza.sk (nadpis dnes *Oratio Dioecesis:* – asi preklep, vhodnejšie *Curia dioecesana*) | pevný text |
+| Kontakt kúrie | **Curia dioecesana:** Jána Kalinčiaka 1, 010 01 Žilina · +421 41 500 22 15 · sekretariat@dcza.sk (O58) | nastavenia celebretu |
 | Sociálne siete diecézy | Instagram, Facebook, YouTube | pevné odkazy |
 | QR kód | `/<meno>/qr` | QR na overovaciu adresu |
 

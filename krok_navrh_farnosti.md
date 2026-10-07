@@ -63,13 +63,14 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 
 **Schematizmus kňazov (K0–K5, § 16)**
 - [x] Analýza `KNAZI - ZOZNAM AKTUALNY.xlsx` (11 listov, 274 kňazov, problémy v dátach) – § 16.1
-- [ ] Rozhodnúť K1–K8 – § 16.8
+- [x] Rozhodnúť K1–K9 – § 16.8, O44–O52
 - [ ] K0: migrácia 043 (register `clergy`, pôsobenia, číselníky, `deaneries.code`, oprávnenia) + import s dry-run správou – § 16.2, § 16.6
 - [ ] K1: admin `/admin/knazi` (zoznam, detail, nové menovanie, audit, export XLSX) – § 16.4
 - [ ] K2: výročia, meniny, adresné štítky – § 16.5
 - [ ] K3: kňazi na stránkach farností z registra (`parish_clergy` zaniká) – § 16.2
 - [ ] K4: kňazská zóna – účet kňaza z registra – § 15
 - [ ] K5: verejný schematizmus pre web diecézy – § 14
+- [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 (dodať ukážku dnešného celebretu)
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
 - [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13
@@ -135,6 +136,16 @@ Cieľ modulu:
 | O41 | Kto pridáva dokumenty (K3) | **Len kúria.** |
 | O42 | Archív (K4) | Starý archív sa neimportuje – **všetko sa pridáva ručne**. Obežníky sú **platné stále**; čo diecéza archivuje, presunie sa do **Archívu**. |
 | O43 | Vyhľadávanie farností a nezverejnené farnosti (2026-10-05) | Stránku `/farnosti/[slug]` má **každá aktívna farnosť**. Kým nie je zapnutá „Verejná stránka farnosti“, je to **základná stránka**: kontakt, kňazi, obce, hody/poklona, **bohoslužby a úradné hodiny, ak sú vyplnené**, podpora fondu cez farnosť (+ e-kasička, keď bude). Bez úvodného textu „zatiaľ nezverejnila…“, bez oznamov, aktualít a sviatostí. Stránku si zapína aj **správca farnosti** v zóne farnosti (Prezentácia). Vyhľadávanie: odkaz v menu a pätičke, blok na domovskej stránke, „Moja farnosť“ pre darcu, hľadanie podľa obce/filiálky/patróna, `?q=` v adrese, „Najbližšie ku mne“ (GPS), obce v popise stránky (SEO). |
+
+| O44 | Archív kňazov (K1, 2026-10-07) | **Áno, povinne** – importujú sa aj **odišli zo ŽD** a **zomrelí** (stav `left` / `deceased`). |
+| O45 | Bohoslovci (K2) | Importuje sa **len aktuálny ročník**. **Ročník sa zvyšuje automaticky k 1. 9.**; stav osoby sa dá **zmeniť výberom** (bohoslovec → diakon → kňaz/kaplán…) a v zozname má každý stav **vlastnú farbu**. |
+| O46 | Prístup do registra (K3) | Zatiaľ **len KROK a diecéza** (kúria). |
+| O47 | Verejné údaje (K4) | Ako dnes na **dcza.sk/schematizmus**: meno s titulmi, funkcia, *Pochádza*, diakonát (dátum, miesto), kňazská vysviacka (dátum, miesto), **história pôsobenia po rokoch**, dekanát a farnosť (odkazy). **Bez fotky a kontaktov.** URL `priezvisko-meno-funkcia`. |
+| O48 | Kňaz a jeho údaje (K5) | Kňaz **register nevidí a nič v ňom nemení** – ani kontakt, ani fotku. |
+| O49 | Zdroj pravdy (K6) | **Register je hlavný zdroj pravdy.** Preloženie kňaza robí diecéza záznamom v registri a stránky farností ukážu aktuálny stav automaticky. |
+| O50 | Osobné číslo (K7) | **Prideľuje diecéza.** |
+| O51 | Excel (K8) | Po dokončení **Excel vypadne**, potrebné sú **exporty** z registra. |
+| O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
 
@@ -1097,7 +1108,7 @@ Pripravovaný web diecézy beží na WordPresse. Ak by sme ho neskôr presunuli 
 
 ---
 
-## 16. Schematizmus kňazov – register osôb (návrh 2026-10-07, ⬜ na rozhodnutie)
+## 16. Schematizmus kňazov – register osôb (návrh 2026-10-07, rozhodnutia O44–O52)
 
 **Cieľ:** jeden diecézny register kňazov (a ďalších osôb v duchovnej službe), ktorý nahradí Excel `KNAZI - ZOZNAM AKTUALNY.xlsx`. **Zatiaľ len v admine** (kúria). Neskôr z neho čerpajú: kňazi na stránkach farností (§ 3.8), kňazská zóna (§ 15 – účet kňaza = osoba z registra), web diecézy (§ 14 – verejný schematizmus), výročia a meniny.
 
@@ -1149,8 +1160,13 @@ Súbor `data/KNAZI - ZOZNAM AKTUALNY.xlsx` (mimo gitu – osobné údaje), 11 li
 CREATE TABLE clergy (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   personal_number TEXT UNIQUE,              -- osobné číslo kúrie (ak je)
-  category TEXT NOT NULL,                   -- 'priest' | 'deacon' | 'permanent_deacon' | 'seminarian' | 'bishop'
+  category TEXT NOT NULL,                   -- 'seminarian' | 'deacon' | 'permanent_deacon' | 'priest' | 'bishop' (mení sa výberom, O45)
   status TEXT NOT NULL DEFAULT 'active',    -- 'active' | 'retired' (n.o.) | 'studying' | 'left' | 'deceased' | 'suspended'
+  seminary_entry_year SMALLINT,             -- bohoslovec: akademický rok nástupu do 1. ročníka → ročník sa počíta k 1. 9. (O45)
+  seminary_year_offset SMALLINT DEFAULT 0,  -- ručná korekcia (opakovanie, prerušenie, rok praxe)
+  seminary TEXT,                            -- NR, RM (Redemptoris Mater), Rím…
+  origin TEXT,                              -- „Pochádza“ (verejné, O47) – rodná obec / farnosť
+  slug TEXT UNIQUE,                         -- verejná URL priezvisko-meno-funkcia (O47)
   first_name TEXT NOT NULL, last_name TEXT NOT NULL,
   title_before TEXT, title_after TEXT,      -- akademické tituly rozdelené pred/za menom
   ecclesiastical_titles TEXT[],             -- Mons., honorárny dekan, titulárny kanonik…
@@ -1163,13 +1179,12 @@ CREATE TABLE clergy (
   education_secondary TEXT, education_university TEXT,
   theology_from SMALLINT, theology_to SMALLINT, theology_place TEXT,
   postgraduate TEXT, education_other TEXT, languages TEXT[],
-  diaconate_date DATE, diaconate_ordainer_id UUID REFERENCES ordainers(id),
-  ordination_date DATE, ordination_ordainer_id UUID REFERENCES ordainers(id),
+  diaconate_date DATE, diaconate_place TEXT, diaconate_ordainer_id UUID REFERENCES ordainers(id),
+  ordination_date DATE, ordination_place TEXT, ordination_ordainer_id UUID REFERENCES ordainers(id),
   in_diocese_from DATE, in_diocese_to DATE, -- v Žilinskej diecéze od–do (inkardinácia / pôsobenie)
   death_date DATE, death_place TEXT,
   work_email TEXT, private_email TEXT, phones TEXT[],
-  photo_url TEXT,
-  public_contact BOOLEAN NOT NULL DEFAULT false,  -- súhlas so zverejnením kontaktu (§ 3.8)
+  photo_url TEXT,                           -- interné (celebret, kúria) – verejne sa nezobrazuje (O47)
   auth_user_id UUID REFERENCES auth.users(id),     -- účet do kňazskej zóny (§ 15) – neskôr
   note TEXT,                                -- interná poznámka kúrie
   source TEXT, created_at, updated_at
@@ -1202,13 +1217,15 @@ CREATE TABLE clergy_assignments (
 ### 16.3 Prístup a GDPR
 
 - Údaje o kňazoch prezrádzajú náboženské vyznanie (osobitná kategória, čl. 9 GDPR) – spracúva ich cirkev o svojich členoch, čl. 9 ods. 2 písm. d). Navyše citlivé súkromné údaje (rodné údaje, trvalý pobyt, krst, súkromné kontakty).
-- **Nové oprávnenia:** `manage_clergy` (kúria – úpravy) a `view_clergy` (čítanie, napr. biskup, generálny vikár). Dekani a farnosti do registra nevidia.
+- **Nové oprávnenia:** `manage_clergy` (úpravy) a `view_clergy` (čítanie) – zatiaľ **len KROK a kúria** (O46). Dekani, farnosti ani samotní kňazi do registra nevidia (O48).
 - RLS: žiadne verejné politiky, čítanie len cez server (service role) s overením oprávnenia – ako pri farnostiach.
-- **Verejne (neskôr web/farnosti) len:** meno, tituly, oslovenie, aktuálna funkcia a farnosť, fotka, rok kňazskej vysviacky; kontakt len pracovný a len so súhlasom (`public_contact`). Nikdy dátum narodenia, adresa, krst, súkromné kontakty.
+- **Verejne (O47 – rovnako ako dnes dcza.sk/schematizmus):** meno s titulmi, funkcia, *Pochádza*, diakonát a kňazská vysviacka (dátum + miesto), **história pôsobenia po rokoch** (vrátane diecéznych funkcií), dekanát a farnosť ako odkazy. **Bez fotky a bez kontaktov.** Nikdy dátum narodenia, adresa, krst, súkromné údaje.
+- Dôsledok O48 pre stránky farností: kontakt kňaza na stránke farnosti sa prestane zobrazovať (dnes ho kňaz vie zverejniť v zóne farnosti – § 3.8) – verejný ostáva kontakt farského úradu. Úpravu kontaktu kňaza v zóne farnosti odstrániť vo fáze K3.
 
 ### 16.4 Obrazovky v admine (`/admin/knazi`)
 
-- **Zoznam:** hľadanie (meno, farnosť, obec), filtre kategória / stav / dekanát / funkcia / rehoľa, stĺpce meno s titulmi, funkcia, farnosť, dekanát, mobil, pracovný e-mail; počty (kňazi v službe, na odpočinku, rehoľníci…).
+- **Zoznam:** hľadanie (meno, farnosť, obec), filtre kategória / stav / dekanát / funkcia / rehoľa, stĺpce meno s titulmi, funkcia, farnosť, dekanát, mobil, pracovný e-mail; počty (kňazi v službe, na odpočinku, rehoľníci…). **Každý stav má vlastnú farbu riadku/štítku** (O45) – napr. bohoslovec, diakon, kaplán/farský vikár, farár, na odpočinku, archív.
+- **Bohoslovci:** aktuálny ročník sa zobrazuje vypočítaný (k 1. 9. sa zvýši sám); akcia **„Zmeniť stav“** – bohoslovec → diakon (dátum, miesto, svätiteľ) → kňaz (dátum, miesto, svätiteľ) + prvé menovanie.
 - **Detail osoby – záložky:** Základné (meno, tituly, oslovenie, kategória, stav, rehoľa, foto) · Kontakty · Pôsobenie (história + „Nové menovanie“ – ukončí doterajšie a založí nové) · Funkcie (dekan, KR, súd…) · Osobné údaje · Sviatosti a formácia · Svätenia · Poznámka · História zmien.
 - **Export XLSX** v rovnakej štruktúre ako dnešný súbor (aby kúria mohla Excel prestať udržiavať) + **adresné štítky / hromadná pošta** (oslovenie, meno s titulmi, farnosť, adresa).
 - **Archív:** odišli zo ŽD, zomrelí (s dátumom úmrtia), samostatný filter.
@@ -1223,6 +1240,8 @@ Prehľad pre zvolený rok/mesiac, počíta sa z dátumov – nič sa neprepisuje
 
 Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na kontrolu** – nespárované farnosti, posunuté stĺpce, nečitateľné dátumy, duplicitné osobné čísla a mená, neznáme rehole/svätitelia. Pravidlá: rozdelenie titulov pred/za, normalizácia dekanátov, reholí, svätiteľov a jazykov, rozdelenie „farár, dekan“ na pôsobenie + funkciu, telefóny do poľa, dátumy zo všetkých formátov, „pôsobenie“ (voľný text) do poznámky pôsobenia. Po importe spárovanie `parish_clergy.clergy_id` (meno, rehoľníci bez prípony).
 
+**Doplnenie z dcza.sk/schematizmus (O47):** Excel nemá miesto diakonátu a kňazskej vysviacky, *Pochádza* ani históriu pôsobenia po rokoch (len 23 záznamov v stĺpci „pôsobenie“ voľným textom). Verejný schematizmus na dcza.sk ich má – doplníme ich skriptom (podobne ako `scripts/fetch-schematizmus.ts` pri farnostiach) a spárujeme podľa mena; nespárované pôjdu do správy na kontrolu.
+
 ### 16.7 Fázovanie
 
 | Fáza | Obsah |
@@ -1232,9 +1251,10 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 | **K2** | výročia a meniny, adresné štítky |
 | **K3** | prepojenie so stránkami farností – kňazi z registra, `parish_clergy` zaniká; foto a kontakt si kňaz spravuje sám |
 | **K4** | kňazská zóna (§ 15) – účet kňaza = osoba z registra (`clergy.auth_user_id`), pozvánky z registra |
-| **K5** | verejný schematizmus pre web diecézy (§ 14) |
+| **K5** | verejný schematizmus pre web diecézy (§ 14) – údaje podľa O47 |
+| **K6** | digitálne celebrety (§ 16.9) |
 
-### 16.8 Otázky na rozhodnutie (K1–K8)
+### 16.8 Otázky K1–K9 – ✅ rozhodnuté 2026-10-07 (O44–O52)
 
 | # | Otázka | Môj návrh |
 |---|---|---|
@@ -1246,3 +1266,15 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 | K6 | Je **register zdrojom pravdy** pre kňazov vo farnostiach (nahradí import schematizmu dcza.sk)? | **Áno** od fázy K3; menovanie robí kúria v registri |
 | K7 | **Osobné číslo** – kto ho prideľuje, má ho mať každý (dnes 172/274, 6 duplicít)? | zachovať, nepovinné, unikátne; duplicity vyrieši kúria pri kontrole importu |
 | K8 | Udržiavať ďalej aj Excel? | **Nie** – po K1 je zdroj register, Excel sa z neho exportuje |
+
+**Rozhodnutia:** K1 áno, povinne (O44) · K2 len aktuálny ročník, automaticky +1 k 1. 9., stav na výber s farbou (O45) · K3 zatiaľ len KROK a diecéza (O46) · K4 ako dcza.sk/schematizmus, bez fotky a kontaktov (O47) · K5 kňaz register nevidí ani nemení (O48) · K6 register = hlavný zdroj pravdy (O49) · K7 osobné číslo prideľuje diecéza (O50) · K8 Excel vypadne, exporty áno (O51) · K9 celebrety (O52, § 16.9).
+
+### 16.9 Digitálne celebrety (O52) – návrh, ⬜ upresniť
+
+**Celebret** (*litterae commendatitiae*) potvrdzuje, že kňaz je v riadnom postavení a môže sláviť sviatosti. Dnes sa vyrába v programe na vizitky a overuje na `celebret.dcza.sk/<meno>` (stránka bola 2026-10-07 nedostupná – 504, ukážku dodá diecéza). Návrh zjednotenia v Kroku:
+
+- **Celebret = záznam k osobe v registri** – `clergy_celebrets`: číslo, dátum vydania, **platnosť do**, stav (platný / zrušený / vypršaný), vydal (ordinár / kancelár), jazyky, fotka (snímka v čase vydania), poznámka; história všetkých vydaných celebretov.
+- **Verejné overenie** cez **QR kód**: `mojkrok.sk/celebret/<token>` (alebo zachovať `celebret.dcza.sk` cez presmerovanie) – zobrazí meno s titulmi, fotku, diecézu, kategóriu, **platnosť a stav veľkým písmom** (platný / neplatný), viacjazyčne. Token je náhodný (nedá sa uhádnuť z mena).
+- **Výstupy:** karta vo formáte platobnej karty / vizitky na tlač (PDF, aj hromadne), A4 verzia a **digitálny celebret** do mobilu (PDF / obrázok), poslanie kňazovi e-mailom.
+- **Admin:** vydať / predĺžiť / zrušiť celebret z detailu kňaza, hromadné predĺženie (napr. všetkým v službe k 1. 1.), zoznam končiacich platnosť.
+- **Upresniť s diecézou:** presný text a jazyky (latinčina, slovenčina, angličtina, taliančina…?), kto podpisuje, pečiatka/podpis ako obrázok, dĺžka platnosti, či celebret majú aj diakoni, čo presne je na overovacej stránke dnes.

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { ClergyMember, ParishDetail, ParishRow, ParishSeason, ParishYearSummary, Schedule, ScheduleItem } from './types'
+import { loadParishClergy } from './parish-clergy'
+import type { ParishDetail, ParishRow, ParishSeason, ParishYearSummary, Schedule, ScheduleItem } from './types'
 import { STATS_YEAR } from './writes'
 
 /** Detail farnosti (admin aj zóna farnosti) – klient musí byť service role. Serverový modul. */
@@ -17,10 +18,10 @@ export async function loadParishDetail(admin: SupabaseClient, id: string): Promi
   const { data: parish } = await admin.from('parishes').select('*').eq('id', id).maybeSingle()
   if (!parish) return null
 
-  const [{ data: villages }, { data: schedules }, { data: clergy }, { data: summary }, { count: donorsCount }, { data: logRows }] = await Promise.all([
+  const [{ data: villages }, { data: schedules }, clergy, { data: summary }, { count: donorsCount }, { data: logRows }] = await Promise.all([
     admin.from('parish_villages').select('id, name, is_seat, district, church_name, has_church, sort_order, parish_population_stats(year, population, catholics, source)').eq('parish_id', id).order('sort_order'),
     admin.from('parish_schedules').select('id, season, is_active, valid_from, valid_to, note, parish_schedule_items(*)').eq('parish_id', id),
-    admin.from('parish_clergy').select('*').eq('parish_id', id).order('sort_order'),
+    loadParishClergy(admin, id),
     admin.from('v_parish_year_summary').select('*').eq('parish_id', id).order('year', { ascending: false }),
     admin.from('donors').select('id', { count: 'exact', head: true }).eq('parish_id', id),
     admin.from('parish_change_log').select('id, action, entity, changes, created_at, user_id').eq('parish_id', id).order('created_at', { ascending: false }).limit(30),
@@ -63,7 +64,7 @@ export async function loadParishDetail(admin: SupabaseClient, id: string): Promi
       }
     }),
     schedules: schedMap,
-    clergy: (clergy ?? []) as ClergyMember[],
+    clergy,
     summary: ((summary ?? []) as ParishYearSummary[]).map((s) => ({
       ...s,
       prescribed_amount: s.prescribed_amount != null ? Number(s.prescribed_amount) : null,

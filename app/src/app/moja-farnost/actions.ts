@@ -6,7 +6,7 @@ import { requireAuth } from '@/lib/auth'
 import { loadParishDetail } from '@/lib/parishes/load'
 import { logParishChange, writeSchedule } from '@/lib/parishes/writes'
 import { LIVE_PARISH_FIELDS, PROTECTED_PARISH_FIELDS, normalizeParishValue, FIELD_LABEL } from '@/lib/parishes/fields'
-import type { ClergyMember, ParishDetail, Schedule, VillageWithStats } from '@/lib/parishes/types'
+import type { ParishDetail, Schedule, VillageWithStats } from '@/lib/parishes/types'
 import { POST_COLUMNS, loadSacramentEditRows, type ParishPostRow, type SacramentEditRow } from '@/lib/parishes/posts'
 
 /**
@@ -140,21 +140,3 @@ export async function submitPopulationChange(parishId: string, villages: Village
   return { success: true }
 }
 
-/** Kontakt, foto a súhlas so zverejnením kontaktu konkrétneho kňaza – mení sa hneď (§ 3.8). */
-export async function updateMyClergyContact(parishId: string, clergyId: string, input: Pick<ClergyMember, 'phone' | 'email' | 'photo_url' | 'is_public'>): Promise<Result> {
-  const { user, db } = await requireParishMember(parishId)
-  const { data: c } = await db.from('parish_clergy').select('id, full_name, photo_url').eq('id', clergyId).eq('parish_id', parishId).maybeSingle()
-  if (!c) return { success: false, error: 'Kňaz sa nenašiel.' }
-  const email = input.email?.trim().toLowerCase() || null
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Neplatný e-mail.' }
-  const photo = input.photo_url?.trim() || null
-  if (photo && !/^https:\/\//i.test(photo)) return { success: false, error: 'Foto musí byť nahraté cez tlačidlo.' }
-  const patch = { phone: input.phone?.trim() || null, email, photo_url: photo, is_public: !!input.is_public, updated_at: new Date().toISOString() }
-  const { error } = await db.from('parish_clergy').update(patch).eq('id', clergyId)
-  if (error) return { success: false, error: 'Uloženie zlyhalo.' }
-  const changes: Record<string, string> = { [c.full_name]: `kontakt ${patch.is_public ? 'verejný' : 'neverejný'}` }
-  if ((c.photo_url ?? null) !== photo) changes.foto = photo ? 'nahraté' : 'odstránené'
-  await logParishChange(db, parishId, user.id, 'clergy', 'parish_update', changes)
-  revalidatePath(`/moja-farnost/${parishId}`)
-  return { success: true }
-}

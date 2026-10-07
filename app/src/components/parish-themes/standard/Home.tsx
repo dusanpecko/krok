@@ -129,27 +129,12 @@ export default function Home({ parish, announcements, news, events, sacraments }
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {parish.clergy.map((c, i) => (
               <div key={i} className={`${c.is_head ? 'bg-gold/[0.07] border border-gold/50 rounded-2xl' : cardCls} p-4 flex gap-4 items-start`}>
-                {c.photo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.photo_url} alt={c.full_name} className={`w-14 h-14 rounded-full object-cover shrink-0 ${c.is_head ? 'border-2 border-gold' : 'border border-blue/10'}`} />
-                ) : (
-                  <div className={`w-14 h-14 rounded-full bg-white flex items-center justify-center text-gold-ink shrink-0 ${c.is_head ? 'border-2 border-gold' : 'border border-blue/10'}`}>
-                    <Church size={22} />
-                  </div>
-                )}
+                <div className={`w-12 h-12 rounded-full bg-white flex items-center justify-center text-gold-ink shrink-0 ${c.is_head ? 'border-2 border-gold' : 'border border-blue/10'}`}>
+                  <Church size={20} />
+                </div>
                 <div className="min-w-0">
                   <p className="font-extrabold">{clergyName(c)}</p>
                   {c.position && <p className={`text-sm ${c.is_head ? 'text-gold-ink font-bold' : 'text-mute'}`}>{c.position}</p>}
-                  {c.phone && (
-                    <a href={`tel:${c.phone.replace(/\s/g, '')}`} className="text-sm text-blue hover:underline block mt-1">
-                      {c.phone}
-                    </a>
-                  )}
-                  {c.email && (
-                    <a href={`mailto:${c.email}`} className="text-sm text-blue hover:underline block break-all">
-                      {c.email}
-                    </a>
-                  )}
                 </div>
               </div>
             ))}

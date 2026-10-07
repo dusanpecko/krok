@@ -12,7 +12,6 @@ import { generateEmailLink } from '@/lib/auth/email-links'
 import { sendTemplateEmail } from '@/lib/email/send'
 import {
   PARISH_EDITABLE_FIELDS,
-  type ClergyMember,
   type ParishDetail,
   type ParishListItem,
   type Schedule,
@@ -207,35 +206,6 @@ export async function saveSchedule(parishId: string, schedule: Schedule): Promis
   return { success: true }
 }
 
-/** Kňazi vo farnosti – celý zoznam naraz. */
-export async function saveClergy(parishId: string, clergy: ClergyMember[]): Promise<Result> {
-  const { user } = await requirePermission(PERM)
-  const admin = db()
-  const clean = clergy.map((c) => ({ ...c, full_name: c.full_name.trim() })).filter((c) => c.full_name)
-  await admin.from('parish_clergy').delete().eq('parish_id', parishId)
-  if (clean.length) {
-    const { error } = await admin.from('parish_clergy').insert(
-      clean.map((c, i) => ({
-        parish_id: parishId,
-        full_name: c.full_name,
-        title_before: c.title_before || null,
-        title_after: c.title_after || null,
-        position: c.position?.trim() || '',
-        phone: c.phone || null,
-        email: c.email || null,
-        // foto si nahráva kňaz v zóne farnosti – zoznam sa ukladá nanovo, preto ho treba preniesť
-        photo_url: c.photo_url && /^https:\/\//i.test(c.photo_url) ? c.photo_url : null,
-        is_public: c.is_public,
-        source: c.source || 'ručne',
-        sort_order: i,
-      }))
-    )
-    if (error) return { success: false, error: 'Uloženie kňazov zlyhalo.' }
-  }
-  await log(parishId, user.id, 'clergy', 'admin_update', { clergy: clean.map((c) => `${c.full_name} (${c.position})`) })
-  revalidatePath(`/admin/farnosti/${parishId}`)
-  return { success: true }
-}
 
 
 // ------------------------------------------------------------ prístupy farnosti (§ 5.1, O7)

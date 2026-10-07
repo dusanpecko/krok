@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { getActiveBox } from '@/lib/parish-box/server'
 import type { PublicParishBox } from '@/lib/parish-box/types'
 import { serviceDb } from './access'
+import { loadParishClergy } from './parish-clergy'
 import { getSessionUser, getUserAccess } from '@/lib/auth'
 import type { ParishKind, ParishOccasion, ParishSeason, ParishServiceType } from './types'
 import { normalizeSocialLinks, type SocialLink } from './social'
@@ -36,20 +37,17 @@ export interface PublicSchedule {
   items: PublicScheduleItem[]
 }
 
+/** Kňaz na stránke farnosti – z registra kňazov (K3); verejne len meno, tituly a funkcia (O47). */
 export interface PublicClergy {
   full_name: string
   title_before: string | null
   title_after: string | null
   position: string
-  phone: string | null
-  email: string | null
-  photo_url: string | null
-  /** vedie farnosť (farár, administrátor, duchovný správca) – na stránke prvý a zvýraznený */
+  /** vedie farnosť (farár, administrátor, duchovný správca, rektor) – na stránke prvý a zvýraznený */
   is_head: boolean
 }
 
 /** Farár (aj „farár, dekan“), administrátor alebo duchovný správca – kto vedie farnosť / duchovnú správu. */
-const isParishHead = (position: string | null) => /^(farár|farský administrátor|administrátor|duchovný správca)\b/i.test((position ?? '').trim())
 
 export interface PublicPostSummary {
   id: string
@@ -163,13 +161,13 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
   const basic = !row.visible_on_web && !viewer.preview
   const preview = !row.visible_on_web && viewer.preview
 
-  const [{ data: deanery }, { data: villages }, { data: schedules }, { data: clergy }, activeBox] = await Promise.all([
+  const [{ data: deanery }, { data: villages }, { data: schedules }, clergy, activeBox] = await Promise.all([
     row.deanery_id ? db.from('deaneries').select('name').eq('id', row.deanery_id).maybeSingle() : Promise.resolve({ data: null }),
     db.from('parish_villages').select('id, name, church_name, is_seat, sort_order').eq('parish_id', row.id).order('sort_order'),
     db.from('parish_schedules')
       .select('season, is_active, valid_from, valid_to, note, parish_schedule_items(service_type, occasion, day_of_week, day_label, time_from, time_to, relative_note, note, village_id, sort_order)')
       .eq('parish_id', row.id),
-    db.from('parish_clergy').select('full_name, title_before, title_after, position, phone, email, photo_url, is_public, sort_order').eq('parish_id', row.id).order('sort_order'),
+    loadParishClergy(db, row.id),
     getActiveBox(row.id),
   ])
 
@@ -206,20 +204,8 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
     villages: (villages ?? []).map((v) => ({ name: v.name, church_name: v.church_name, is_seat: v.is_seat })),
     schedules: out,
     currentSeason,
-    // meno a funkcia sú verejné (schematizmus); kontakt len so súhlasom (§ 3.8, GDPR)
-    clergy: (clergy ?? [])
-      .map((c) => ({
-        full_name: c.full_name,
-        title_before: c.title_before,
-        title_after: c.title_after,
-        position: c.position,
-        phone: c.is_public ? c.phone : null,
-        email: c.is_public ? c.email : null,
-        photo_url: c.photo_url,
-        is_head: isParishHead(c.position),
-      }))
-      // vedúci farnosti prvý, ostatní v poradí zo správy farnosti (sort je stabilný)
-      .sort((a, b) => Number(b.is_head) - Number(a.is_head)),
+    // z registra kňazov (O49) – verejne len meno, tituly a funkcia (O47)
+    clergy: clergy.map(({ full_name, title_before, title_after, position, is_head }) => ({ full_name, title_before, title_after, position, is_head })),
     box: activeBox ? { title: activeBox.title, description: activeBox.description } : null,
   }
 })

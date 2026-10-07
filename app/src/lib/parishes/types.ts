@@ -1,3 +1,4 @@
+import type { ParishClergyEntry } from './parish-clergy'
 /** Typy registra farností (migrácia 034) – zdieľané server aj klient. */
 import type { SocialLink } from './social'
 
@@ -133,19 +134,6 @@ export interface Schedule {
   items: ScheduleItem[]
 }
 
-export interface ClergyMember {
-  id?: string
-  full_name: string
-  title_before: string | null
-  title_after: string | null
-  position: string
-  phone: string | null
-  email: string | null
-  photo_url: string | null
-  is_public: boolean
-  source: string | null
-}
-
 export interface ParishYearSummary {
   year: number
   prescribed_amount: number | null
@@ -168,7 +156,8 @@ export interface ParishDetail {
   parish: ParishRow
   villages: VillageWithStats[]
   schedules: Record<ParishSeason, Schedule>
-  clergy: ClergyMember[]
+  /** kňazi farnosti z registra kňazov (K3) */
+  clergy: ParishClergyEntry[]
   summary: ParishYearSummary[]
   donorsCount: number
   log: ParishChangeLogEntry[]

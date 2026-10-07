@@ -118,7 +118,7 @@ export default function ParishDetailView({
       {tab === 'schedule' && <ParishScheduleTab parishId={parish.id} schedules={detail.schedules} villages={detail.villages} />}
       {tab === 'posts' && <ParishPostsTab parishId={parish.id} parishSlug={parish.slug} posts={web.posts} actions={POST_ACTIONS} />}
       {tab === 'sacraments' && <ParishSacramentsTab parishId={parish.id} rows={web.sacraments} save={adminSaveParishSacrament} />}
-      {tab === 'clergy' && <ParishClergyTab parishId={parish.id} initial={detail.clergy} />}
+      {tab === 'clergy' && <ParishClergyTab clergy={detail.clergy} />}
       {tab === 'box' && <ParishBoxTab parishId={parish.id} parishSlug={parish.slug} />}
       {tab === 'traffic' && <ParishTrafficCard parishId={parish.id} load={adminGetParishTraffic} />}
       {tab === 'donations' && <ParishDonationsTab summary={detail.summary} log={detail.log} donorsCount={detail.donorsCount} />}

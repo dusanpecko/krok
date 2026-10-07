@@ -9,7 +9,6 @@ import {
   saveMySchedule,
   submitParishChange,
   submitPopulationChange,
-  updateMyClergyContact,
   updateMyPresentation,
   type MyParishView,
 } from '@/app/moja-farnost/actions'
@@ -19,9 +18,10 @@ import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
 import { getMyParishTraffic, deleteMyPost, setMyWebVisibility, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
 import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
 import ParishTrafficCard from '@/components/parishes/ParishTrafficCard'
-import ClergyPhotoInput from '@/components/parishes/ClergyPhotoInput'
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS } from '@/lib/parishes/fields'
-import type { ClergyMember, VillageWithStats } from '@/lib/parishes/types'
+import type { VillageWithStats } from '@/lib/parishes/types'
+import type { ParishClergyEntry } from '@/lib/parishes/parish-clergy'
+import { clergyName } from '@/lib/parishes/format'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
 type TabKey = 'overview' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'sacraments' | 'population' | 'clergy'
@@ -109,7 +109,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
       )}
       {tab === 'official' && <OfficialTab view={view} />}
       {tab === 'population' && <PopulationTab view={view} />}
-      {tab === 'clergy' && <ClergyTab parishId={p.id} clergy={view.clergy} />}
+      {tab === 'clergy' && <ClergyTab clergy={view.clergy} />}
     </div>
   )
 }
@@ -416,61 +416,24 @@ function PopulationTab({ view }: { view: MyParishView }) {
   )
 }
 
-// ------------------------------------------------------------ Kňazi (vlastný kontakt)
+// ------------------------------------------------------------ Kňazi (z registra kňazov – len na čítanie, O48)
 
-function ClergyTab({ parishId, clergy }: { parishId: string; clergy: ClergyMember[] }) {
+function ClergyTab({ clergy }: { clergy: ParishClergyEntry[] }) {
   return (
     <div className={`${cardCls} space-y-4`}>
       <SectionTitle
         title="Kňazi vo farnosti"
-        description="Fotku, kontakt a súhlas so zverejnením kontaktu si mení každý sám. Fotka sa na webe zobrazí vždy, telefón a e-mail len so súhlasom. Pridanie alebo odobratie kňaza rieši biskupský úrad."
+        description="Zoznam vedie biskupský úrad v registri kňazov. Na stránke farnosti sa zobrazí meno, tituly a funkcia. Ak niečo nesedí, napíšte na mojkrok@dcza.sk."
       />
       <div className="divide-y divide-gray-50">
-        {clergy.map((c) => <ClergyRow key={c.id} parishId={parishId} c={c} />)}
+        {clergy.map((c) => (
+          <div key={c.clergy_id} className="py-3 flex items-center justify-between gap-3">
+            <div className="font-bold text-gray-900">{clergyName(c)}</div>
+            <div className={`text-sm ${c.is_head ? 'font-bold text-gray-900' : 'text-gray-500'}`}>{c.position}</div>
+          </div>
+        ))}
         {clergy.length === 0 && <p className="py-6 text-center text-gray-400 text-sm">Bez záznamu.</p>}
       </div>
-    </div>
-  )
-}
-
-function ClergyRow({ parishId, c }: { parishId: string; c: ClergyMember }) {
-  const router = useRouter()
-  const [phone, setPhone] = useState(c.phone ?? '')
-  const [email, setEmail] = useState(c.email ?? '')
-  const [photo, setPhoto] = useState(c.photo_url)
-  const [isPublic, setIsPublic] = useState(c.is_public)
-  const [msg, setMsg] = useState<Msg>(null)
-  const [pending, startTransition] = useTransition()
-  const save = () =>
-    startTransition(async () => {
-      const res = await updateMyClergyContact(parishId, c.id!, { phone, email, photo_url: photo, is_public: isPublic })
-      setMsg(res.success ? { kind: 'success', text: 'Uložené.' } : { kind: 'error', text: res.error })
-      if (res.success) router.refresh()
-    })
-  return (
-    <div className="py-4 grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-      <div className="md:col-span-3 flex items-center gap-3">
-        <ClergyPhotoInput
-          value={photo}
-          onChange={(url) => { setPhoto(url); setMsg({ kind: 'success', text: 'Fotku uložíte tlačidlom vpravo.' }) }}
-          uploader={(fd) => uploadMyParishFile(parishId, fd)}
-          onError={(text) => setMsg({ kind: 'error', text })}
-          size="sm"
-        />
-        <div className="min-w-0">
-          <div className="font-bold text-gray-900">{c.full_name}</div>
-          <div className="text-xs text-gray-500">{c.position}</div>
-        </div>
-      </div>
-      <Field label="Telefón" className="md:col-span-3"><input value={phone} onChange={(e) => setPhone(e.target.value)} className={`${inputCls} py-2`} /></Field>
-      <Field label="E-mail" className="md:col-span-3"><input value={email} onChange={(e) => setEmail(e.target.value)} className={`${inputCls} py-2`} type="email" /></Field>
-      <label className="md:col-span-2 flex items-center gap-2 text-xs font-bold text-gray-600 pb-3 cursor-pointer">
-        <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className={checkboxCls} /> Zverejniť kontakt
-      </label>
-      <div className="md:col-span-1 pb-1">
-        <button onClick={save} disabled={pending} className={btnSecondary}>{pending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}</button>
-      </div>
-      {msg && <div className="md:col-span-12"><Notice kind={msg.kind}>{msg.text}</Notice></div>}
     </div>
   )
 }

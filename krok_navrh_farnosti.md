@@ -64,7 +64,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 **Schematizmus kňazov (K0–K5, § 16)**
 - [x] Analýza `KNAZI - ZOZNAM AKTUALNY.xlsx` (11 listov, 274 kňazov, problémy v dátach) – § 16.1
 - [x] Rozhodnúť K1–K9 – § 16.8, O44–O52
-- [ ] K0: migrácia 043 (register `clergy`, pôsobenia, číselníky, `deaneries.code`, oprávnenia) + import s dry-run správou – § 16.2, § 16.6
+- [x] K0: migrácia 043 (register `clergy`, pôsobenia, číselníky, `deaneries.code`, oprávnenia) + import (2026-10-07: 440 osôb, 1 698 pôsobení, 259/267 spárovaných so schematizmom dcza.sk, 224/232 `parish_clergy` prepojených; 288 bodov na kontrolu v `data/import-clergy-report.csv`) – § 16.2, § 16.6
 - [ ] K1: admin `/admin/knazi` (zoznam, detail, nové menovanie, audit, export XLSX) – § 16.4
 - [ ] K2: výročia, meniny, adresné štítky – § 16.5
 - [ ] K3: kňazi na stránkach farností z registra (`parish_clergy` zaniká) – § 16.2

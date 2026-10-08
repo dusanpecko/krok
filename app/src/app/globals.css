@@ -139,6 +139,8 @@
   --color-gold: #CBBB2D;
   --color-gold-bright: #F5E300;
   --color-gold-ink: #bf9b1b;      /* Zlatá pre VEĽKÝ text a akcenty na svetlom pozadí (nadpisy, sumy); drobný text = modrá */
+  --color-wine: #7a1f2b;          /* Web diecézy dcza.sk – liturgický vínový akcent (beta) */
+  --color-sky: #40a1f0;           /* Web diecézy – svetlá modrá (beta) */
   --color-white: #FFFFFF;
   --color-ink: #051b30;
   --color-mute: #4b6b8b;
@@ -666,3 +668,25 @@ body {
   color: var(--color-gold-bright);
   text-decoration: underline;
 }
+
+/* =========================================================================
+   Web diecézy dcza.sk – obsah stránok a článkov (import z bety a živého webu)
+   ========================================================================= */
+.dcza-prose { color: var(--color-ink); line-height: 1.75; font-size: 1.05rem; }
+.dcza-prose > * + * { margin-top: 1rem; }
+.dcza-prose h2 { font-size: 1.6rem; font-weight: 300; letter-spacing: -0.01em; margin-top: 2.2rem; }
+.dcza-prose h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.8rem; }
+.dcza-prose h4, .dcza-prose h5 { font-size: 1.05rem; font-weight: 800; margin-top: 1.4rem; }
+.dcza-prose a { color: var(--color-blue); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--color-blue) 35%, transparent); }
+.dcza-prose a:hover { text-decoration-color: var(--color-blue); }
+.dcza-prose ul { list-style: disc; padding-left: 1.4rem; }
+.dcza-prose ol { list-style: decimal; padding-left: 1.4rem; }
+.dcza-prose li + li { margin-top: 0.35rem; }
+.dcza-prose blockquote { border-left: 3px solid var(--color-gold); padding: 0.25rem 0 0.25rem 1.1rem; font-style: italic; color: color-mix(in srgb, var(--color-ink) 80%, transparent); }
+.dcza-prose img { max-width: 100%; height: auto; border-radius: 1rem; }
+.dcza-prose figure { margin: 1.6rem 0; }
+.dcza-prose figcaption { font-size: 0.85rem; color: var(--color-mute); margin-top: 0.5rem; text-align: center; }
+.dcza-prose iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; border-radius: 1rem; border: 0; }
+.dcza-prose table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.dcza-prose th, .dcza-prose td { border: 1px solid color-mix(in srgb, var(--color-blue) 15%, transparent); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+.dcza-prose hr { border-color: color-mix(in srgb, var(--color-blue) 15%, transparent); margin: 2rem 0; }

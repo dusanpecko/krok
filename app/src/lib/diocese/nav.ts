@@ -1,0 +1,57 @@
+import type { DiocesePageNode } from './public'
+
+/** Menu webu diecézy zo stromu stránok (§ 20, D2). Niektoré stránky bety nahrádzajú naše sekcie. */
+
+export interface NavItem {
+  label: string
+  href: string
+  children?: NavItem[]
+}
+
+/** stránky bety, ktoré vedú na dynamické sekcie Kroku */
+const HREF_OVERRIDE: Record<string, string> = {
+  aktuality: '/aktuality',
+  'aktuality/clanky': '/aktuality',
+  'aktuality/kalendar-akcii': '/kalendar',
+  'aktuality/nasa-zilinska-dieceza': '/casopis',
+  'kontakty/farnosti': '/farnosti',
+  'o-nas/schematizmus/farnosti': '/farnosti',
+  'cinnost/krok': 'https://mojkrok.sk',
+  'dokumenty/homilie': '/aktuality?kategoria=homilie',
+  'dokumenty/pastierske-listy': '/aktuality?kategoria=pastierske-listy',
+}
+
+export const pageHref = (path: string) => HREF_OVERRIDE[path] ?? `/${path}`
+
+const toItem = (n: DiocesePageNode): NavItem => ({
+  label: n.title,
+  href: pageHref(n.path),
+  children: n.children.filter((c) => c.show_in_menu).map(toItem),
+})
+
+/** Hlavné menu: poradie ako na bete, farnosti doplnené. */
+const TOP_ORDER = ['o-nas', 'kuria', 'cinnost', 'aktuality', 'dokumenty', 'kontakty']
+
+export function mainNav(tree: DiocesePageNode[]): NavItem[] {
+  const roots = tree.filter((n) => n.show_in_menu && TOP_ORDER.includes(n.path)).sort((a, b) => TOP_ORDER.indexOf(a.path) - TOP_ORDER.indexOf(b.path))
+  const items = roots.map(toItem)
+  // Aktuality: pevné podsekcie (články, kalendár, časopis) namiesto prázdnych stránok bety
+  const akt = items.find((i) => i.href === '/aktuality')
+  if (akt) akt.children = [{ label: 'Články', href: '/aktuality' }, { label: 'Kalendár akcií', href: '/kalendar' }, { label: 'Časopis Naša Žilinská diecéza', href: '/casopis' }, ...(akt.children ?? []).filter((c) => !['/aktuality', '/kalendar', '/casopis'].includes(c.href))]
+  items.splice(Math.max(1, items.length - 1), 0, { label: 'Farnosti', href: '/farnosti' })
+  return items
+}
+
+/** Cesta k stránke (omrvinky) a súrodenci/deti pre bočné menu. */
+export function locate(tree: DiocesePageNode[], path: string): { trail: DiocesePageNode[]; section: DiocesePageNode | null } {
+  const walk = (nodes: DiocesePageNode[], trail: DiocesePageNode[]): DiocesePageNode[] | null => {
+    for (const n of nodes) {
+      if (n.path === path) return [...trail, n]
+      const r = walk(n.children, [...trail, n])
+      if (r) return r
+    }
+    return null
+  }
+  const trail = walk(tree, []) ?? []
+  return { trail, section: trail[0] ?? null }
+}

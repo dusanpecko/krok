@@ -4,6 +4,7 @@ import { hasParishSchedule, officeHoursFor, parishDisplayName } from '@/lib/pari
 import ParishHeader, { type ParishNavItem } from './ParishHeader'
 import ParishFooter from './ParishFooter'
 import MobileBar from './MobileBar'
+import ShareButton from '@/components/parishes/ShareButton'
 
 type Section = 'home' | 'announcement' | 'news' | 'gallery'
 
@@ -85,6 +86,7 @@ export default function Shell({
                     <MapPin size={14} /> {parish.city}
                   </span>
                 )}
+                {!parish.preview && <ShareButton path={base} title={parishDisplayName(parish)} className="text-blue" />}
               </p>
             </header>
           )}

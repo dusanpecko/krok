@@ -65,6 +65,8 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] Rozhodnúť G1–G6 – § 17.4, O59–O64
 - [x] Realizácia (migrácie 044–045): albumy a fotky, nahrávanie viacerých fotiek so zmenšením do WebP, kvóta, sekcia na stránke farnosti, galéria + zväčšenie, prepojenie s aktualitou, externé albumy, stiahnutie diecézou, upozornenie GDPR + podmienky – § 17.1–17.2
 - [ ] Otestovať na test.mojkrok.sk (nahrávanie z mobilu, HEIC z iPhonu, kvóta)
+- [x] Zdieľanie stránky, príspevkov, albumov a fotiek + zdieľanie zo zóny – § 18, O65
+- [ ] Automatické zverejnenie na FB stránku farnosti – § 18, S1 (neskôr)
 
 **Schematizmus kňazov (K0–K5, § 16)**
 - [x] Analýza `KNAZI - ZOZNAM AKTUALNY.xlsx` (11 listov, 274 kňazov, problémy v dátach) – § 16.1
@@ -162,6 +164,7 @@ Cieľ modulu:
 | O62 | Indexovanie (G4) | Fotky kostola na hlavnej stránke farnosti áno, **albumy zo života farnosti `noindex`** (deti). |
 | O63 | Externé albumy (G6) | Popri vlastných albumoch aj **odkaz na externý album** (Facebook, Google Fotky, Zonerama) – dlaždica otvorí odkaz. |
 | O64 | GDPR | Upozornenie pri nahrávaní v zóne + odsek v **podmienkach používania** (súhlas rodičov pri deťoch, odstránenie na žiadosť). |
+| O65 | Zdieľanie (2026-10-08) | Tlačidlo Zdieľať na verejných stránkach (aj jednotlivé fotky) a v zóne farnosti; priame zverejnenie na FB stránku neskôr (S1). |
 | O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
@@ -1367,3 +1370,11 @@ parish_posts.album_id → parish_albums (voliteľné prepojenie aktuality s albu
 | G4 | Smú fotky indexovať vyhľadávače (Google obrázky)? | **Áno pre fotky kostola, nie pre albumy zo života** (deti) |
 | G5 | Limit na farnosť | **300 fotiek / 1 GB**, diecéza môže zvýšiť |
 | G6 | Prepojenie na existujúce albumy (Facebook, Google Fotky, Zonerama) namiesto nahrávania? | Popri vlastných albumoch povoliť aj **odkaz na externý album** (dlaždica s odkazom) |
+
+## 18. Zdieľanie na sociálne siete (pripomienky Julie, 2026-10-08)
+
+**Hotové (O65):** tlačidlo **Zdieľať** na stránke farnosti, pri oznamoch, aktualitách, zozname albumov, v albume a pri **každej fotke** (lightbox). Na mobile otvorí systémové zdieľanie (Messenger, WhatsApp, Instagram…), na počítači ponuku Facebook / WhatsApp / X / e-mail / kopírovať odkaz. Každá fotka má vlastnú adresu `?foto=N` – otvorí sa rovno v lightboxe a Facebook ukáže v náhľade práve ju (og:image + og:url s `?foto=N`). Úvodná stránka farnosti má v náhľade prvú fotku kostola.
+
+V zóne farnosti je Zdieľať pri každom zverejnenom oznamy/aktualite a albume, navyše **„Kopírovať text s odkazom“** (nadpis + perex + odkaz – na vloženie do Facebooku, Instagramu, skupín). Facebook otvorí okno, kde kňaz príspevok zverejní na svojom profile alebo na stránke farnosti (ak ju spravuje).
+
+**Na rozhodnutie neskôr (S1):** automatické zverejnenie priamo na **Facebook stránku farnosti** po uložení príspevku – vyžaduje Meta aplikáciu so schválením (Page publishing), každá farnosť si raz prepojí svoju FB stránku; Instagram len cez firemný účet a vždy s obrázkom. Návrh: až keď to bude farnosti reálne chýbať.

@@ -5,7 +5,7 @@ import { getBaseUrl } from '@/lib/mollie/client'
 
 /** SEO stránok farností (návrh § 4.2): metadata, OG a schema.org CatholicChurch. */
 
-export function parishMetadata(parish: PublicParish, opts: { title?: string; description?: string; path?: string; image?: string | null } = {}): Metadata {
+export function parishMetadata(parish: PublicParish, opts: { title?: string; description?: string; path?: string; image?: string | null; ogQuery?: string } = {}): Metadata {
   const name = parishDisplayName(parish)
   // bez opakovania („Martin – Martin“), ak je obec už v názve
   const place = parish.city && !name.toLowerCase().includes(parish.city.toLowerCase()) ? ` – ${parish.city}` : ''
@@ -27,7 +27,8 @@ export function parishMetadata(parish: PublicParish, opts: { title?: string; des
     description,
     alternates: { canonical: url },
     robots: parish.preview ? { index: false, follow: false } : undefined,
-    openGraph: { title, description, url, type: 'website', ...(image ? { images: [{ url: image }] } : {}) },
+    // og:url so zdieľanou fotkou (?foto=N) – Facebook náhľad načíta práve z tejto adresy
+    openGraph: { title, description, url: opts.ogQuery ? `${url}?${opts.ogQuery}` : url, type: 'website', ...(image ? { images: [{ url: image }] } : {}) },
   }
 }
 

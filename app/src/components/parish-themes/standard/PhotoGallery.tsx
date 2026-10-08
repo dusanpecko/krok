@@ -4,19 +4,47 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Images, X } from 'lucide-react'
 import type { PublicGalleryPhoto } from '@/lib/parishes/gallery'
 import { photoCount } from '@/lib/parishes/format'
+import ShareButton from '@/components/parishes/ShareButton'
 
 /**
  * Fotky farnosti s lightboxom (§ 17): variant „strip“ = pás hore na stránke (veľká + menšie fotky),
  * „grid“ = mriežka albumu. Lightbox: šípky, klávesnica (←/→/Esc), potiahnutie prstom.
+ * S `sharePath` má každá fotka vlastnú adresu `?foto=N` (zdieľanie konkrétnej fotky, otvorí sa rovno v lightboxe).
  */
-export default function PhotoGallery({ photos, variant = 'grid', title }: { photos: PublicGalleryPhoto[]; variant?: 'strip' | 'grid'; title?: string }) {
-  const [open, setOpen] = useState<number | null>(null)
+export default function PhotoGallery({
+  photos,
+  variant = 'grid',
+  title,
+  sharePath,
+  initialIndex,
+}: {
+  photos: PublicGalleryPhoto[]
+  variant?: 'strip' | 'grid'
+  title?: string
+  sharePath?: string
+  /** 0-based – fotka z odkazu ?foto=N */
+  initialIndex?: number | null
+}) {
+  const [open, setOpen] = useState<number | null>(initialIndex != null && initialIndex >= 0 && initialIndex < photos.length ? initialIndex : null)
+
+  // adresa v prehliadači ukazuje na práve otvorenú fotku (dá sa skopírovať / zdieľať)
+  useEffect(() => {
+    // len na stránke, ktorej adresa sa zdieľa (nie napr. album pod aktualitou)
+    if (!sharePath || window.location.pathname !== sharePath) return
+    const u = new URL(window.location.href)
+    if (open == null) u.searchParams.delete('foto')
+    else u.searchParams.set('foto', String(open + 1))
+    window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash)
+  }, [open, sharePath])
+
   if (!photos.length) return null
 
   return (
     <>
       {variant === 'strip' ? <Strip photos={photos} onOpen={setOpen} title={title} /> : <Grid photos={photos} onOpen={setOpen} />}
-      {open != null && <Lightbox photos={photos} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />}
+      {open != null && (
+        <Lightbox photos={photos} index={open} onIndex={setOpen} onClose={() => setOpen(null)} share={sharePath ? { path: `${sharePath}?foto=${open + 1}`, title: title ?? 'Fotka' } : undefined} />
+      )}
     </>
   )
 }
@@ -73,7 +101,19 @@ function Grid({ photos, onOpen }: { photos: PublicGalleryPhoto[]; onOpen: (i: nu
   )
 }
 
-function Lightbox({ photos, index, onIndex, onClose }: { photos: PublicGalleryPhoto[]; index: number; onIndex: (i: number) => void; onClose: () => void }) {
+function Lightbox({
+  photos,
+  index,
+  onIndex,
+  onClose,
+  share,
+}: {
+  photos: PublicGalleryPhoto[]
+  index: number
+  onIndex: (i: number) => void
+  onClose: () => void
+  share?: { path: string; title: string }
+}) {
   const touchX = useRef<number | null>(null)
   const n = photos.length
   const go = useCallback((d: number) => onIndex((index + d + n) % n), [index, n, onIndex])
@@ -113,9 +153,12 @@ function Lightbox({ photos, index, onIndex, onClose }: { photos: PublicGalleryPh
         <span>
           {index + 1} / {n}
         </span>
-        <button type="button" onClick={onClose} aria-label="Zavrieť" className="p-2 rounded-full hover:bg-white/10 cursor-pointer">
-          <X size={22} />
-        </button>
+        <div className="flex items-center gap-1">
+          {share && <ShareButton path={share.path} title={photos[index].caption || share.title} label="Zdieľať fotku" tone="dark" align="right" />}
+          <button type="button" onClick={onClose} aria-label="Zavrieť" className="p-2 rounded-full hover:bg-white/10 cursor-pointer">
+            <X size={22} />
+          </button>
+        </div>
       </div>
       <div className="relative flex-1 flex items-center justify-center px-2 sm:px-16 min-h-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bell, Eye, EyeOff, FileText, Loader2, Newspaper, Pencil, Pin, Plus, Save, Trash2, Upload, X, AlertTriangle, ExternalLink } from 'lucide-react'
 import SimpleRichTextEditor from '@/components/admin/SimpleRichTextEditor'
+import ShareButton from '@/components/parishes/ShareButton'
 import type { ParishPostInput, ParishPostRow, ParishPostType } from '@/lib/parishes/posts'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
@@ -100,7 +101,10 @@ export default function ParishPostsTab({ parishId, parishSlug, posts, actions }:
   return (
     <div className={`${cardCls} space-y-5`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <SectionTitle title="Oznamy a aktuality" description="Zverejnené príspevky sú na stránke farnosti hneď. Text z Wordu môžete vložiť priamo – formátovanie sa vyčistí." />
+        <SectionTitle
+          title="Oznamy a aktuality"
+          description="Zverejnené príspevky sú na stránke farnosti hneď. Text z Wordu môžete vložiť priamo – formátovanie sa vyčistí. Tlačidlom Zdieľať pošlete príspevok na Facebook (na svoj profil alebo stránku farnosti), do WhatsAppu či e-mailom."
+        />
         <button type="button" onClick={() => setEditing(emptyPost(type))} className={btnPrimary}>
           <Plus size={16} /> {type === 'announcement' ? 'Nové oznamy' : 'Nová aktualita'}
         </button>
@@ -141,9 +145,12 @@ export default function ParishPostsTab({ parishId, parishSlug, posts, actions }:
                   </p>
                 </div>
                 {url && p.published && !p.taken_down_at && (
-                  <a href={url} target="_blank" rel="noopener noreferrer" className={btnSecondary}>
-                    <ExternalLink size={14} /> Zobraziť
-                  </a>
+                  <>
+                    <a href={url} target="_blank" rel="noopener noreferrer" className={btnSecondary}>
+                      <ExternalLink size={14} /> Zobraziť
+                    </a>
+                    <ShareButton bare path={url} title={p.title} text={p.excerpt ? `${p.title}\n\n${p.excerpt}` : p.title} className={btnSecondary} align="right" />
+                  </>
                 )}
                 <button type="button" onClick={() => edit(p)} className={btnSecondary}>
                   <Pencil size={14} /> Upraviť

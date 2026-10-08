@@ -8,18 +8,31 @@ export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ foto?: string }>
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+/** ?foto=N (1-based) – zdieľaná fotka kostola */
+const photoIndex = (v?: string) => (v && /^\d+$/.test(v) ? Number(v) - 1 : null)
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { slug } = await params
+  const { foto } = await searchParams
   const parish = await getPublicParishBySlug(slug)
   if (!parish) return { title: 'Farnosť nenájdená | KROK' }
-  return parishMetadata(parish, { description: parish.intro?.slice(0, 200) || undefined })
+  // náhľad pri zdieľaní: zdieľaná fotka, inak prvá fotka kostola, inak titulná fotka
+  const photos = parish.basic ? [] : await getParishChurchPhotos(parish.id)
+  const shared = photos[photoIndex(foto) ?? -1]
+  return parishMetadata(parish, {
+    description: parish.intro?.slice(0, 200) || undefined,
+    image: shared?.url ?? photos[0]?.url,
+    ogQuery: shared ? `foto=${foto}` : undefined,
+  })
 }
 
 /** Verejná stránka farnosti (návrh § 4.2, F5) – vykreslí ju zvolený motív (O29). */
-export default async function ParishPage({ params }: PageProps) {
+export default async function ParishPage({ params, searchParams }: PageProps) {
   const { slug } = await params
+  const { foto } = await searchParams
   const parish = await getPublicParishBySlug(slug)
   if (!parish) notFound()
 
@@ -39,7 +52,7 @@ export default async function ParishPage({ params }: PageProps) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(parishJsonLd(parish))} />
-      <Home parish={parish} announcements={announcements} news={news} events={events} sacraments={sacraments} churchPhotos={churchPhotos} albums={albums} />
+      <Home parish={parish} announcements={announcements} news={news} events={events} sacraments={sacraments} churchPhotos={churchPhotos} albums={albums} initialPhoto={photoIndex(foto)} />
     </>
   )
 }

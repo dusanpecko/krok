@@ -2,12 +2,16 @@ import Link from 'next/link'
 import type { ParishGalleryProps } from '../types'
 import Shell from './Shell'
 import AlbumCard from './AlbumCard'
+import ShareButton from '@/components/parishes/ShareButton'
 
 export default function Gallery({ parish, albums, page, hasMore }: ParishGalleryProps) {
   const base = `/farnosti/${parish.slug}`
   return (
     <Shell parish={parish} active="gallery" compact>
-      <h2 className="text-3xl font-light mb-8">Zo života farnosti</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+        <h2 className="text-3xl font-light">Zo života farnosti</h2>
+        {!parish.preview && <ShareButton path={`${base}/galeria`} title={`Zo života farnosti – ${parish.name}`} className="text-blue" />}
+      </div>
       {albums.length === 0 ? (
         <p className="text-mute py-16 text-center">Zatiaľ tu nie sú žiadne albumy.</p>
       ) : (

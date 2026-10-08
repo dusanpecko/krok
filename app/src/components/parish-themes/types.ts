@@ -17,6 +17,8 @@ export interface ParishHomeProps {
   churchPhotos: PublicGalleryPhoto[]
   /** najnovšie albumy „Zo života farnosti“ */
   albums: PublicAlbumSummary[]
+  /** 0-based fotka kostola z odkazu ?foto=N (zdieľaná fotka) */
+  initialPhoto?: number | null
 }
 
 export interface ParishPostListProps {
@@ -43,6 +45,7 @@ export interface ParishGalleryProps {
 export interface ParishAlbumProps {
   parish: PublicParish
   album: PublicAlbum
+  initialPhoto?: number | null
 }
 
 export interface ParishTheme {

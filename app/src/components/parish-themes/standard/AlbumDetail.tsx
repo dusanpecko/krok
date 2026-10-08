@@ -4,8 +4,9 @@ import type { ParishAlbumProps } from '../types'
 import { photoCount } from '@/lib/parishes/format'
 import Shell from './Shell'
 import PhotoGallery from './PhotoGallery'
+import ShareButton from '@/components/parishes/ShareButton'
 
-export default function AlbumDetail({ parish, album }: ParishAlbumProps) {
+export default function AlbumDetail({ parish, album, initialPhoto }: ParishAlbumProps) {
   const base = `/farnosti/${parish.slug}`
   const date = album.event_date ? new Date(`${album.event_date}T12:00:00`).toLocaleDateString('sk-SK', { day: 'numeric', month: 'long', year: 'numeric' }) : null
   return (
@@ -14,10 +15,13 @@ export default function AlbumDetail({ parish, album }: ParishAlbumProps) {
         <ArrowLeft size={14} /> Všetky albumy
       </Link>
       <h2 className="text-3xl sm:text-4xl font-light tracking-tight">{album.title}</h2>
-      <p className="text-sm text-mute mt-2">{[date, photoCount(album.photo_count)].filter(Boolean).join(' · ')}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <p className="text-sm text-mute">{[date, photoCount(album.photo_count)].filter(Boolean).join(' · ')}</p>
+        {!parish.preview && <ShareButton path={`${base}/galeria/${album.slug}`} title={album.title} label="Zdieľať album" className="text-blue" />}
+      </div>
       {album.description && <p className="mt-4 max-w-3xl text-ink/85 leading-relaxed whitespace-pre-line">{album.description}</p>}
       <div className="mt-8">
-        <PhotoGallery photos={album.photos} title={album.title} />
+        <PhotoGallery photos={album.photos} title={album.title} sharePath={`${base}/galeria/${album.slug}`} initialIndex={initialPhoto} />
       </div>
     </Shell>
   )

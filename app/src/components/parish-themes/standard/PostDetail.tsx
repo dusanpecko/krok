@@ -4,6 +4,7 @@ import type { ParishPostDetailProps } from '../types'
 import Shell from './Shell'
 import PostCard from './PostCard'
 import PhotoGallery from './PhotoGallery'
+import ShareButton from '@/components/parishes/ShareButton'
 import { formatDate, formatDateTime, photoCount, validRange } from '@/lib/parishes/format'
 
 export default function PostDetail({ parish, post, related }: ParishPostDetailProps) {
@@ -16,9 +17,12 @@ export default function PostDetail({ parish, post, related }: ParishPostDetailPr
           <ArrowLeft size={14} /> {isAnn ? 'Všetky oznamy' : 'Všetky aktuality'}
         </Link>
         <h2 className="text-3xl sm:text-4xl font-light leading-tight">{post.title}</h2>
-        <p className="text-sm text-mute mt-3">
-          {isAnn && validRange(post.valid_from, post.valid_to) ? `Platí ${validRange(post.valid_from, post.valid_to)}` : `Publikované ${formatDate(post.published_at)}`}
-        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <p className="text-sm text-mute">
+            {isAnn && validRange(post.valid_from, post.valid_to) ? `Platí ${validRange(post.valid_from, post.valid_to)}` : `Publikované ${formatDate(post.published_at)}`}
+          </p>
+          {!parish.preview && <ShareButton path={`${path}/${post.slug}`} title={post.title} text={post.excerpt ? `${post.title}\n${post.excerpt}` : post.title} className="text-blue" />}
+        </div>
         {post.event_at && (
           <p className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gold/10 border border-gold/30 text-blue text-sm font-bold first-letter:uppercase">
             <CalendarDays size={16} /> {formatDateTime(post.event_at)}
@@ -42,7 +46,7 @@ export default function PostDetail({ parish, post, related }: ParishPostDetailPr
           <h3 className="text-xl font-light mb-5 flex items-center gap-2">
             <Images size={20} className="text-gold-ink" /> Fotky – {photoCount(post.album.photo_count)}
           </h3>
-          <PhotoGallery photos={post.album.photos} title={post.album.title} />
+          <PhotoGallery photos={post.album.photos} title={post.album.title} sharePath={`/farnosti/${parish.slug}/galeria/${post.album.slug}`} />
           <Link href={`/farnosti/${parish.slug}/galeria/${post.album.slug}`} className="mt-4 inline-flex items-center gap-1 text-sm font-extrabold text-blue hover:underline">
             Album „{post.album.title}“ <ArrowRight size={14} />
           </Link>

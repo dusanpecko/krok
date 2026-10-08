@@ -15,7 +15,7 @@ import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
 import { clergyName, dayMonth, formatDateTime, googleMapsUrl, hasParishSchedule, validRange } from '@/lib/parishes/format'
 
-export default function Home({ parish, announcements, news, events, sacraments, churchPhotos, albums }: ParishHomeProps) {
+export default function Home({ parish, announcements, news, events, sacraments, churchPhotos, albums, initialPhoto }: ParishHomeProps) {
   const base = `/farnosti/${parish.slug}`
   const latest = announcements[0]
   const feast = dayMonth(parish.feast_day)
@@ -32,7 +32,7 @@ export default function Home({ parish, announcements, news, events, sacraments, 
       {/* Kostol a farnosť – pás fotiek (§ 17, G1) */}
       {churchPhotos.length > 0 && (
         <div className="mb-12">
-          <PhotoGallery photos={churchPhotos} variant="strip" title={parish.name} />
+          <PhotoGallery photos={churchPhotos} variant="strip" title={parish.name} sharePath={base} initialIndex={initialPhoto} />
         </div>
       )}
 

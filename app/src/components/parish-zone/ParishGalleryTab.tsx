@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { ArrowLeft, ArrowRight, Ban, ExternalLink, Eye, EyeOff, Images, Link2, Loader2, Pencil, Plus, Save, ShieldCheck, Star, Trash2, Upload, X } from 'lucide-react'
 import type { AlbumInput, GalleryAlbum, GalleryOverview, GalleryPhoto } from '@/lib/parishes/gallery'
+import ShareButton from '@/components/parishes/ShareButton'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
@@ -400,9 +401,12 @@ function AlbumEditor({
           </div>
           <div className="flex flex-wrap gap-2">
             {publicUrl && (
-              <a href={publicUrl} target="_blank" rel="noopener noreferrer" className={btnSecondary}>
-                <ExternalLink size={14} /> Zobraziť
-              </a>
+              <>
+                <a href={publicUrl} target="_blank" rel="noopener noreferrer" className={btnSecondary}>
+                  <ExternalLink size={14} /> Zobraziť
+                </a>
+                <ShareButton bare path={publicUrl} title={album.title} text={album.description ? `${album.title}\n\n${album.description}` : album.title} className={btnSecondary} align="right" />
+              </>
             )}
             {album.external_url && (
               <a href={album.external_url} target="_blank" rel="noopener noreferrer" className={btnSecondary}>

@@ -10,7 +10,7 @@ export default function ParishFinder() {
         <Church className="mx-auto text-gold-ink mb-5" size={32} />
         <h2 className="text-3xl sm:text-4xl font-light text-ink tracking-tight leading-tight">Nájdite svoju farnosť</h2>
         <p className="text-ink/80 text-base font-light leading-relaxed mt-4 mb-8">
-          Sväté omše, farské oznamy a kontakt na farský úrad. Stačí napísať obec, v ktorej bývate.
+          Sväté omše, farské oznamy a kontakt na farský úrad vo farnostiach Žilinskej diecézy. Stačí napísať obec, v ktorej bývate.
         </p>
         <form action="/farnosti" method="get" className="flex flex-col sm:flex-row gap-3">
           <label className="flex-1 relative">

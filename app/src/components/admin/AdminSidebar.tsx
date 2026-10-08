@@ -20,7 +20,7 @@ import {
   Megaphone,
   Mail,
   BookUser,
-  Handshake, FolderLock, Building2, BookOpen } from 'lucide-react'
+  Handshake, FolderLock, Building2, BookOpen, HandHeart } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
@@ -45,17 +45,28 @@ type NavLink = {
   icon: typeof LayoutDashboard
   permission?: string
   external?: boolean
-  children?: { href: string; label: string; icon: typeof LayoutDashboard }[]
+  children?: { href: string; label: string; icon: typeof LayoutDashboard; permission?: string }[]
 }
 
 const mainLinks: NavLink[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/', label: 'Zobraziť web', icon: Globe, external: true },
-  { href: '/admin/darcovia', label: 'Darcovia', icon: Users, permission: 'view_donors' },
-  { href: '/admin/banka', label: 'Banka', icon: Landmark, permission: 'view_bank' },
-  { href: '/admin/platby', label: 'Online platby', icon: CreditCard, permission: 'view_bank' },
-  { href: '/admin/granty', label: 'Granty', icon: FolderHeart, permission: 'view_grants' },
-  { href: '/admin/projekty', label: 'Výzvy a projekty', icon: Megaphone, permission: 'manage_projects' },
+  {
+    href: '#web-krok',
+    label: 'Web KROK',
+    icon: HandHeart,
+    children: [
+      { href: '/admin/darcovia', label: 'Darcovia', icon: Users, permission: 'view_donors' },
+      { href: '/admin/banka', label: 'Banka', icon: Landmark, permission: 'view_bank' },
+      { href: '/admin/platby', label: 'Online platby', icon: CreditCard, permission: 'view_bank' },
+      { href: '/admin/granty', label: 'Granty', icon: FolderHeart, permission: 'view_grants' },
+      { href: '/admin/projekty', label: 'Výzvy a projekty', icon: Megaphone, permission: 'manage_projects' },
+      { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
+      { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
+      { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },
+      { href: '/admin/sponzori', label: 'Sponzori', icon: Handshake },
+    ],
+  },
   { href: '/admin/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_parishes' },
   { href: '/admin/knazi', label: 'Schematizmus kňazov', icon: BookUser, permission: 'view_clergy' },
   { href: '/admin/knazska-zona', label: 'Kňazská zóna', icon: FolderLock, permission: 'manage_clergy_docs' },
@@ -66,10 +77,6 @@ const mainLinks: NavLink[] = [
     permission: 'manage_diocese_web',
     children: [{ href: '/admin/web-dieceza/casopis', label: 'Naša Žilinská diecéza', icon: BookOpen }],
   },
-  { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
-  { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
-  { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },
-  { href: '/admin/sponzori', label: 'Sponzori', icon: Handshake },
 ]
 
 const settingsLinks = [
@@ -100,7 +107,11 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
   const mounted = useIsClient()
 
-  const visibleMainLinks = mainLinks.filter(link => !link.permission || hasPermission(link.permission))
+  const allowed = (perm?: string) => !perm || hasPermission(perm)
+  const visibleMainLinks = mainLinks
+    .filter((link) => allowed(link.permission))
+    .map((link) => (link.children ? { ...link, children: link.children.filter((c) => allowed(c.permission)) } : link))
+    .filter((link) => !link.children || link.children.length > 0)
   const visibleSettingsLinks = settingsLinks.filter(link => !link.permission || hasPermission(link.permission))
   const hasSettingsAccess = visibleSettingsLinks.length > 0
 
@@ -169,9 +180,9 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
               </p>
             )}
 
-            {visibleMainLinks.map(link => {
+            {visibleMainLinks.flatMap((link) => (link.children?.length && isCollapsed ? link.children : [link])).map((link: NavLink) => {
               const Icon = link.icon
-              const active = isActive(link.href, link.external)
+              const active = link.children?.length ? link.children.some((c) => isActive(c.href)) || isActive(link.href) : isActive(link.href, link.external)
               if (link.children?.length && !isCollapsed) {
                 // rozbaľovacia skupina – otvorená, keď je aktívna niektorá podstránka
                 const expanded = openGroups[link.href] ?? active

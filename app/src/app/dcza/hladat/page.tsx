@@ -15,7 +15,7 @@ export default async function DczaSearch({ searchParams }: { searchParams: Promi
   const [posts, pages, krok] =
     q.length >= 2
       ? await Promise.all([
-          dioceseDb().from('diocese_posts').select('slug, title, excerpt, published_at').eq('published', true).or(`title.ilike.${like},excerpt.ilike.${like}`).order('published_at', { ascending: false }).limit(30),
+          dioceseDb().from('diocese_posts').select('slug, title, excerpt, published_at').eq('published', true).lte('published_at', new Date().toISOString()).or(`title.ilike.${like},excerpt.ilike.${like}`).order('published_at', { ascending: false }).limit(30),
           dioceseDb().from('diocese_pages').select('path, title, excerpt').eq('published', true).or(`title.ilike.${like},content.ilike.${like}`).limit(20),
           dioceseDb().from('posts').select('slug, title, excerpt, published_at').eq('status', 'published').or(`title.ilike.${like},excerpt.ilike.${like}`).order('published_at', { ascending: false }).limit(10),
         ])

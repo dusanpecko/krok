@@ -75,7 +75,10 @@ const mainLinks: NavLink[] = [
     label: 'Web diecézy',
     icon: Building2,
     permission: 'manage_diocese_web',
-    children: [{ href: '/admin/web-dieceza/casopis', label: 'Naša Žilinská diecéza', icon: BookOpen }],
+    children: [
+      { href: '/admin/web-dieceza/aktuality', label: 'Aktuality', icon: FileText },
+      { href: '/admin/web-dieceza/casopis', label: 'Naša Žilinská diecéza', icon: BookOpen },
+    ],
   },
 ]
 

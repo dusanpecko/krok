@@ -34,6 +34,8 @@ export interface DiocesePostSummary {
   excerpt: string | null
   image_url: string | null
   published_at: string
+  /** pripnutý článok diecézy je v zozname prvý */
+  pinned?: boolean
   categories: { slug: string; name: string }[]
 }
 
@@ -89,7 +91,7 @@ export async function getPage(path: string): Promise<DiocesePage | null> {
   return (data as DiocesePage | null) ?? null
 }
 
-const POST_COLUMNS = 'id, slug, title, excerpt, image_url, published_at, diocese_post_category_links(diocese_post_categories(slug, name))'
+const POST_COLUMNS = 'id, slug, title, excerpt, image_url, published_at, pinned, diocese_post_category_links(diocese_post_categories(slug, name))'
 
 type PostRow = Omit<DiocesePostSummary, 'categories'> & { content?: string | null; diocese_post_category_links: { diocese_post_categories: { slug: string; name: string } | null }[] }
 const toPost = ({ diocese_post_category_links: links, ...p }: PostRow) => ({
@@ -127,7 +129,7 @@ export async function getPosts(opts: { limit?: number; offset?: number; category
   const offset = opts.offset ?? 0
   if (opts.category === KROK_CATEGORY.slug) return (await getKrokPosts(offset + limit)).slice(offset)
   const [own, krok] = await Promise.all([getDiocesePosts({ limit: offset + limit, offset: 0, category: opts.category }), opts.category ? Promise.resolve([]) : getKrokPosts(offset + limit)])
-  return [...own, ...krok].sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(offset, offset + limit)
+  return [...own, ...krok].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.published_at.localeCompare(a.published_at)).slice(offset, offset + limit)
 }
 
 export async function getKrokPost(slug: string): Promise<DiocesePost | null> {
@@ -146,13 +148,14 @@ export async function getKrokPost(slug: string): Promise<DiocesePost | null> {
 async function getDiocesePosts(opts: { limit?: number; offset?: number; category?: string | null } = {}): Promise<DiocesePostSummary[]> {
   const limit = opts.limit ?? 12
   let q = dioceseDb().from('diocese_posts').select(opts.category ? POST_COLUMNS.replace('diocese_post_category_links(', 'diocese_post_category_links!inner(') : POST_COLUMNS).eq('published', true)
+    .lte('published_at', new Date().toISOString())
   if (opts.category) q = q.eq('diocese_post_category_links.diocese_post_categories.slug', opts.category)
-  const { data } = await q.order('published_at', { ascending: false }).range(opts.offset ?? 0, (opts.offset ?? 0) + limit - 1)
+  const { data } = await q.order('pinned', { ascending: false }).order('published_at', { ascending: false }).range(opts.offset ?? 0, (opts.offset ?? 0) + limit - 1)
   return ((data ?? []) as unknown as PostRow[]).map(toPost)
 }
 
 export async function getPost(slug: string): Promise<DiocesePost | null> {
-  const { data } = await dioceseDb().from('diocese_posts').select(`${POST_COLUMNS}, content`).eq('slug', slug).eq('published', true).maybeSingle()
+  const { data } = await dioceseDb().from('diocese_posts').select(`${POST_COLUMNS}, content`).eq('slug', slug).eq('published', true).lte('published_at', new Date().toISOString()).maybeSingle()
   return data ? (toPost(data as unknown as PostRow) as DiocesePost) : null
 }
 

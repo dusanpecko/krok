@@ -27,6 +27,34 @@ export default function Home({ parish, announcements, news, events, sacraments }
 
   return (
     <Shell parish={parish} active="home">
+      {/* Úvod + najnovší oznam (základná stránka bez vlastného textu ho nemá) */}
+      {(parish.intro || !parish.basic || latest) && (
+        <div className="grid lg:grid-cols-5 gap-6 mb-16">
+          <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
+            {parish.intro ? (
+              <p className="text-lg text-ink/85 leading-relaxed whitespace-pre-line">{parish.intro}</p>
+            ) : parish.basic ? null : (
+              <p className="text-lg text-ink/85 leading-relaxed">
+                Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
+              </p>
+            )}
+          </div>
+          {latest && (
+            <Link href={`${base}/oznamy/${latest.slug}`} className={`${cardCls} lg:col-span-2 p-6 hover:border-gold/40 transition-colors group`}>
+              <p className="text-xs font-black uppercase tracking-widest text-blue flex items-center gap-2 mb-3">
+                <Bell size={14} /> Farské oznamy
+              </p>
+              <h3 className="text-xl font-light group-hover:text-blue">{latest.title}</h3>
+              {validRange(latest.valid_from, latest.valid_to) && <p className="text-sm text-mute mt-1">{validRange(latest.valid_from, latest.valid_to)}</p>}
+              {latest.excerpt && <p className="text-sm text-mute mt-3 line-clamp-3">{latest.excerpt}</p>}
+              <p className="mt-4 text-sm font-extrabold text-blue inline-flex items-center gap-1">
+                Čítať oznamy <ArrowRight size={14} />
+              </p>
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* Bohoslužby (základná stránka bez vyplneného rozpisu: len hody a poklona) */}
       {(showSchedule || hasFeasts) && (
         <section className="mb-16">
@@ -142,34 +170,6 @@ export default function Home({ parish, announcements, news, events, sacraments }
           </div>
         )}
       </section>
-
-      {/* Úvod + najnovší oznam (základná stránka bez vlastného textu ho nemá) */}
-      {(parish.intro || !parish.basic || latest) && (
-        <div className="grid lg:grid-cols-5 gap-6 mb-16">
-          <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
-            {parish.intro ? (
-              <p className="text-lg text-ink/85 leading-relaxed whitespace-pre-line">{parish.intro}</p>
-            ) : parish.basic ? null : (
-              <p className="text-lg text-ink/85 leading-relaxed">
-                Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
-              </p>
-            )}
-          </div>
-          {latest && (
-            <Link href={`${base}/oznamy/${latest.slug}`} className={`${cardCls} lg:col-span-2 p-6 hover:border-gold/40 transition-colors group`}>
-              <p className="text-xs font-black uppercase tracking-widest text-blue flex items-center gap-2 mb-3">
-                <Bell size={14} /> Farské oznamy
-              </p>
-              <h3 className="text-xl font-light group-hover:text-blue">{latest.title}</h3>
-              {validRange(latest.valid_from, latest.valid_to) && <p className="text-sm text-mute mt-1">{validRange(latest.valid_from, latest.valid_to)}</p>}
-              {latest.excerpt && <p className="text-sm text-mute mt-3 line-clamp-3">{latest.excerpt}</p>}
-              <p className="mt-4 text-sm font-extrabold text-blue inline-flex items-center gap-1">
-                Čítať oznamy <ArrowRight size={14} />
-              </p>
-            </Link>
-          )}
-        </div>
-      )}
 
       {/* Pripravujeme */}
       {events.length > 0 && (

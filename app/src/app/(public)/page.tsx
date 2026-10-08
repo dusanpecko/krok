@@ -542,7 +542,7 @@ export default function KrokLandingPage() {
             </span>
           </h2>
           <p className="text-ink/80 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-            Pravidelná podpora vo výške 5 alebo 10 eur mesačne od jedného človeka nezmení všetko. <br className="hidden md:inline" />
+            Pravidelná podpora vo výške 7 alebo 14 eur mesačne od jedného človeka nezmení všetko. <br className="hidden md:inline" />
             Keď sa však takýchto ľudí spojí celá diecéza, vytvoríme silu, ktorá zmení budúcnosť celej generácie.
           </p>
 
@@ -599,9 +599,9 @@ export default function KrokLandingPage() {
               <div className="text-xl md:text-2xl lg:text-3xl font-extrabold text-gold-ink font-mono tracking-wide mb-3 bg-white py-2.5 px-4 rounded-xl border border-blue/10 text-center select-all">
                 {mounted ? <CountUpNumber value={totalAmount} suffix=" €" /> : `${totalAmount.toLocaleString('sk-SK')} €`}
               </div>
-              <p className="text-blue font-extrabold text-sm tracking-wide uppercase mb-1">Vyzbieraná suma</p>
+              <p className="text-blue font-extrabold text-sm tracking-wide uppercase mb-1">Vyzbierané v roku {new Date().getFullYear()}</p>
               <p className="text-mute text-xs">
-                Transparentne spravované prostriedky
+                Od 1. januára {new Date().getFullYear()} · transparentne spravované prostriedky
               </p>
               {/* Poznámka pre Supabase napojenie */}
               <span className="sr-only">/* Supabase: SELECT sum(amount) FROM donations */</span>

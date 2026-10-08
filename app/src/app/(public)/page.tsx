@@ -35,6 +35,9 @@ const PLACEHOLDER_TOTAL_AMOUNT = 0;      // {{CELKOVA_SUMA}}
 const PLACEHOLDER_PROJECTS_COUNT = 0;    // {{POCET_PODPORENYCH_PROJEKTOV}}
 
 // Projekt: Lectio Divina (reálne dáta)
+/** Sekcia „KROK v praxi“ (príbeh Lectio Divina) – zatiaľ vypnutá; zapnete zmenou na true. */
+const SHOW_PROOF_SECTION = false;
+
 const LECTIO_DIVINA_TARGET = 7000;
 const LECTIO_DIVINA_CURRENT = 4900;        // {{AKTUALNA_SUMA_PROJEKTU}} (70% z cieľa)
 
@@ -647,6 +650,7 @@ export default function KrokLandingPage() {
       {/* =========================================================================
           SEKCIA 4: DÔKAZ (Lectio Divina - split-screen scrollytelling)
           ========================================================================= */}
+      {SHOW_PROOF_SECTION && (
       <section id="dokaz" ref={proofRef} className="relative py-28 md:py-36 bg-white border-t border-blue/10">
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -861,6 +865,7 @@ export default function KrokLandingPage() {
 
         </div>
       </section>
+      )}
 
       {/* Podporili nás – logá sponzorov (ak nejakí sú) */}
       <SponsorsStrip />

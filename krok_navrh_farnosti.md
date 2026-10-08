@@ -83,7 +83,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
 - [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13 *(až keď bude všetko hotové)*
-- [ ] Web diecézy na platforme Krok (doména `dcza.sk`) – migrácia nedokončeného webu z **beta.dcza.dev**, presun domény; odblokuje K5, K6 a F6 – § 14
+- [ ] Web diecézy na platforme Krok (doména `dcza.sk`) – migrácia z **beta.dcza.dev** + články zo živého webu, presun domény; odblokuje K5, K6 a F6 – § 14, **§ 20 (O70–O73, fázy D0–D6)**
 - [x] **Kňazská zóna** (migrácia 048) – `/knazska-zona` (kategórie, nové, archív, roky, fulltext v PDF/DOCX bez diakritiky s úryvkami), admin `/admin/knazska-zona` (dokumenty, súbory priamo do B2, zverejnenie + e-mail kňazom, kategórie, pozvánky kňazov z registra) – § 15, O39–O42, O67–O69
 - [ ] Kňazská zóna: **súkromný bucket B2** (`B2_PRIVATE_BUCKET`) – nastaviť pred nahraním citlivých dokumentov
 - [ ] **Dashboard pre kúriu** vrátane riadku „Dary bez farnosti (na projekt)“ – § 5.2, § 2
@@ -173,6 +173,7 @@ Cieľ modulu:
 | O67 | Kategórie kňazskej zóny (2026-10-08) | **13 kategórií zo starej zóny dcza.sk** (Dokumenty, Štatúty a zmluvy, Obežníky, Formuláre, Ekonomický manuál, Liturgia, Birmovky, Exorcizmus, Homílie, Katechéza, Hospodárenie diecézy, Ochrana osobných údajov, Darujem) – kúria ich premenuje, pridá, zoradí, skryje. |
 | O68 | Kto má účet v kňazskej zóne | **Kňazi, diakoni (aj trvalí) a biskupi** z registra v stave v službe / na odpočinku / štúdium – pozvánka z adminu (aj hromadne) na pracovný, inak súkromný e-mail; **účty farností** vidia zónu automaticky; bohoslovci nie. |
 | O69 | E-mail pri zverejnení | **Prepínač pri dokumente, predvolene zapnutý**; e-mail obsahuje len odkaz do zóny (dokument sa neprikladá – ostáva neverejný). |
+| O70–O73 | Web dcza.sk (2026-10-08) | Viď § 20.2 – štruktúra z bety + články zo živého webu, nový svetlý vzhľad, canonical farností na dcza.sk po spustení, archív 2 roky. |
 | O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
@@ -1400,3 +1401,44 @@ V zóne farnosti je Zdieľať pri každom zverejnenom oznamy/aktualite a albume,
 - **Aktualita:** pole „Videá“ (max. 10) – prehrávač pod textom.
 - **Album:** videá nad fotkami; album môže mať aj **len videá** (dlaždica s náhľadom videa a počtom).
 - **Verejne:** najprv len náhľad s tlačidlom ▶ – na YouTube/Vimeo sa nič neposiela, kým návštevník neklikne (GDPR, rýchlosť); YouTube cez `youtube-nocookie.com`, Vimeo s `dnt=1`.
+
+## 20. Web diecézy dcza.sk na platforme Krok (návrh 2026-10-08, rozhodnuté O70–O73, 🟡 realizácia)
+
+**Cieľ (zadanie):** jedna aplikácia a **jeden admin, dva weby** – `mojkrok.sk` ostáva web fondu KROK, pribudne `dcza.sk` (web diecézy). Web sa vyberie podľa domény.
+
+**Subdomény farností:**
+- `<farnost>.mojkrok.sk` → vždy **naša stránka farnosti**,
+- `<farnost>.dcza.sk` → ak má farnosť **vlastný web** (`parishes.website`), presmeruje naň (napr. `farnostbela.sk`); inak tá istá naša stránka farnosti.
+
+### 20.1 Čo je dnes (analýza 2026-10-08)
+
+| | **beta.dcza.dev** (WordPress) | **dcza.sk** (živý web, NetBase CMS) |
+|---|---|---|
+| Stav | rozpracovaná nová štruktúra a vzhľad | aktívne používaný – posledná pozvánka 8. 10. 2026 |
+| Obsah | 86 stránok (veľa prázdnych – 0 slov), 169 článkov (posledný 15. 5. 2026), 11 akcií (miesto, dátum od–do, čas), 3 čísla časopisu (odkaz na Zachej), 240 médií | ~270 stránok v mape webu, články v sekciách Udalosti, Pozvánky, Zo života farností, Zamyslenia, Pastorácia, Projekty, Jubilejný rok…, RSS |
+| Štruktúra | O nás (diecéza, biskup, chrámy, schematizmus), Kúria (úrady, rady a komisie), Činnosť (pastorácia, charita, misie), Aktuality (články, kalendár akcií), Dokumenty (homílie, pastierske listy, dokumenty pápežov, GDPR), Kontakty | `/sk/dokumenty/...` (biskup, biskupský úrad, úrady, diecéza, kňazi, pastorácia, projekty), `/sk/ostatne/...` (kostoly, kaplnky, verejné obstarávanie, zmluvy), `/sk/knazska-zona` |
+| Kategórie článkov | Zamyslenia 60, Homílie 34, Pastierske listy 19, Udalosti 19, Projekty 16, Pozvánky 7, Farnosti 7… | podobné, plus dlhší archív |
+| Prístup k dátam | verejné WP REST API (stránky, články, akcie, časopis, médiá) | len HTML (+ RSS 20 posledných) – treba stiahnuť zo stránok |
+
+**Dôsledky:** schematizmus (kňazi, farnosti, dekanáty) **nahradia naše dáta** (register kňazov K5, stránky farností); kňazská zóna je už v Kroku (§ 15); dcza.sk dostane vlastné aktuality, akcie, časopis a statické stránky, editovateľné v spoločnom admine; staré adresy `/sk/dokumenty/...` treba **presmerovať (301)** na nové.
+
+### 20.2 Rozhodnutia (2026-10-08)
+
+| # | Otázka | Rozhodnutie |
+|---|---|---|
+| O70 | Zdroj obsahu | **Štruktúra a stránky z bety** (menu, stránky, akcie, časopis) + **články zo živého dcza.sk** (aby nechýbalo nič od mája); prázdne stránky bety doplniť zo živého webu. |
+| O71 | Vzhľad | **Nový, svetlý** – spoločné komponenty s Krokom, vlastná hlavička, erb a farby diecézy; najprv na test.mojkrok.sk na schválenie. |
+| O72 | Hlavná adresa stránky farnosti (canonical) | **dcza.sk/farnosti/<farnosť>** – diecéza je „matka“. Prepne sa až po spustení dcza.sk na Kroku; dovtedy ostáva mojkrok.sk. *Nápad do budúcnosti: mojkrok.sk → `mojkrok.dcza.sk` a jeden branding – teraz nie, mojkrok.sk ostáva.* |
+| O73 | Archív článkov zo živého webu | **Len posledné 2 roky** (od 10/2024); staršie adresy sa presmerujú na zoznam aktualít. |
+
+### 20.3 Fázy
+
+| Fáza | Obsah |
+|---|---|
+| **D0** | Výber webu podľa domény (`mojkrok.sk` / `dcza.sk`, aj `www.`), na test.mojkrok.sk prepínač „web diecézy“ (cookie, len mimo produkcie); spoločný admin |
+| **D1** | Dátový model webu diecézy (stránky v strome, články s kategóriami, akcie, časopis, menu) + import z bety (REST API) a článkov zo živého webu (2 roky) |
+| **D2** | Verejný web dcza.sk – hlavička/pätička diecézy, úvod, aktuality, kalendár akcií, časopis, stránky, vyhľadávanie; farnosti a kňazská zóna z Kroku |
+| **D3** | Admin pre kúriu – stránky, články, akcie, časopis, menu (oprávnenie `manage_diocese_web`) |
+| **D4 = K5** | Verejný schematizmus z registra (kňazi, farnosti, dekanáty, rehole) |
+| **D5 = F6** | Subdomény `<farnosť>.mojkrok.sk` a `<farnosť>.dcza.sk` (vlastný web farnosti → presmerovanie) |
+| **D6** | Spustenie: DNS dcza.sk na Vercel, presmerovania starých adries `/sk/dokumenty/...`, canonical farností na dcza.sk (O72), potom K6 celebrety |

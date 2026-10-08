@@ -1,7 +1,34 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { SITE_COOKIE, SITE_HEADER, isSharedPath, siteFromHost, type SiteKey } from '@/lib/site'
+
+/** Web podľa domény; mimo produkcie aj prepínač cookie (test.mojkrok.sk → web diecézy). */
+function resolveSite(request: NextRequest): SiteKey {
+  const byHost = siteFromHost(request.headers.get('host'))
+  if (byHost) return byHost
+  if (process.env.VERCEL_ENV !== 'production' && request.cookies.get(SITE_COOKIE)?.value === 'dcza') return 'dcza'
+  return 'mojkrok'
+}
 
 export async function middleware(request: NextRequest) {
+  const site = resolveSite(request)
+  const { pathname } = request.nextUrl
+
+  // prepínač webu na testovacej verzii: /web/dieceza, /web/krok
+  if (pathname === '/web/dieceza' || pathname === '/web/krok') {
+    const res = NextResponse.redirect(new URL('/', request.url))
+    if (process.env.VERCEL_ENV === 'production') return res
+    if (pathname === '/web/dieceza') res.cookies.set(SITE_COOKIE, 'dcza', { path: '/', sameSite: 'lax' })
+    else res.cookies.delete(SITE_COOKIE)
+    return res
+  }
+  // vnútorné stránky webu diecézy nie sú priamo dostupné z mojkrok.sk
+  if (site === 'mojkrok' && (pathname === '/dcza' || pathname.startsWith('/dcza/'))) {
+    return NextResponse.rewrite(new URL('/stranka-neexistuje', request.url))
+  }
+  // server komponenty vedia, na ktorom webe sú (lib/site-server getSite)
+  request.headers.set(SITE_HEADER, site)
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -67,6 +94,15 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/prihlasenie'
     url.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(url)
+  }
+
+  // dcza.sk: vlastné stránky webu diecézy žijú pod /dcza (spoločné cesty ostávajú)
+  if (site === 'dcza' && !isSharedPath(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = `/dcza${pathname === '/' ? '' : pathname}`
+    const rewritten = NextResponse.rewrite(url, { request })
+    supabaseResponse.cookies.getAll().forEach((c) => rewritten.cookies.set(c))
+    return rewritten
   }
 
   return supabaseResponse

@@ -28,6 +28,8 @@ export interface DiocesePage {
 export interface DiocesePostSummary {
   id: string
   slug: string
+  /** adresa článku na dcza.sk (aktuality Kroku majú /aktuality/krok/…) */
+  href: string
   title: string
   excerpt: string | null
   image_url: string | null
@@ -37,7 +39,13 @@ export interface DiocesePostSummary {
 
 export interface DiocesePost extends DiocesePostSummary {
   content: string | null
+  /** aktualita Kroku – audio a hlavná adresa na mojkrok.sk (O74) */
+  audio_url?: string | null
+  krok?: boolean
 }
+
+/** Aktuality Kroku na dcza.sk ako kategória (O74) – na mojkrok.sk sa aktuality diecézy nezobrazujú. */
+export const KROK_CATEGORY = { slug: 'krok', name: 'KROK – Pastoračný fond' }
 
 export interface DioceseEvent {
   id: string
@@ -86,10 +94,56 @@ const POST_COLUMNS = 'id, slug, title, excerpt, image_url, published_at, diocese
 type PostRow = Omit<DiocesePostSummary, 'categories'> & { content?: string | null; diocese_post_category_links: { diocese_post_categories: { slug: string; name: string } | null }[] }
 const toPost = ({ diocese_post_category_links: links, ...p }: PostRow) => ({
   ...p,
+  href: `/aktuality/${p.slug}`,
   categories: (links ?? []).map((l) => l.diocese_post_categories).filter((c): c is { slug: string; name: string } => !!c),
 })
 
+type KrokRow = { id: string; slug: string; title: string; excerpt: string | null; featured_image: string | null; published_at: string; content?: string | null; audio_url?: string | null }
+const krokToPost = (k: KrokRow) => ({
+  id: `krok-${k.id}`,
+  slug: k.slug,
+  href: `/aktuality/krok/${k.slug}`,
+  title: k.title,
+  excerpt: k.excerpt,
+  image_url: k.featured_image,
+  published_at: k.published_at,
+  categories: [KROK_CATEGORY],
+})
+
+async function getKrokPosts(limit: number): Promise<DiocesePostSummary[]> {
+  const { data } = await dioceseDb()
+    .from('posts')
+    .select('id, slug, title, excerpt, featured_image, published_at')
+    .eq('status', 'published')
+    .lte('published_at', new Date().toISOString())
+    .order('published_at', { ascending: false })
+    .limit(limit)
+  return ((data ?? []) as KrokRow[]).map(krokToPost)
+}
+
+/** Články webu diecézy + aktuality Kroku (kategória „krok“), zoradené podľa dátumu. */
 export async function getPosts(opts: { limit?: number; offset?: number; category?: string | null } = {}): Promise<DiocesePostSummary[]> {
+  const limit = opts.limit ?? 12
+  const offset = opts.offset ?? 0
+  if (opts.category === KROK_CATEGORY.slug) return (await getKrokPosts(offset + limit)).slice(offset)
+  const [own, krok] = await Promise.all([getDiocesePosts({ limit: offset + limit, offset: 0, category: opts.category }), opts.category ? Promise.resolve([]) : getKrokPosts(offset + limit)])
+  return [...own, ...krok].sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(offset, offset + limit)
+}
+
+export async function getKrokPost(slug: string): Promise<DiocesePost | null> {
+  const { data } = await dioceseDb()
+    .from('posts')
+    .select('id, slug, title, excerpt, featured_image, published_at, content, audio_url')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .lte('published_at', new Date().toISOString())
+    .maybeSingle()
+  if (!data) return null
+  const k = data as KrokRow
+  return { ...krokToPost(k), content: k.content ?? null, audio_url: k.audio_url ?? null, krok: true }
+}
+
+async function getDiocesePosts(opts: { limit?: number; offset?: number; category?: string | null } = {}): Promise<DiocesePostSummary[]> {
   const limit = opts.limit ?? 12
   let q = dioceseDb().from('diocese_posts').select(opts.category ? POST_COLUMNS.replace('diocese_post_category_links(', 'diocese_post_category_links!inner(') : POST_COLUMNS).eq('published', true)
   if (opts.category) q = q.eq('diocese_post_category_links.diocese_post_categories.slug', opts.category)
@@ -104,7 +158,9 @@ export async function getPost(slug: string): Promise<DiocesePost | null> {
 
 export const getCategories = cache(async () => {
   const { data } = await dioceseDb().from('diocese_post_categories').select('slug, name, diocese_post_category_links(post_id)').eq('is_visible', true).order('sort_order')
-  return (data ?? []).map((c) => ({ slug: c.slug as string, name: c.name as string, count: (c.diocese_post_category_links as unknown[]).length })).filter((c) => c.count > 0)
+  const { count: krok } = await dioceseDb().from('posts').select('id', { count: 'exact', head: true }).eq('status', 'published').lte('published_at', new Date().toISOString())
+  const cats = (data ?? []).map((c) => ({ slug: c.slug as string, name: c.name as string, count: (c.diocese_post_category_links as unknown[]).length })).filter((c) => c.count > 0)
+  return krok ? [...cats, { ...KROK_CATEGORY, count: krok }] : cats
 })
 
 const EVENT_COLUMNS = 'id, slug, title, content, place, starts_on, ends_on, time_from, time_to, all_day, image_url, link_url'

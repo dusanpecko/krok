@@ -12,14 +12,15 @@ export const metadata: Metadata = { title: 'Hľadať', robots: { index: false } 
 export default async function DczaSearch({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const q = String((await searchParams).q ?? '').trim().slice(0, 100)
   const like = `%${q.replace(/[%_,()]/g, ' ')}%`
-  const [posts, pages] =
+  const [posts, pages, krok] =
     q.length >= 2
       ? await Promise.all([
           dioceseDb().from('diocese_posts').select('slug, title, excerpt, published_at').eq('published', true).or(`title.ilike.${like},excerpt.ilike.${like}`).order('published_at', { ascending: false }).limit(30),
           dioceseDb().from('diocese_pages').select('path, title, excerpt').eq('published', true).or(`title.ilike.${like},content.ilike.${like}`).limit(20),
+          dioceseDb().from('posts').select('slug, title, excerpt, published_at').eq('status', 'published').or(`title.ilike.${like},excerpt.ilike.${like}`).order('published_at', { ascending: false }).limit(10),
         ])
-      : [{ data: [] }, { data: [] }]
-  const total = (posts.data?.length ?? 0) + (pages.data?.length ?? 0)
+      : [{ data: [] }, { data: [] }, { data: [] }]
+  const total = (posts.data?.length ?? 0) + (pages.data?.length ?? 0) + (krok.data?.length ?? 0)
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
@@ -42,6 +43,17 @@ export default async function DczaSearch({ searchParams }: { searchParams: Promi
           <li key={p.slug}>
             <Link href={`/aktuality/${p.slug}`} className="block rounded-2xl bg-white border border-blue/10 p-4 hover:border-gold/60">
               <p className="text-xs text-mute">{longDate(p.published_at)}</p>
+              <p className="font-extrabold">{p.title}</p>
+              {p.excerpt && <p className="text-sm text-mute line-clamp-2 mt-1">{p.excerpt}</p>}
+            </Link>
+          </li>
+        ))}
+        {(krok.data ?? []).map((p) => (
+          <li key={`krok-${p.slug}`}>
+            <Link href={`/aktuality/krok/${p.slug}`} className="block rounded-2xl bg-white border border-blue/10 p-4 hover:border-gold/60">
+              <p className="text-xs text-mute">
+                {longDate(p.published_at)} · <span className="font-black uppercase tracking-wider text-wine">KROK</span>
+              </p>
               <p className="font-extrabold">{p.title}</p>
               {p.excerpt && <p className="text-sm text-mute line-clamp-2 mt-1">{p.excerpt}</p>}
             </Link>

@@ -5,7 +5,7 @@ import { longDate } from '@/lib/diocese/format'
 /** Karta článku webu diecézy. */
 export default function PostCard({ post, big = false }: { post: DiocesePostSummary; big?: boolean }) {
   return (
-    <Link href={`/aktuality/${post.slug}`} className="group flex flex-col rounded-3xl bg-white border border-blue/10 overflow-hidden hover:shadow-lg hover:border-blue/20 transition-all h-full">
+    <Link href={post.href} className="group flex flex-col rounded-3xl bg-white border border-blue/10 overflow-hidden hover:shadow-lg hover:border-blue/20 transition-all h-full">
       <div className={`relative bg-blue-soft/40 overflow-hidden ${big ? 'aspect-[16/9] lg:aspect-auto lg:flex-1 lg:min-h-[340px]' : 'aspect-[16/10]'}`}>
         {post.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element

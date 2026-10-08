@@ -98,7 +98,7 @@ export default function ParishScheduleTab({
         </div>
       )}
 
-      <Field label="Poznámka k rozvrhu" hint="Napr. „Počas prázdnin neprebieha detská sv. omša.“">
+      <Field label="Poznámka k rozvrhu" hint="Napr. „Počas prázdnin neprebieha detská svätá omša.“">
         <input value={current.note ?? ''} onChange={(e) => setCurrent({ note: e.target.value || null })} className={inputCls} />
       </Field>
 
@@ -146,7 +146,14 @@ export default function ParishScheduleTab({
                 </td>
                 <td className="py-1.5 pr-2"><input type="time" value={it.time_from ?? ''} onChange={(e) => updateItem(i, { time_from: e.target.value || null })} className={cell} /></td>
                 <td className="py-1.5 pr-2"><input type="time" value={it.time_to ?? ''} onChange={(e) => updateItem(i, { time_to: e.target.value || null })} className={cell} /></td>
-                <td className="py-1.5 pr-2"><input value={it.relative_note ?? ''} onChange={(e) => updateItem(i, { relative_note: e.target.value || null })} className={cell} placeholder="30 min. pred sv. omšou" /></td>
+                <td className="py-1.5 pr-2">
+                  {/* poznámka „pred svätou omšou“ patrí k spovedaniu a pod., nie k samotnej omši */}
+                  {it.service_type === 'mass' ? (
+                    <input value="" disabled className={cell} placeholder="—" title="Pri svätej omši sa nevypĺňa – zadajte čas" />
+                  ) : (
+                    <input value={it.relative_note ?? ''} onChange={(e) => updateItem(i, { relative_note: e.target.value || null })} className={cell} placeholder="30 minút pred svätou omšou" />
+                  )}
+                </td>
                 <td className="py-1.5 pr-2">
                   <select value={it.village_id ?? ''} onChange={(e) => updateItem(i, { village_id: e.target.value || null })} className={cell}>
                     <option value="">farský kostol</option>

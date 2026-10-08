@@ -86,7 +86,9 @@ export default function ParishDirectory({ parishes, initialQuery = '' }: { paris
     .filter((h): h is Hit => h !== null)
     .sort((a, b) => {
       if (here) return (a.distance ?? Infinity) - (b.distance ?? Infinity)
-      return a.rank - b.rank
+      // farnosti pred duchovnými správami (nemocnice, univerzity, rehoľné kostoly)
+      const chap = (h: Hit) => (h.p.kind === 'chaplaincy' ? 1 : 0)
+      return a.rank - b.rank || chap(a) - chap(b)
     })
 
   if (parishes.length === 0) {

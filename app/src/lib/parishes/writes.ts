@@ -60,7 +60,8 @@ export async function writeVillages(db: SupabaseClient, parishId: string, villag
 export async function writeSchedule(db: SupabaseClient, parishId: string, schedule: Schedule, userId: string): Promise<WriteResult> {
   const items = schedule.items.filter((it) => it.day_of_week != null || it.day_label)
   for (const it of items) {
-    if (!it.time_from && !it.relative_note) return { success: false, error: 'Každá položka potrebuje čas alebo poznámku (napr. „30 minút pred sv. omšou“).' }
+    if (it.service_type === 'mass' && !it.time_from) return { success: false, error: 'Svätá omša potrebuje čas.' }
+    if (!it.time_from && !it.relative_note) return { success: false, error: 'Každá položka potrebuje čas alebo poznámku (napr. „30 minút pred svätou omšou“).' }
     if (it.time_to && it.time_from && it.time_to < it.time_from) return { success: false, error: 'Koniec nesmie byť skôr ako začiatok.' }
   }
   const { data: sched, error } = await db
@@ -89,7 +90,7 @@ export async function writeSchedule(db: SupabaseClient, parishId: string, schedu
         day_label: it.day_label || null,
         time_from: it.time_from || null,
         time_to: it.time_to || null,
-        relative_note: it.relative_note || null,
+        relative_note: it.service_type === 'mass' ? null : it.relative_note || null,
         note: it.note || null,
         village_id: it.village_id && villageIds.has(it.village_id) ? it.village_id : null,
         sort_order: i,

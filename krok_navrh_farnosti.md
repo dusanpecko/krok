@@ -61,6 +61,10 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] Postaviť e-zvonček farnosti (F5b; jednorazový + pravidelný, poplatky Mollie/fond per farnosť, mesačné vyúčtovanie) – § 12
 - [ ] Účelové zbierky farností (cieľová suma) – neskôr, O37
 
+**Fotogaléria farnosti (§ 17)**
+- [ ] Rozhodnúť G1–G6 (fotky kostola, albumy „Zo života farnosti“, kto nahráva, indexovanie, limit, externé albumy) – § 17.4
+- [ ] Realizácia: albumy a fotky, nahrávanie viacerých fotiek so zmenšením do WebP, sekcia na stránke farnosti, galéria + zväčšenie, prepojenie s aktualitou – § 17.1–17.2
+
 **Schematizmus kňazov (K0–K5, § 16)**
 - [x] Analýza `KNAZI - ZOZNAM AKTUALNY.xlsx` (11 listov, 274 kňazov, problémy v dátach) – § 16.1
 - [x] Rozhodnúť K1–K9 – § 16.8, O44–O52
@@ -1312,3 +1316,47 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 - **Stav platnosti viditeľne:** zelené *VALET* / červené *NON VALET* (vypršaný alebo zrušený celebret) – dnes stránka platnosť len vypisuje.
 - Obrázky (logo, pečiatka, podpis) dnes ležia na cudzom hostingu images.sk → uložiť v Kroku.
 - Dnešná stránka sa načítava vyše minúty (504 – pomalý server mypro.one, 2026-10-07) → v Kroku ide o rýchlu statickú stránku.
+
+---
+
+## 17. Fotogaléria farnosti – „Zo života farnosti“ (návrh 2026-10-08, ⬜ na rozhodnutie)
+
+**Podnet (pripomienky Julie, 2026-10-08):** na stránke farnosti chýbajú fotky – kostol, farnosť, život spoločenstva. Stránka je dnes vizuálne strohá (titulná fotka, erb, obrázok pri aktualite).
+
+### 17.1 Čo navrhujem
+
+1. **Fotky kostola a farnosti** (stále, „vizitka“): 3–8 fotiek – exteriér, interiér, oltár, filiálne kostoly. Na stránke farnosti hore ako jemný **pás / slideshow** pod nadpisom (nahradí dnešnú stmavenú titulnú fotku), na mobile posúvanie prstom.
+2. **Albumy „Zo života farnosti“** (pribúdajú): album = názov, dátum, krátky popis, titulná fotka, fotky s voliteľným popisom. Napr. „Prvé sväté prijímanie 2026“, „Hody“, „Púť na Živčákovú“.
+   - Na domovskej stránke farnosti sekcia **Zo života farnosti** – 3 najnovšie albumy (dlaždice), odkaz na všetky.
+   - Samostatná stránka `/farnosti/<slug>/galeria` (zoznam albumov) a `/farnosti/<slug>/galeria/<album>` (mriežka fotiek + zväčšenie na celú obrazovku, posúvanie, popis).
+   - Album sa dá **pripojiť k aktualite** (pod článkom sa zobrazí galéria) – kňaz nemusí fotky nahrávať dvakrát.
+3. **Nahrávanie v zóne farnosti** (správca aj editor): viac fotiek naraz (presunutím z počítača alebo z mobilu), automatické **zmenšenie a prevod do WebP** (napr. max. 2000 px, ~300 kB), poradie ťahaním, výber titulnej fotky, popisy. Fotky na B2 ako dnešné obrázky.
+4. **Kontrola obsahu:** ako pri oznamoch – ide na web hneď, diecéza vie album skryť (§ 4.3).
+
+### 17.2 Dátový model (migrácia pri realizácii)
+
+```sql
+parish_albums (id, parish_id, title, slug, description, event_date, cover_photo_id,
+               kind 'church' | 'life', published, taken_down_at, takedown_reason, created_by, created_at, updated_at)
+parish_photos (id, album_id, url, width, height, caption, sort_order, size_bytes, created_at)
+parish_posts.album_id → parish_albums (voliteľné prepojenie aktuality s albumom)
+```
+
+`kind = 'church'` = jeden stály album „Kostol a farnosť“ (bod 1), `life` = albumy zo života.
+
+### 17.3 GDPR a pravidlá
+
+- Na fotkách sú ľudia, často **deti** (prvé sväté prijímanie, birmovka). Zodpovednosť za súhlas so zverejnením nesie farnosť – v zóne pri nahrávaní krátke upozornenie + doplniť do podmienok používania stránok farností (§ 5.4).
+- Bez mien ľudí v popisoch (odporúčanie), vyhľadávače fotky môžu indexovať (otázka G4).
+- Limit, aby sa B2 nezahltilo: napr. **300 fotiek / 1 GB na farnosť** (dá sa zvýšiť).
+
+### 17.4 Otázky na rozhodnutie (G1–G6)
+
+| # | Otázka | Môj návrh |
+|---|---|---|
+| G1 | Stále **fotky kostola** hore na stránke (pás/slideshow) – áno? | **Áno**, 3–8 fotiek, nahradí stmavenú titulnú fotku |
+| G2 | **Albumy** (podujatia) alebo jedna spoločná galéria bez albumov? | **Albumy** – prehľadnejšie, dá sa pripojiť k aktualite |
+| G3 | Kto nahráva – len správca farnosti, alebo aj editor? | **Správca aj editor** (ako oznamy) |
+| G4 | Smú fotky indexovať vyhľadávače (Google obrázky)? | **Áno pre fotky kostola, nie pre albumy zo života** (deti) |
+| G5 | Limit na farnosť | **300 fotiek / 1 GB**, diecéza môže zvýšiť |
+| G6 | Prepojenie na existujúce albumy (Facebook, Google Fotky, Zonerama) namiesto nahrávania? | Popri vlastných albumoch povoliť aj **odkaz na externý album** (dlaždica s odkazom) |

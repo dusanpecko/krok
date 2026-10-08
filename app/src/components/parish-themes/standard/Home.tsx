@@ -27,34 +27,6 @@ export default function Home({ parish, announcements, news, events, sacraments }
 
   return (
     <Shell parish={parish} active="home">
-      {/* Úvod + najnovší oznam (základná stránka bez vlastného textu ho nemá) */}
-      {(parish.intro || !parish.basic || latest) && (
-        <div className="grid lg:grid-cols-5 gap-6 mb-16">
-          <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
-            {parish.intro ? (
-              <p className="text-lg text-ink/85 leading-relaxed whitespace-pre-line">{parish.intro}</p>
-            ) : parish.basic ? null : (
-              <p className="text-lg text-ink/85 leading-relaxed">
-                Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
-              </p>
-            )}
-          </div>
-          {latest && (
-            <Link href={`${base}/oznamy/${latest.slug}`} className={`${cardCls} lg:col-span-2 p-6 hover:border-gold/40 transition-colors group`}>
-              <p className="text-xs font-black uppercase tracking-widest text-blue flex items-center gap-2 mb-3">
-                <Bell size={14} /> Farské oznamy
-              </p>
-              <h3 className="text-xl font-light group-hover:text-blue">{latest.title}</h3>
-              {validRange(latest.valid_from, latest.valid_to) && <p className="text-sm text-mute mt-1">{validRange(latest.valid_from, latest.valid_to)}</p>}
-              {latest.excerpt && <p className="text-sm text-mute mt-3 line-clamp-3">{latest.excerpt}</p>}
-              <p className="mt-4 text-sm font-extrabold text-blue inline-flex items-center gap-1">
-                Čítať oznamy <ArrowRight size={14} />
-              </p>
-            </Link>
-          )}
-        </div>
-      )}
-
       {/* Bohoslužby (základná stránka bez vyplneného rozpisu: len hody a poklona) */}
       {(showSchedule || hasFeasts) && (
         <section className="mb-16">
@@ -88,67 +60,6 @@ export default function Home({ parish, announcements, news, events, sacraments }
       )}
 
       <OfficeHours parish={parish} />
-
-      {/* Pripravujeme */}
-      {events.length > 0 && (
-        <section className="mb-16">
-          <SectionHeading icon={<CalendarDays size={22} />}>Pripravujeme</SectionHeading>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {events.map((e) => (
-              <Link key={e.id} href={`${base}/aktuality/${e.slug}`} className={`${cardCls} p-4 flex gap-4 items-start hover:border-gold/40`}>
-                <CalendarDays className="text-gold-ink shrink-0 mt-0.5" size={20} />
-                <div>
-                  <p className="font-extrabold">{e.title}</p>
-                  <p className="text-sm text-mute first-letter:uppercase">{formatDateTime(e.event_at)}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Aktuality */}
-      {news.length > 0 && (
-        <section className="mb-16">
-          <SectionHeading icon={<Newspaper size={22} />}>Aktuality</SectionHeading>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {news.slice(0, 6).map((p) => (
-              <PostCard key={p.id} post={p} href={`${base}/aktuality/${p.slug}`} />
-            ))}
-          </div>
-          <Link href={`${base}/aktuality`} className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-blue hover:underline">
-            Všetky aktuality <ArrowRight size={14} />
-          </Link>
-        </section>
-      )}
-
-      {/* Kňazi */}
-      {parish.clergy.length > 0 && (
-        <section className="mb-16">
-          <SectionHeading icon={<Users size={22} />}>Kňazi vo farnosti</SectionHeading>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {parish.clergy.map((c, i) => (
-              <div key={i} className={`${c.is_head ? 'bg-gold/[0.07] border border-gold/50 rounded-2xl' : cardCls} p-4 flex gap-4 items-start`}>
-                <div className={`w-12 h-12 rounded-full bg-white flex items-center justify-center text-gold-ink shrink-0 ${c.is_head ? 'border-2 border-gold' : 'border border-blue/10'}`}>
-                  <Church size={20} />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-extrabold">{clergyName(c)}</p>
-                  {c.position && <p className={`text-sm ${c.is_head ? 'text-gold-ink font-bold' : 'text-mute'}`}>{c.position}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Sviatosti */}
-      {sacraments.length > 0 && (
-        <section className="mb-16">
-          <SectionHeading id="sviatosti" icon={<BookOpen size={22} />}>Sviatosti – čo treba vybaviť</SectionHeading>
-          <SacramentsSection sacraments={sacraments} />
-        </section>
-      )}
 
       {/* Kontakt */}
       <section className="mb-16">
@@ -232,6 +143,95 @@ export default function Home({ parish, announcements, news, events, sacraments }
         )}
       </section>
 
+      {/* Úvod + najnovší oznam (základná stránka bez vlastného textu ho nemá) */}
+      {(parish.intro || !parish.basic || latest) && (
+        <div className="grid lg:grid-cols-5 gap-6 mb-16">
+          <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
+            {parish.intro ? (
+              <p className="text-lg text-ink/85 leading-relaxed whitespace-pre-line">{parish.intro}</p>
+            ) : parish.basic ? null : (
+              <p className="text-lg text-ink/85 leading-relaxed">
+                Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
+              </p>
+            )}
+          </div>
+          {latest && (
+            <Link href={`${base}/oznamy/${latest.slug}`} className={`${cardCls} lg:col-span-2 p-6 hover:border-gold/40 transition-colors group`}>
+              <p className="text-xs font-black uppercase tracking-widest text-blue flex items-center gap-2 mb-3">
+                <Bell size={14} /> Farské oznamy
+              </p>
+              <h3 className="text-xl font-light group-hover:text-blue">{latest.title}</h3>
+              {validRange(latest.valid_from, latest.valid_to) && <p className="text-sm text-mute mt-1">{validRange(latest.valid_from, latest.valid_to)}</p>}
+              {latest.excerpt && <p className="text-sm text-mute mt-3 line-clamp-3">{latest.excerpt}</p>}
+              <p className="mt-4 text-sm font-extrabold text-blue inline-flex items-center gap-1">
+                Čítať oznamy <ArrowRight size={14} />
+              </p>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Pripravujeme */}
+      {events.length > 0 && (
+        <section className="mb-16">
+          <SectionHeading icon={<CalendarDays size={22} />}>Pripravujeme</SectionHeading>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {events.map((e) => (
+              <Link key={e.id} href={`${base}/aktuality/${e.slug}`} className={`${cardCls} p-4 flex gap-4 items-start hover:border-gold/40`}>
+                <CalendarDays className="text-gold-ink shrink-0 mt-0.5" size={20} />
+                <div>
+                  <p className="font-extrabold">{e.title}</p>
+                  <p className="text-sm text-mute first-letter:uppercase">{formatDateTime(e.event_at)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Aktuality */}
+      {news.length > 0 && (
+        <section className="mb-16">
+          <SectionHeading icon={<Newspaper size={22} />}>Aktuality</SectionHeading>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {news.slice(0, 6).map((p) => (
+              <PostCard key={p.id} post={p} href={`${base}/aktuality/${p.slug}`} />
+            ))}
+          </div>
+          <Link href={`${base}/aktuality`} className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-blue hover:underline">
+            Všetky aktuality <ArrowRight size={14} />
+          </Link>
+        </section>
+      )}
+
+      {/* Kňazi */}
+      {parish.clergy.length > 0 && (
+        <section className="mb-16">
+          <SectionHeading icon={<Users size={22} />}>Kňazi vo farnosti</SectionHeading>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {parish.clergy.map((c, i) => (
+              <div key={i} className={`${c.is_head ? 'bg-gold/[0.07] border border-gold/50 rounded-2xl' : cardCls} p-4 flex gap-4 items-start`}>
+                <div className={`w-12 h-12 rounded-full bg-white flex items-center justify-center text-gold-ink shrink-0 ${c.is_head ? 'border-2 border-gold' : 'border border-blue/10'}`}>
+                  <Church size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-extrabold">{clergyName(c)}</p>
+                  {c.position && <p className={`text-sm ${c.is_head ? 'text-gold-ink font-bold' : 'text-mute'}`}>{c.position}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Sviatosti */}
+      {sacraments.length > 0 && (
+        <section className="mb-16">
+          <SectionHeading id="sviatosti" icon={<BookOpen size={22} />}>Sviatosti – čo treba vybaviť</SectionHeading>
+          <SacramentsSection sacraments={sacraments} />
+        </section>
+      )}
+
       {/* Podpora: e-zvonček farnosti (ak ho diecéza zapla) + Pastoračný fond (O31) */}
       {parish.box ? (
         <section className="grid lg:grid-cols-2 gap-6 items-stretch">
@@ -243,7 +243,7 @@ export default function Home({ parish, announcements, news, events, sacraments }
               Pastoračný fond KROK podporuje kňazov, farnosti a diecézne diela. Pri registrácii bude predvolená {parish.kind === 'chaplaincy' ? 'táto duchovná správa' : 'táto farnosť'}.
             </p>
             <Link href={`/registracia?farnost=${parish.slug}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue text-white font-black hover:bg-blue-deep">
-              <Sparkles size={18} /> Podporujem Pastoračný fond
+              <Sparkles size={18} /> Chcem podporiť Pastoračný fond
             </Link>
           </div>
         </section>
@@ -255,7 +255,7 @@ export default function Home({ parish, announcements, news, events, sacraments }
             Pastoračný fond KROK podporuje kňazov, farnosti a diecézne diela. Pri registrácii bude predvolená {parish.kind === 'chaplaincy' ? 'táto duchovná správa' : 'táto farnosť'}.
           </p>
           <Link href={`/registracia?farnost=${parish.slug}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold text-blue-deep font-black hover:bg-gold-bright">
-            <Sparkles size={18} /> Podporujem Pastoračný fond
+            <Sparkles size={18} /> Chcem podporiť Pastoračný fond
           </Link>
         </section>
       )}

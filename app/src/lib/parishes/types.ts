@@ -14,7 +14,7 @@ export const KIND_LABEL: Record<ParishKind, string> = {
 }
 
 export const SERVICE_LABEL: Record<ParishServiceType, string> = {
-  mass: 'Sv. omša',
+  mass: 'Svätá omša',
   confession: 'Spovedanie',
   adoration: 'Adorácia',
   devotion: 'Pobožnosť',

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, CalendarDays, Download } from 'lucide-react'
+import { ArrowLeft, CalendarDays, FileText } from 'lucide-react'
 import type { ParishPostDetailProps } from '../types'
 import Shell from './Shell'
 import PostCard from './PostCard'
@@ -32,7 +32,7 @@ export default function PostDetail({ parish, post, related }: ParishPostDetailPr
         )}
         {post.attachment_url && (
           <a href={post.attachment_url} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-gold text-blue-deep font-black text-sm hover:bg-gold-bright">
-            <Download size={16} /> {post.attachment_name || 'Stiahnuť prílohu (PDF)'}
+            <FileText size={16} /> {post.attachment_name || 'Otvoriť prílohu (PDF)'}
           </a>
         )}
       </article>

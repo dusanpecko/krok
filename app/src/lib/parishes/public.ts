@@ -6,6 +6,7 @@ import { loadParishClergy } from './parish-clergy'
 import { getSessionUser, getUserAccess } from '@/lib/auth'
 import type { ParishKind, ParishOccasion, ParishSeason, ParishServiceType } from './types'
 import { normalizeSocialLinks, type SocialLink } from './social'
+import { normalizeVideos, type ParishVideo } from './video'
 import { getChurchPhotos, getLifeAlbums, getPublicAlbum, type PublicAlbumSummary, type PublicGalleryPhoto } from './gallery'
 
 /**
@@ -71,9 +72,11 @@ export interface PublicPost extends PublicPostSummary {
   updated_at: string
   /** pripojený album zo života farnosti (§ 17) – fotky sa zobrazia pod príspevkom */
   album: PublicAlbum | null
+  /** videá YouTube / Vimeo pod aktualitou (O66) */
+  videos: ParishVideo[]
 }
 
-export type PublicAlbum = PublicAlbumSummary & { photos: PublicGalleryPhoto[] }
+export type PublicAlbum = PublicAlbumSummary & { photos: PublicGalleryPhoto[]; videos: ParishVideo[] }
 
 export interface PublicSacrament {
   type: string
@@ -247,7 +250,7 @@ export async function getUpcomingEvents(parishId: string, limit = 4): Promise<Pu
 export async function getParishPost(parishId: string, type: 'announcement' | 'news', slug: string): Promise<PublicPost | null> {
   const { data } = await serviceDb()
     .from('parish_posts')
-    .select(`${POST_SUMMARY_COLUMNS}, content, updated_at, album_id`)
+    .select(`${POST_SUMMARY_COLUMNS}, content, updated_at, album_id, videos`)
     .eq('parish_id', parishId)
     .eq('type', type)
     .eq('slug', slug)
@@ -255,8 +258,8 @@ export async function getParishPost(parishId: string, type: 'announcement' | 'ne
     .is('taken_down_at', null)
     .maybeSingle()
   if (!data) return null
-  const { album_id, ...post } = data as unknown as Omit<PublicPost, 'album'> & { album_id: string | null }
-  return { ...post, album: album_id ? await getPublicAlbum(serviceDb(), parishId, { id: album_id }) : null }
+  const { album_id, videos, ...post } = data as unknown as Omit<PublicPost, 'album' | 'videos'> & { album_id: string | null; videos: unknown }
+  return { ...post, videos: normalizeVideos(videos), album: album_id ? await getPublicAlbum(serviceDb(), parishId, { id: album_id }) : null }
 }
 
 // ------------------------------------------------------------ fotogaléria (§ 17)

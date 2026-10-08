@@ -1,3 +1,5 @@
+import type { ParishVideo } from './video'
+import { resolveVideos } from './video-server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sanitizeRichHtml, htmlToText } from '@/lib/html/sanitize'
 import { generateSlug } from '@/lib/slug'
@@ -25,6 +27,8 @@ export interface ParishPostRow {
   pinned: boolean
   /** pripojený album zo života farnosti (len aktuality, § 17) */
   album_id: string | null
+  /** videá YouTube / Vimeo (O66) */
+  videos: ParishVideo[]
   taken_down_at: string | null
   takedown_reason: string | null
   created_at: string
@@ -46,10 +50,11 @@ export interface ParishPostInput {
   published: boolean
   pinned?: boolean
   album_id?: string | null
+  video_urls?: string[]
 }
 
 export const POST_COLUMNS =
-  'id, parish_id, type, title, slug, excerpt, content, image_url, attachment_url, attachment_name, valid_from, valid_to, event_at, published, published_at, pinned, album_id, taken_down_at, takedown_reason, created_at, updated_at'
+  'id, parish_id, type, title, slug, excerpt, content, image_url, attachment_url, attachment_name, valid_from, valid_to, event_at, published, published_at, pinned, album_id, videos, taken_down_at, takedown_reason, created_at, updated_at'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const httpsUrl = (v: string | null | undefined) => (v && /^https?:\/\//i.test(v.trim()) ? v.trim() : null)
@@ -85,6 +90,9 @@ export async function writeParishPost(
   if (validFrom && validTo && validTo < validFrom) return { success: false, error: 'Dátum „platí do“ je skôr ako „platí od“.' }
   const eventAt = input.type === 'news' && input.event_at && !Number.isNaN(Date.parse(input.event_at)) ? new Date(input.event_at).toISOString() : null
 
+  const resolved = input.type === 'news' ? await resolveVideos(input.video_urls) : { success: true as const, videos: [] }
+  if (!resolved.success) return resolved
+
   let albumId: string | null = null
   if (input.type === 'news' && input.album_id) {
     const { data: album } = await db.from('parish_albums').select('id').eq('id', input.album_id).eq('parish_id', parishId).eq('kind', 'life').maybeSingle()
@@ -117,6 +125,7 @@ export async function writeParishPost(
     published_at: input.published ? existing?.published_at ?? new Date().toISOString() : existing?.published_at ?? null,
     pinned: !!input.pinned,
     album_id: albumId,
+    videos: resolved.videos,
     updated_by: userId,
   }
 

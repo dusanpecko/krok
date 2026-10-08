@@ -67,3 +67,8 @@ export function officeHoursFor<T extends { service_type: string; time_from: stri
 export function photoCount(n: number): string {
   return `${n} ${n === 1 ? 'fotka' : n >= 2 && n <= 4 ? 'fotky' : 'fotiek'}`
 }
+
+/** „1 video“, „3 videá“, „5 videí“ */
+export function videoCount(n: number): string {
+  return `${n} ${n === 1 ? 'video' : n >= 2 && n <= 4 ? 'videá' : 'videí'}`
+}

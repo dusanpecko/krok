@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Bell, Eye, EyeOff, FileText, Loader2, Newspaper, Pencil, Pin, Plus, Save, Trash2, Upload, X, AlertTriangle, ExternalLink } from 'lucide-react'
 import SimpleRichTextEditor from '@/components/admin/SimpleRichTextEditor'
 import ShareButton from '@/components/parishes/ShareButton'
+import VideoLinksField from './VideoLinksField'
 import type { ParishPostInput, ParishPostRow, ParishPostType } from '@/lib/parishes/posts'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
@@ -53,6 +54,7 @@ function emptyPost(type: ParishPostType): ParishPostInput {
     published: true,
     pinned: false,
     album_id: null,
+    video_urls: [],
   }
 }
 
@@ -68,7 +70,7 @@ export default function ParishPostsTab({ parishId, parishSlug, posts, actions }:
     setEditing({
       id: p.id, type: p.type, title: p.title, content: p.content ?? '', excerpt: p.excerpt ?? '', image_url: p.image_url,
       attachment_url: p.attachment_url, attachment_name: p.attachment_name, valid_from: p.valid_from, valid_to: p.valid_to,
-      event_at: p.event_at, published: p.published, pinned: p.pinned, album_id: p.album_id,
+      event_at: p.event_at, published: p.published, pinned: p.pinned, album_id: p.album_id, video_urls: (p.videos ?? []).map((v) => v.url),
     })
 
   const remove = (p: ParishPostRow) => {
@@ -263,6 +265,8 @@ function PostEditor({ parishId, initial, actions, takenDown, onClose }: { parish
           </Field>
         )}
       </div>
+
+      {!isAnn && <VideoLinksField value={form.video_urls ?? []} onChange={(v) => set('video_urls', v)} />}
 
       {!isAnn && <AlbumPicker parishId={parishId} value={form.album_id ?? null} onChange={(v) => set('album_id', v)} list={actions.listAlbums} />}
 

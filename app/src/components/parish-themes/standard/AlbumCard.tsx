@@ -1,14 +1,14 @@
 import Link from 'next/link'
-import { ExternalLink, Images } from 'lucide-react'
+import { ExternalLink, Images, Play } from 'lucide-react'
 import type { PublicAlbumSummary } from '@/lib/parishes/gallery'
-import { photoCount } from '@/lib/parishes/format'
+import { photoCount, videoCount } from '@/lib/parishes/format'
 import { cardCls } from './Shell'
 
 const fmtDate = (d: string | null) => (d ? new Date(`${d}T12:00:00`).toLocaleDateString('sk-SK', { day: 'numeric', month: 'long', year: 'numeric' }) : null)
 
 /** Dlaždica albumu „Zo života farnosti“; externý album (G6) otvorí odkaz v novom okne. */
 export default function AlbumCard({ album, base }: { album: PublicAlbumSummary; base: string }) {
-  const external = album.photo_count === 0 && album.external_url
+  const external = album.photo_count === 0 && album.video_count === 0 && album.external_url
   const body = (
     <>
       <div className="relative aspect-[4/3] bg-blue-soft/20 overflow-hidden">
@@ -25,9 +25,19 @@ export default function AlbumCard({ album, base }: { album: PublicAlbumSummary; 
             <>
               <ExternalLink size={12} /> Externý album
             </>
-          ) : (
+          ) : album.photo_count ? (
             <>
               <Images size={12} /> {photoCount(album.photo_count)}
+              {album.video_count > 0 && (
+                <>
+                  {' · '}
+                  <Play size={11} fill="currentColor" /> {album.video_count}
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <Play size={11} fill="currentColor" /> {videoCount(album.video_count)}
             </>
           )}
         </span>

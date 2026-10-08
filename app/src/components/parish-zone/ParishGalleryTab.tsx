@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { ArrowLeft, ArrowRight, Ban, ExternalLink, Eye, EyeOff, Images, Link2, Loader2, Pencil, Plus, Save, ShieldCheck, Star, Trash2, Upload, X } from 'lucide-react'
 import type { AlbumInput, GalleryAlbum, GalleryOverview, GalleryPhoto } from '@/lib/parishes/gallery'
 import ShareButton from '@/components/parishes/ShareButton'
+import VideoLinksField from './VideoLinksField'
+import { videoCount } from '@/lib/parishes/format'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
@@ -139,6 +141,7 @@ export default function ParishGalleryTab({ parishId, parishSlug, actions, isDioc
                       <AlbumStatus album={a} />
                       {a.event_date && ` · ${fmtDate(a.event_date)}`}
                       {a.external_url ? ' · externý album' : ` · ${a.photos.length} fotiek`}
+                      {a.videos.length > 0 && ` · ${videoCount(a.videos.length)}`}
                     </p>
                   </div>
                   <Pencil size={16} className="text-gray-400" />
@@ -159,12 +162,12 @@ function AlbumStatus({ album }: { album: GalleryAlbum }) {
 }
 
 function Thumbs({ album }: { album: GalleryAlbum }) {
-  const cover = album.photos.find((p) => p.id === album.cover_photo_id) ?? album.photos[0]
+  const cover = (album.photos.find((p) => p.id === album.cover_photo_id) ?? album.photos[0])?.url ?? album.videos.find((v) => v.thumbnail)?.thumbnail
   return (
     <div className="w-20 h-14 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
       {cover ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={cover.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+        <img src={cover} alt="" className="w-full h-full object-cover" loading="lazy" />
       ) : album.external_url ? (
         <Link2 size={20} className="text-gray-400" />
       ) : (
@@ -291,6 +294,13 @@ function AlbumForm({
             </Field>
           )}
         </div>
+      )}
+      {!isChurch && (
+        <VideoLinksField
+          value={form.video_urls ?? []}
+          onChange={(v) => set('video_urls', v)}
+          hint="Napr. záznam z podujatia na YouTube farnosti. Videá sa zobrazia v albume nad fotkami; album môže mať aj len videá."
+        />
       )}
       <label className="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
         <input type="checkbox" checked={form.published !== false} onChange={(e) => set('published', e.target.checked)} className={checkboxCls} />
@@ -447,7 +457,7 @@ function AlbumEditor({
         {editingMeta && (
           <div className="border-t border-gray-100 pt-4">
             <AlbumForm
-              initial={{ title: album.title, description: album.description ?? '', event_date: album.event_date, external_url: album.external_url ?? '', published: album.published }}
+              initial={{ title: album.title, description: album.description ?? '', event_date: album.event_date, external_url: album.external_url ?? '', video_urls: album.videos.map((v) => v.url), published: album.published }}
               isChurch={isChurch}
               onCancel={() => setEditingMeta(false)}
               onSave={async (input) => {

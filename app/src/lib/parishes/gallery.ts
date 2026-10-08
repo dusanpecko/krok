@@ -2,6 +2,8 @@ import sharp from 'sharp'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { deleteImage, uploadBuffer } from '@/lib/storage'
 import { generateSlug } from '@/lib/slug'
+import { normalizeVideos, type ParishVideo } from './video'
+import { resolveVideos } from './video-server'
 
 /**
  * Fotogaléria farnosti (krok_navrh_farnosti.md § 17, O59–O64): album „Kostol a farnosť“ (kind = church,
@@ -32,6 +34,8 @@ export interface GalleryAlbum {
   cover_photo_id: string | null
   /** externý album (Facebook, Google Fotky, Zonerama…) – dlaždica s odkazom namiesto fotiek (G6) */
   external_url: string | null
+  /** odkazy na YouTube / Vimeo (O66) */
+  videos: ParishVideo[]
   published: boolean
   taken_down_at: string | null
   takedown_reason: string | null
@@ -50,6 +54,8 @@ export interface AlbumInput {
   description?: string | null
   event_date?: string | null
   external_url?: string | null
+  /** odkazy na videá YouTube / Vimeo */
+  video_urls?: string[]
   published?: boolean
 }
 
@@ -58,7 +64,7 @@ type Result<T = object> = ({ success: true } & T) | { success: false; error: str
 export const CHURCH_ALBUM_TITLE = 'Kostol a farnosť'
 const MAX_SIDE = 2000
 const MAX_INPUT_BYTES = 25 * 1024 * 1024
-const ALBUM_COLUMNS = 'id, kind, title, slug, description, event_date, cover_photo_id, external_url, published, taken_down_at, takedown_reason, updated_at'
+const ALBUM_COLUMNS = 'id, kind, title, slug, description, event_date, cover_photo_id, external_url, videos, published, taken_down_at, takedown_reason, updated_at'
 const PHOTO_COLUMNS = 'id, album_id, url, width, height, size_bytes, caption, sort_order'
 
 export function formatBytes(n: number): string {
@@ -81,7 +87,7 @@ export async function loadGallery(db: SupabaseClient, parishId: string): Promise
     byAlbum.set(p.album_id, [...(byAlbum.get(p.album_id) ?? []), { ...p, size_bytes: Number(p.size_bytes) }])
   }
   return {
-    albums: ((albums ?? []) as Omit<GalleryAlbum, 'photos'>[]).map((a) => ({ ...a, photos: byAlbum.get(a.id) ?? [] })),
+    albums: ((albums ?? []) as Omit<GalleryAlbum, 'photos'>[]).map((a) => ({ ...a, videos: normalizeVideos(a.videos), photos: byAlbum.get(a.id) ?? [] })),
     usedBytes: used,
     quotaBytes: Number(parish?.gallery_quota_bytes ?? 1073741824),
   }
@@ -115,11 +121,14 @@ export async function writeAlbum(db: SupabaseClient, parishId: string, albumId: 
   if (input.event_date && !/^\d{4}-\d{2}-\d{2}$/.test(input.event_date)) return { success: false, error: 'Dátum má tvar RRRR-MM-DD.' }
   const external = input.external_url?.trim() || null
   if (external && !/^https:\/\/[^\s]+$/i.test(external)) return { success: false, error: 'Odkaz na externý album musí začínať https://' }
+  const resolved = await resolveVideos(input.video_urls)
+  if (!resolved.success) return resolved
   const row = {
     title: title.slice(0, 150),
     description: input.description?.trim().slice(0, 1000) || null,
     event_date: input.event_date || null,
     external_url: external,
+    videos: resolved.videos,
     published: input.published !== false,
     updated_at: new Date().toISOString(),
   }
@@ -241,6 +250,7 @@ export interface PublicAlbumSummary {
   event_date: string | null
   cover_url: string | null
   photo_count: number
+  video_count: number
   /** externý album – dlaždica vedie na tento odkaz */
   external_url: string | null
 }
@@ -262,7 +272,7 @@ export async function getChurchPhotos(db: SupabaseClient, parishId: string): Pro
 export async function getLifeAlbums(db: SupabaseClient, parishId: string, limit = 24, offset = 0): Promise<PublicAlbumSummary[]> {
   const { data: albums } = await db
       .from('parish_albums')
-      .select('id, title, slug, description, event_date, cover_photo_id, external_url, created_at')
+      .select('id, title, slug, description, event_date, cover_photo_id, external_url, videos, created_at')
       .eq('parish_id', parishId)
       .eq('kind', 'life')
       .eq('published', true)
@@ -276,29 +286,47 @@ export async function getLifeAlbums(db: SupabaseClient, parishId: string, limit 
     .map((a) => {
       const mine = (photos ?? []).filter((p) => p.album_id === a.id)
       const cover = mine.find((p) => p.id === a.cover_photo_id) ?? mine[0]
-      return { id: a.id, title: a.title, slug: a.slug, description: a.description, event_date: a.event_date, cover_url: cover?.url ?? null, photo_count: mine.length, external_url: a.external_url }
+      const videos = normalizeVideos(a.videos)
+      return {
+        id: a.id,
+        title: a.title,
+        slug: a.slug,
+        description: a.description,
+        event_date: a.event_date,
+        cover_url: cover?.url ?? videos.find((v) => v.thumbnail)?.thumbnail ?? null,
+        photo_count: mine.length,
+        video_count: videos.length,
+        external_url: a.external_url,
+      }
     })
-    // album bez fotiek sa zobrazí len ako odkaz na externý album
-    .filter((a) => a.photo_count > 0 || a.external_url)
+    // prázdny album (bez fotiek a videí) sa zobrazí len ako odkaz na externý album
+    .filter((a) => a.photo_count > 0 || a.video_count > 0 || a.external_url)
 }
 
-export async function getPublicAlbum(db: SupabaseClient, parishId: string, slugOrId: { slug?: string; id?: string }): Promise<(PublicAlbumSummary & { photos: PublicGalleryPhoto[] }) | null> {
-  let q = db.from('parish_albums').select('id, title, slug, description, event_date, cover_photo_id').eq('parish_id', parishId).eq('kind', 'life').eq('published', true).is('taken_down_at', null)
+export async function getPublicAlbum(
+  db: SupabaseClient,
+  parishId: string,
+  slugOrId: { slug?: string; id?: string },
+): Promise<(PublicAlbumSummary & { photos: PublicGalleryPhoto[]; videos: ParishVideo[] }) | null> {
+  let q = db.from('parish_albums').select('id, title, slug, description, event_date, cover_photo_id, videos').eq('parish_id', parishId).eq('kind', 'life').eq('published', true).is('taken_down_at', null)
   q = slugOrId.id ? q.eq('id', slugOrId.id) : q.eq('slug', slugOrId.slug ?? '')
   const { data: a } = await q.maybeSingle()
   if (!a) return null
   const { data: photos } = await db.from('parish_photos').select('id, url, width, height, caption').eq('album_id', a.id).order('sort_order')
-  if (!photos?.length) return null
-  const cover = photos.find((p) => p.id === a.cover_photo_id) ?? photos[0]
+  const videos = normalizeVideos(a.videos)
+  if (!photos?.length && !videos.length) return null
+  const cover = photos?.find((p) => p.id === a.cover_photo_id) ?? photos?.[0]
   return {
     id: a.id,
     title: a.title,
     slug: a.slug,
     description: a.description,
     event_date: a.event_date,
-    cover_url: cover.url,
-    photo_count: photos.length,
+    cover_url: cover?.url ?? videos.find((v) => v.thumbnail)?.thumbnail ?? null,
+    photo_count: photos?.length ?? 0,
+    video_count: videos.length,
     external_url: null,
-    photos: photos.map(({ url, width, height, caption }) => ({ url, width, height, caption })),
+    photos: (photos ?? []).map(({ url, width, height, caption }) => ({ url, width, height, caption })),
+    videos,
   }
 }

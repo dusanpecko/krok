@@ -66,7 +66,8 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] Realizácia (migrácie 044–045): albumy a fotky, nahrávanie viacerých fotiek so zmenšením do WebP, kvóta, sekcia na stránke farnosti, galéria + zväčšenie, prepojenie s aktualitou, externé albumy, stiahnutie diecézou, upozornenie GDPR + podmienky – § 17.1–17.2
 - [ ] Otestovať na test.mojkrok.sk (nahrávanie z mobilu, HEIC z iPhonu, kvóta)
 - [x] Zdieľanie stránky, príspevkov, albumov a fotiek + zdieľanie zo zóny – § 18, O65
-- [ ] Automatické zverejnenie na FB stránku farnosti – § 18, S1 (neskôr)
+- [ ] Automatické zverejnenie na FB stránku farnosti – § 18, S1 (možno v budúcnosti, teraz nie)
+- [x] Videá – odkazy YouTube / Vimeo pri aktualitách a v albumoch, bez nahrávania (migrácia 046) – § 19, O66
 
 **Schematizmus kňazov (K0–K5, § 16)**
 - [x] Analýza `KNAZI - ZOZNAM AKTUALNY.xlsx` (11 listov, 274 kňazov, problémy v dátach) – § 16.1
@@ -165,6 +166,7 @@ Cieľ modulu:
 | O63 | Externé albumy (G6) | Popri vlastných albumoch aj **odkaz na externý album** (Facebook, Google Fotky, Zonerama) – dlaždica otvorí odkaz. |
 | O64 | GDPR | Upozornenie pri nahrávaní v zóne + odsek v **podmienkach používania** (súhlas rodičov pri deťoch, odstránenie na žiadosť). |
 | O65 | Zdieľanie (2026-10-08) | Tlačidlo Zdieľať na verejných stránkach (aj jednotlivé fotky) a v zóne farnosti; priame zverejnenie na FB stránku neskôr (S1). |
+| O66 | Videá (2026-10-08) | Len **odkazy YouTube / Vimeo** (bez nahrávania) pri aktualitách a v albumoch; prehrávač sa načíta až po kliknutí (YouTube bez cookies). |
 | O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
@@ -1377,4 +1379,11 @@ parish_posts.album_id → parish_albums (voliteľné prepojenie aktuality s albu
 
 V zóne farnosti je Zdieľať pri každom zverejnenom oznamy/aktualite a albume, navyše **„Kopírovať text s odkazom“** (nadpis + perex + odkaz – na vloženie do Facebooku, Instagramu, skupín). Facebook otvorí okno, kde kňaz príspevok zverejní na svojom profile alebo na stránke farnosti (ak ju spravuje).
 
-**Na rozhodnutie neskôr (S1):** automatické zverejnenie priamo na **Facebook stránku farnosti** po uložení príspevku – vyžaduje Meta aplikáciu so schválením (Page publishing), každá farnosť si raz prepojí svoju FB stránku; Instagram len cez firemný účet a vždy s obrázkom. Návrh: až keď to bude farnosti reálne chýbať.
+**Na rozhodnutie neskôr (S1):** automatické zverejnenie priamo na **Facebook stránku farnosti** po uložení príspevku – vyžaduje Meta aplikáciu so schválením (Page publishing), každá farnosť si raz prepojí svoju FB stránku; Instagram len cez firemný účet a vždy s obrázkom. Rozhodnutie 2026-10-08: **možno v budúcnosti, teraz nie.**
+
+## 19. Videá farností (2026-10-08, O66)
+
+**Hotové (migrácia 046):** farnosť nevie video nahrať, len **vloží odkaz** na YouTube alebo Vimeo (watch, youtu.be, shorts, live, aj súkromný Vimeo odkaz s kódom). Pri uložení sa cez oEmbed doplní názov a náhľad (YouTube 16:9 bez pruhov).
+- **Aktualita:** pole „Videá“ (max. 10) – prehrávač pod textom.
+- **Album:** videá nad fotkami; album môže mať aj **len videá** (dlaždica s náhľadom videa a počtom).
+- **Verejne:** najprv len náhľad s tlačidlom ▶ – na YouTube/Vimeo sa nič neposiela, kým návštevník neklikne (GDPR, rýchlosť); YouTube cez `youtube-nocookie.com`, Vimeo s `dnt=1`.

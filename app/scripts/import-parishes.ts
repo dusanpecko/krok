@@ -428,7 +428,6 @@ async function main() {
       official_name: e.name,
       slug: e.slug,
       kind: e.kind,
-      deanery: deanery?.name ?? e.deanery,
       deanery_id: deanery?.id ?? null,
       street: e.street ?? main?.street ?? null,
       postal_code: e.postal_code,

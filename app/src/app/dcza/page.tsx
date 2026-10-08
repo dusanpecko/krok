@@ -14,7 +14,7 @@ export default async function DczaHome() {
     getPosts({ limit: 7 }),
     getUpcomingEvents(4),
     getPastEvents(4),
-    getMagazine(3),
+    getMagazine(4),
     db.from('parishes').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('kind', 'parish'),
     db.from('deaneries').select('id', { count: 'exact', head: true }),
     db.from('clergy').select('id', { count: 'exact', head: true }).in('category', ['priest', 'bishop']).eq('status', 'active'),
@@ -135,7 +135,7 @@ export default async function DczaHome() {
                 Všetky čísla <ArrowRight size={15} />
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-5 max-w-4xl">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
               {magazine.map((m) => (
                 <a key={m.id} href={m.link_url ?? m.pdf_url ?? '#'} target="_blank" rel="noopener noreferrer" className="group">
                   <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm group-hover:shadow-xl transition-shadow">
@@ -146,7 +146,7 @@ export default async function DczaHome() {
                   </div>
                   <p className="mt-3 text-xs font-bold text-mute">{m.issue_number}</p>
                   <p className="font-extrabold group-hover:text-blue inline-flex items-center gap-1">
-                    {m.title} <ExternalLink size={13} className="opacity-50" />
+                    {m.title.startsWith('Naša Žilinská diecéza') ? 'Kúpiť e-časopis' : m.title} <ExternalLink size={13} className="opacity-50" />
                   </p>
                 </a>
               ))}

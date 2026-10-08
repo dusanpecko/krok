@@ -23,7 +23,7 @@ export default async function DczaMagazine() {
             </div>
             <p className="mt-3 text-xs font-bold text-mute">{m.issue_number}</p>
             <p className="font-extrabold group-hover:text-blue inline-flex items-center gap-1">
-              {m.title} <ExternalLink size={13} className="opacity-50" />
+              {m.title.startsWith('Naša Žilinská diecéza') ? 'Kúpiť e-časopis' : m.title} <ExternalLink size={13} className="opacity-50" />
             </p>
           </a>
         ))}

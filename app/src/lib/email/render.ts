@@ -41,6 +41,7 @@ export const EMAIL_CATEGORY_LABELS: Record<string, string> = {
   account: 'Účet',
   donation: 'Dary',
   newsletter: 'Newsletter',
+  clergy: 'Kňazská zóna',
 }
 
 /** Popis premenných pre admin (čo znamenajú). */
@@ -64,6 +65,13 @@ export const EMAIL_VARIABLE_HELP: Record<string, string> = {
   is_recurring: 'Blok len pri pravidelnom dare',
   is_registered: 'Blok len pre darcu s účtom',
   has_name: 'Blok len ak poznáme meno',
+  category: 'Kategória dokumentu (kňazská zóna)',
+  title: 'Názov dokumentu',
+  doc_number: 'Číslo dokumentu (napr. obežníka)',
+  summary: 'Krátky popis dokumentu',
+  doc_url: 'Odkaz na dokument v kňazskej zóne',
+  zone_url: 'Odkaz na kňazskú zónu',
+  salutation: 'Oslovenie (napr. „Vážený pán farár“)',
 }
 
 /** Ukážkové hodnoty pre náhľad a testovací e-mail. */
@@ -87,6 +95,13 @@ export const SAMPLE_EMAIL_VARIABLES: EmailVariables = {
   is_recurring: true,
   is_registered: true,
   has_name: true,
+  category: 'Obežníky',
+  title: 'Obežník k Adventu a Vianociam',
+  doc_number: '7/2026',
+  summary: 'Pokyny k adventnej zbierke a sviatočným bohoslužbám.',
+  doc_url: 'https://mojkrok.sk/knazska-zona/dokument/ukazka',
+  zone_url: 'https://mojkrok.sk/knazska-zona',
+  salutation: 'Vážený pán farár',
 }
 
 function escapeHtml(s: string): string {

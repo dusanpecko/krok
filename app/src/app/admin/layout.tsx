@@ -15,6 +15,7 @@ const routePermissionsMap: Record<string, string> = {
   '/admin/projekty': 'manage_config',
   '/admin/farnosti': 'manage_parishes',
   '/admin/knazi': 'view_clergy',
+  '/admin/knazska-zona': 'manage_clergy_docs',
   '/admin/nastavenia/dekanaty': 'manage_config',
   '/admin/emaily': 'manage_config',
   '/admin/exporty': 'view_donors',

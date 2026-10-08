@@ -3,6 +3,7 @@ import { getUserAccess } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { donorNeedsOnboarding, getCurrentDonor } from '@/app/(public)/profil/actions'
 import { getMyParishes } from '@/lib/parishes/access'
+import { hasZoneAccess } from '@/lib/clergy-zone/access'
 
 /**
  * Rozhodne, kam presmerovať používateľa po prihlásení (email aj Google).
@@ -39,6 +40,11 @@ export async function GET(request: Request) {
   const myParishes = await getMyParishes(user.id)
   if (myParishes.length > 0) {
     return NextResponse.redirect(`${origin}${to ?? '/moja-farnost'}`)
+  }
+
+  // Kňaz / diakon s účtom v kňazskej zóne (§ 15)
+  if (await hasZoneAccess(user.id)) {
+    return NextResponse.redirect(`${origin}${to ?? '/knazska-zona'}`)
   }
 
   const donor = await getCurrentDonor()

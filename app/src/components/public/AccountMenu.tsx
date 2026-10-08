@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, Church, HandHeart, LayoutDashboard, LogOut, Settings, User } from 'lucide-react'
+import { BookLock, ChevronDown, Church, HandHeart, LayoutDashboard, LogOut, Settings, User } from 'lucide-react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import type { AccountMenu as AccountMenuData } from '@/app/(public)/account-actions'
 
@@ -21,6 +21,7 @@ export function accountItems(menu: AccountMenuData | null): Item[] {
   ]
   if (menu?.myParishSlug) items.push({ href: `/farnosti/${menu.myParishSlug}`, label: 'Moja farnosť', icon: Church })
   if (menu?.hasParishZone) items.push({ href: '/moja-farnost', label: 'Správa farnosti', icon: Settings })
+  if (menu?.hasClergyZone) items.push({ href: '/knazska-zona', label: 'Kňazská zóna', icon: BookLock })
   if (menu?.canAdmin) items.push({ href: '/admin', label: 'Administrácia', icon: LayoutDashboard })
   return items
 }

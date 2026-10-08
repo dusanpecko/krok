@@ -2,6 +2,7 @@
 
 import { getSessionUser, getUserAccess } from '@/lib/auth'
 import { getMyParishes, serviceDb } from '@/lib/parishes/access'
+import { getZoneAccess } from '@/lib/clergy-zone/access'
 
 export interface AccountMenu {
   /** Krstné meno darcu (alebo začiatok e-mailu) – na tlačidlo účtu */
@@ -12,6 +13,8 @@ export interface AccountMenu {
   hasParishZone: boolean
   /** Verejná stránka farnosti, ktorú si darca zvolil v profile */
   myParishSlug: string | null
+  /** Kňaz / diakon z registra, účet farnosti alebo kúria → kňazská zóna */
+  hasClergyZone: boolean
 }
 
 /**
@@ -22,10 +25,11 @@ export async function getAccountMenu(): Promise<AccountMenu | null> {
   const user = await getSessionUser()
   if (!user) return null
 
-  const [access, parishes, donorRes] = await Promise.all([
+  const [access, parishes, donorRes, zone] = await Promise.all([
     getUserAccess(user.id),
     getMyParishes(user.id),
     serviceDb().from('donors').select('first_name, parishes(slug, is_active)').eq('auth_user_id', user.id).maybeSingle(),
+    getZoneAccess(user),
   ])
 
   const donor = donorRes.data as { first_name: string | null; parishes: { slug: string | null; is_active: boolean } | null } | null
@@ -37,5 +41,6 @@ export async function getAccountMenu(): Promise<AccountMenu | null> {
     canAdmin: access.isAdmin || access.roles.length > 0,
     hasParishZone: parishes.length > 0,
     myParishSlug: parish?.is_active && parish.slug ? parish.slug : null,
+    hasClergyZone: !!zone,
   }
 }

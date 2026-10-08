@@ -24,7 +24,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] Zmena farnosti a projektu v profile – § 6.3
 - [x] Darca sa hľadá cez `auth_user_id`, zmena e-mailu nezaloží druhý profil – § 6.4, O21
 - [x] VS nových darcov z DB sekvencie (race condition) – O23
-- [ ] Riadok „Dary bez farnosti (na projekt)“ v prehľadoch za diecézu – § 2
+- [ ] Riadok „Dary bez farnosti (na projekt)“ v prehľadoch za diecézu – § 2 → **súčasť dashboardu pre kúriu**
 
 **Admin diecézy (F2, F3, F4)**
 - [x] `/admin/farnosti` – zoznam (hľadanie, dekanát, typ, chýbajúce údaje, plnenie) – § 6.1
@@ -77,14 +77,16 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] K1: admin `/admin/knazi` (zoznam s farebnými stavmi a filtrami, detail so záložkami, zmena stavu bohoslovec → diakon → kňaz, nové menovanie / ukončenie / hlavné pôsobenie, história zmien, export XLSX v službe / všetci) – § 16.4
 - [x] K2: výročia (kňazstvo od 10. každých 5 r., život od 40., úmrtie 1. a každých 5 r.), meniny, export XLSX pre KN, adresné štítky 3 × 8 – `/admin/knazi/vyrocia`, `/admin/knazi/stitky` – § 16.5
 - [x] K3: kňazi na stránkach farností z registra – verejne len meno, tituly, funkcia (O47); v zóne farnosti a v admine farnosti len na čítanie, úprava kontaktu a fotky kňaza odstránená (O48); doplnené väzby 11 duchovných správ / farností (`scripts/link-clergy-parishes.ts`). `parish_clergy` ostáva len ako archív starého importu – zmazať neskôr – § 16.2
-- [ ] K4: kňazská zóna – účet kňaza z registra – § 15
+- [x] K4: kňazská zóna – účet kňaza z registra (`clergy.auth_user_id`, pozvánka z adminu) – § 15
 - [ ] K5: verejný schematizmus – **súčasť webu dcza.sk** – § 14
 - [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 – **závisí od webu dcza.sk** (overovacia adresa)
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
 - [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13 *(až keď bude všetko hotové)*
 - [ ] Web diecézy na platforme Krok (doména `dcza.sk`) – migrácia nedokončeného webu z **beta.dcza.dev**, presun domény; odblokuje K5, K6 a F6 – § 14
-- [ ] **Kňazská zóna** – archív dokumentov kúrie pre kňazov (aj bez farnosti), e-mail pri zverejnení, bez importu – § 15, O39–O42
+- [x] **Kňazská zóna** (migrácia 048) – `/knazska-zona` (kategórie, nové, archív, roky, fulltext v PDF/DOCX bez diakritiky s úryvkami), admin `/admin/knazska-zona` (dokumenty, súbory priamo do B2, zverejnenie + e-mail kňazom, kategórie, pozvánky kňazov z registra) – § 15, O39–O42, O67–O69
+- [ ] Kňazská zóna: **súkromný bucket B2** (`B2_PRIVATE_BUCKET`) – nastaviť pred nahraním citlivých dokumentov
+- [ ] **Dashboard pre kúriu** vrátane riadku „Dary bez farnosti (na projekt)“ – § 5.2, § 2
 
 Cieľ modulu:
 
@@ -168,6 +170,9 @@ Cieľ modulu:
 | O64 | GDPR | Upozornenie pri nahrávaní v zóne + odsek v **podmienkach používania** (súhlas rodičov pri deťoch, odstránenie na žiadosť). |
 | O65 | Zdieľanie (2026-10-08) | Tlačidlo Zdieľať na verejných stránkach (aj jednotlivé fotky) a v zóne farnosti; priame zverejnenie na FB stránku neskôr (S1). |
 | O66 | Videá (2026-10-08) | Len **odkazy YouTube / Vimeo** (bez nahrávania) pri aktualitách a v albumoch; prehrávač sa načíta až po kliknutí (YouTube bez cookies). |
+| O67 | Kategórie kňazskej zóny (2026-10-08) | **13 kategórií zo starej zóny dcza.sk** (Dokumenty, Štatúty a zmluvy, Obežníky, Formuláre, Ekonomický manuál, Liturgia, Birmovky, Exorcizmus, Homílie, Katechéza, Hospodárenie diecézy, Ochrana osobných údajov, Darujem) – kúria ich premenuje, pridá, zoradí, skryje. |
+| O68 | Kto má účet v kňazskej zóne | **Kňazi, diakoni (aj trvalí) a biskupi** z registra v stave v službe / na odpočinku / štúdium – pozvánka z adminu (aj hromadne) na pracovný, inak súkromný e-mail; **účty farností** vidia zónu automaticky; bohoslovci nie. |
+| O69 | E-mail pri zverejnení | **Prepínač pri dokumente, predvolene zapnutý**; e-mail obsahuje len odkaz do zóny (dokument sa neprikladá – ostáva neverejný). |
 | O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
@@ -1117,7 +1122,7 @@ Technicky: `<script src="https://mojkrok.sk/embed.js" data-farnost="varin">` ale
 
 Pripravovaný web diecézy beží na WordPresse. Ak by sme ho neskôr presunuli k nám, pobežal by na **vlastnej doméne `dcza.sk`** (Vercel podporuje viac domén na jednom projekte; obsah by sa vyberal podľa hostu – rovnaký mechanizmus ako § 4.4). Výhoda: jeden register farností, bohoslužieb a kňazov pre diecézny web aj farské stránky; jedna správa obsahu. Zatiaľ len zapísané – **držíme sa jednotného dizajnu**, aby bol prechod možný. Rozhodnúť až po F5.
 
-## 15. Kňazská zóna – dokumentácia diecézy pre kňazov (O39–O42)
+## 15. Kňazská zóna – dokumentácia diecézy pre kňazov (O39–O42, O67–O69) – ✅ realizované (migrácia 048)
 
 **Účel:** neverejný archív, kam diecéza ukladá dokumenty pre kňazov – **obežníky, tlačivá, smernice**, prípadne dekréty, pastoračné a matričné pokyny, liturgické materiály.
 
@@ -1128,6 +1133,13 @@ Pripravovaný web diecézy beží na WordPresse. Ak by sme ho neskôr presunuli 
 - **Funkcie:** vyhľadávanie, filter kategória/rok, „nové“ (napr. posledných 30 dní).
 - **Import (O42):** nerobí sa, dokumenty pridáva kúria ručne.
 - **Kde:** `/knazska-zona`.
+
+**Realizácia (2026-10-08, migrácia 048):**
+- Tabuľky `clergy_doc_categories`, `clergy_docs` (číslo, dátum vydania, popis, voliteľný text, stav aktuálne/archív, zverejnenie, e-mail), `clergy_doc_files`; oprávnenie `manage_clergy_docs` (administrátor, zamestnanec, kúria); `clergy.zone_invited_at`.
+- **Súbory** sa nahrávajú z prehliadača priamo do B2 podpísanou adresou (bez limitu 4,5 MB Vercelu, do 100 MB) a sťahujú cez `/knazska-zona/subor/[id]` až po kontrole prístupu krátkodobou podpísanou adresou (5 min). Pre skutočnú neverejnosť treba **samostatný súkromný bucket** (`B2_PRIVATE_BUCKET`) – dnešný bucket webu je verejne čitateľný; admin to zobrazuje ako upozornenie.
+- **Fulltext:** pri nahratí sa vytiahne text z PDF (unpdf) a DOCX/ODT; hľadá sa v názve, čísle, popise, texte aj v obsahu súborov, bez ohľadu na diakritiku a aj podľa začiatku slova; výsledky ukazujú zvýraznené úryvky. Naskenované PDF a starý `.doc` sa nájdu len podľa názvu.
+- **Zóna:** úvod (nové za 30 dní, dlaždice kategórií), kategória (aktuálne / archív, filter rokov), detail (otvoriť / stiahnuť), vyhľadávanie s filtrom kategórie; `noindex`. Po prihlásení ide kňaz rovno do zóny; v menu účtu „Kňazská zóna“.
+- **Admin:** zoznam s filtrami, editor (súbory s priebehom, poradie, zverejniť / skryť / archivovať, e-mail kňazom aj opakovane), kategórie, „Kňazi a prístupy“ (stav účtu, hromadné pozvánky). E-maily `clergy_zone_invite`, `clergy_zone_granted`, `clergy_doc_published` – upraviteľné v `/admin/emaily`.
 
 ---
 
@@ -1273,7 +1285,7 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 | **K1** ✅ | admin `/admin/knazi` – zoznam, detail, úpravy, nové menovanie, audit, export XLSX |
 | **K2** ✅ | výročia a meniny, adresné štítky |
 | **K3** ✅ | prepojenie so stránkami farností – kňazi z registra, `parish_clergy` zaniká; ~~foto a kontakt si kňaz spravuje sám~~ → verejne bez fotky a kontaktov (O47, O48) |
-| **K4** ⬜ | kňazská zóna (§ 15) – účet kňaza = osoba z registra (`clergy.auth_user_id`), pozvánky z registra |
+| **K4** ✅ | kňazská zóna (§ 15) – účet kňaza = osoba z registra (`clergy.auth_user_id`), pozvánky z registra |
 | **K5** ⬜ | verejný schematizmus pre web diecézy (§ 14) – údaje podľa O47 |
 | **K6** ⬜ | digitálne celebrety (§ 16.9) |
 

@@ -20,8 +20,7 @@ import {
   Megaphone,
   Mail,
   BookUser,
-  Handshake,
-} from 'lucide-react'
+  Handshake, FolderLock } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
@@ -50,6 +49,7 @@ const mainLinks = [
   { href: '/admin/projekty', label: 'Výzvy a projekty', icon: Megaphone, permission: 'manage_projects' },
   { href: '/admin/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_parishes' },
   { href: '/admin/knazi', label: 'Schematizmus kňazov', icon: BookUser, permission: 'view_clergy' },
+  { href: '/admin/knazska-zona', label: 'Kňazská zóna', icon: FolderLock, permission: 'manage_clergy_docs' },
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
   { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
   { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },

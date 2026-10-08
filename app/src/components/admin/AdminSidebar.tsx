@@ -20,7 +20,7 @@ import {
   Megaphone,
   Mail,
   BookUser,
-  Handshake, FolderLock, Building2 } from 'lucide-react'
+  Handshake, FolderLock, Building2, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
@@ -39,7 +39,16 @@ const KROK = {
   sidebarActive: '#001A4D',
 }
 
-const mainLinks = [
+type NavLink = {
+  href: string
+  label: string
+  icon: typeof LayoutDashboard
+  permission?: string
+  external?: boolean
+  children?: { href: string; label: string; icon: typeof LayoutDashboard }[]
+}
+
+const mainLinks: NavLink[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/', label: 'Zobraziť web', icon: Globe, external: true },
   { href: '/admin/darcovia', label: 'Darcovia', icon: Users, permission: 'view_donors' },
@@ -50,7 +59,13 @@ const mainLinks = [
   { href: '/admin/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_parishes' },
   { href: '/admin/knazi', label: 'Schematizmus kňazov', icon: BookUser, permission: 'view_clergy' },
   { href: '/admin/knazska-zona', label: 'Kňazská zóna', icon: FolderLock, permission: 'manage_clergy_docs' },
-  { href: '/admin/web-dieceza', label: 'Web diecézy', icon: Building2, permission: 'manage_diocese_web' },
+  {
+    href: '/admin/web-dieceza',
+    label: 'Web diecézy',
+    icon: Building2,
+    permission: 'manage_diocese_web',
+    children: [{ href: '/admin/web-dieceza/casopis', label: 'Naša Žilinská diecéza', icon: BookOpen }],
+  },
   { href: '/admin/aktuality', label: 'Aktuality', icon: FileText },
   { href: '/admin/podporene-projekty', label: 'Podporené projekty', icon: FolderHeart },
   { href: '/admin/na-stiahnutie', label: 'Na stiahnutie', icon: FileUp },
@@ -82,6 +97,7 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
   const { supabase } = useSupabase()
   const { hasPermission } = useUserRole()
   const [settingsExpanded, setSettingsExpanded] = useState(false)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
   const mounted = useIsClient()
 
   const visibleMainLinks = mainLinks.filter(link => !link.permission || hasPermission(link.permission))
@@ -156,6 +172,47 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
             {visibleMainLinks.map(link => {
               const Icon = link.icon
               const active = isActive(link.href, link.external)
+              if (link.children?.length && !isCollapsed) {
+                // rozbaľovacia skupina – otvorená, keď je aktívna niektorá podstránka
+                const expanded = openGroups[link.href] ?? active
+                return (
+                  <div key={link.href}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenGroups((g) => ({ ...g, [link.href]: !expanded }))}
+                      className={`w-full group relative flex items-center gap-2.5 rounded-lg transition-all duration-200 px-3 py-2 border ${
+                        active ? 'bg-white/10 border-white/10' : 'border-transparent hover:bg-white/8 hover:border-white/5'
+                      }`}
+                    >
+                      <div className={`flex-shrink-0 transition-colors ${active ? 'text-yellow-300' : 'text-blue-200/70 group-hover:text-white'}`}>
+                        <Icon size={16} />
+                      </div>
+                      <span className={`flex-1 text-left text-sm font-medium ${active ? 'text-white' : 'text-blue-100/80 group-hover:text-white'}`}>{link.label}</span>
+                      {expanded ? <ChevronUp size={12} className="text-blue-200/50" /> : <ChevronDown size={12} className="text-blue-200/50" />}
+                    </button>
+                    {expanded && (
+                      <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-2">
+                        {link.children.map((sub) => {
+                          const SubIcon = sub.icon
+                          const subActive = isActive(sub.href)
+                          return (
+                            <Link
+                              key={sub.href}
+                              href={sub.href}
+                              className={`group flex items-center gap-2 rounded-lg px-3 py-1.5 transition-all duration-200 ${
+                                subActive ? 'bg-white/15 text-white' : 'text-blue-100/60 hover:bg-white/8 hover:text-white'
+                              }`}
+                            >
+                              <SubIcon size={14} />
+                              <span className="text-xs font-medium">{sub.label}</span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
               return (
                 <Link
                   key={link.href}

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, BookOpen, Church, ExternalLink, HandHeart, Lock, Search, ShieldAlert } from 'lucide-react'
-import { getMagazine, getPastEvents, getPosts, getUpcomingEvents } from '@/lib/diocese/public'
+import { dioceseDb, getMagazine, getPastEvents, getPosts, getUpcomingEvents } from '@/lib/diocese/public'
+import DczaHero from '@/components/dcza/DczaHero'
 import PostCard from '@/components/dcza/PostCard'
 import EventItem from '@/components/dcza/EventItem'
 
@@ -8,19 +9,29 @@ export const dynamic = 'force-dynamic'
 
 /** Úvod webu diecézy dcza.sk (§ 20, D2). */
 export default async function DczaHome() {
-  const [posts, upcoming, past, magazine] = await Promise.all([getPosts({ limit: 7 }), getUpcomingEvents(4), getPastEvents(4), getMagazine(3)])
+  const db = dioceseDb()
+  const [posts, upcoming, past, magazine, { count: parishes }, { count: deaneries }, { count: priests }] = await Promise.all([
+    getPosts({ limit: 7 }),
+    getUpcomingEvents(4),
+    getPastEvents(4),
+    getMagazine(3),
+    db.from('parishes').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('kind', 'parish'),
+    db.from('deaneries').select('id', { count: 'exact', head: true }),
+    db.from('clergy').select('id', { count: 'exact', head: true }).in('category', ['priest', 'bishop']).eq('status', 'active'),
+  ])
   const [lead, ...rest] = posts
 
   return (
     <>
+      <DczaHero parishes={parishes ?? 0} deaneries={deaneries ?? 0} priests={priests ?? 0} />
+
       {/* Najnovšie */}
-      <section className="relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[420px] bg-sky/10 blur-[140px] pointer-events-none rounded-full" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+      <section id="aktuality" className="relative overflow-hidden bg-white border-t border-blue/10 scroll-mt-28">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-16">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-wine mb-2">Aktuality</p>
-              <h1 className="text-4xl sm:text-5xl font-light tracking-tight">Žilinská diecéza</h1>
+              <h2 className="text-3xl sm:text-4xl font-light tracking-tight">Z diecézy</h2>
             </div>
             <Link href="/aktuality" className="inline-flex items-center gap-1.5 text-sm font-extrabold text-blue hover:underline">
               Všetky aktuality <ArrowRight size={15} />
@@ -47,7 +58,7 @@ export default async function DczaHome() {
       </section>
 
       {/* Farnosti + rýchle odkazy */}
-      <section className="bg-white border-y border-blue/10">
+      <section className="bg-paper-warm border-y border-blue/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div>
             <h2 className="text-3xl font-light tracking-tight flex items-center gap-3">

@@ -6,6 +6,7 @@ import { loadParishClergy } from './parish-clergy'
 import { getSessionUser, getUserAccess } from '@/lib/auth'
 import type { ParishKind, ParishOccasion, ParishSeason, ParishServiceType } from './types'
 import { normalizeSocialLinks, type SocialLink } from './social'
+import { getChurchPhotos, getLifeAlbums, getPublicAlbum, type PublicAlbumSummary, type PublicGalleryPhoto } from './gallery'
 
 /**
  * Verejné stránky farností /farnosti (návrh § 4, fáza F5). Serverový modul.
@@ -68,7 +69,11 @@ export interface PublicPostSummary {
 export interface PublicPost extends PublicPostSummary {
   content: string | null
   updated_at: string
+  /** pripojený album zo života farnosti (§ 17) – fotky sa zobrazia pod príspevkom */
+  album: PublicAlbum | null
 }
+
+export type PublicAlbum = PublicAlbumSummary & { photos: PublicGalleryPhoto[] }
 
 export interface PublicSacrament {
   type: string
@@ -117,9 +122,11 @@ export interface PublicParish {
   clergy: PublicClergy[]
   /** E-zvonček farnosti – len ak ho diecéza zapla a farnosť má IBAN (aj na základnej stránke, O43) */
   box: PublicParishBox | null
+  /** má zverejnené albumy „Zo života farnosti“ – položka Galéria v menu */
+  hasAlbums: boolean
 }
 
-type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'basic' | 'manageUrl' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'box' | 'latitude' | 'longitude'> & {
+type ParishDbRow = Omit<PublicParish, 'deanery_name' | 'preview' | 'basic' | 'manageUrl' | 'villages' | 'schedules' | 'currentSeason' | 'clergy' | 'box' | 'hasAlbums' | 'latitude' | 'longitude'> & {
   deanery_id: string | null
   is_active: boolean
   latitude: string | number | null
@@ -161,7 +168,7 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
   const basic = !row.visible_on_web && !viewer.preview
   const preview = !row.visible_on_web && viewer.preview
 
-  const [{ data: deanery }, { data: villages }, { data: schedules }, clergy, activeBox] = await Promise.all([
+  const [{ data: deanery }, { data: villages }, { data: schedules }, clergy, activeBox, { count: albumCount }] = await Promise.all([
     row.deanery_id ? db.from('deaneries').select('name').eq('id', row.deanery_id).maybeSingle() : Promise.resolve({ data: null }),
     db.from('parish_villages').select('id, name, church_name, is_seat, sort_order').eq('parish_id', row.id).order('sort_order'),
     db.from('parish_schedules')
@@ -169,6 +176,9 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
       .eq('parish_id', row.id),
     loadParishClergy(db, row.id),
     getActiveBox(row.id),
+    basic
+      ? Promise.resolve({ count: 0 })
+      : db.from('parish_albums').select('id', { count: 'exact', head: true }).eq('parish_id', row.id).eq('kind', 'life').eq('published', true).is('taken_down_at', null),
   ])
 
   const villageName = new Map((villages ?? []).map((v) => [v.id as string, v.name as string]))
@@ -207,6 +217,7 @@ export const getPublicParishBySlug = cache(async (slug: string): Promise<PublicP
     // z registra kňazov (O49) – verejne len meno, tituly a funkcia (O47)
     clergy: clergy.map(({ full_name, title_before, title_after, position, is_head }) => ({ full_name, title_before, title_after, position, is_head })),
     box: activeBox ? { title: activeBox.title, description: activeBox.description } : null,
+    hasAlbums: (albumCount ?? 0) > 0,
   }
 })
 
@@ -236,15 +247,27 @@ export async function getUpcomingEvents(parishId: string, limit = 4): Promise<Pu
 export async function getParishPost(parishId: string, type: 'announcement' | 'news', slug: string): Promise<PublicPost | null> {
   const { data } = await serviceDb()
     .from('parish_posts')
-    .select(`${POST_SUMMARY_COLUMNS}, content, updated_at`)
+    .select(`${POST_SUMMARY_COLUMNS}, content, updated_at, album_id`)
     .eq('parish_id', parishId)
     .eq('type', type)
     .eq('slug', slug)
     .eq('published', true)
     .is('taken_down_at', null)
     .maybeSingle()
-  return (data as PublicPost | null) ?? null
+  if (!data) return null
+  const { album_id, ...post } = data as unknown as Omit<PublicPost, 'album'> & { album_id: string | null }
+  return { ...post, album: album_id ? await getPublicAlbum(serviceDb(), parishId, { id: album_id }) : null }
 }
+
+// ------------------------------------------------------------ fotogaléria (§ 17)
+
+/** Pás fotiek „Kostol a farnosť“ hore na stránke farnosti. */
+export const getParishChurchPhotos = (parishId: string) => getChurchPhotos(serviceDb(), parishId)
+
+/** Albumy „Zo života farnosti“ (najnovšie hore), aj externé odkazy (G6). */
+export const getParishAlbums = (parishId: string, limit = 24, offset = 0) => getLifeAlbums(serviceDb(), parishId, limit, offset)
+
+export const getParishAlbum = (parishId: string, slug: string): Promise<PublicAlbum | null> => getPublicAlbum(serviceDb(), parishId, { slug })
 
 /** Sviatosti: text farnosti prekryje diecézny štandard (O27); skryté sa vynechajú. */
 export async function getParishSacraments(parishId: string): Promise<PublicSacrament[]> {

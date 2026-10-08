@@ -14,20 +14,33 @@ import ParishBoxTab from './ParishBoxTab'
 import type { ChangeRequestRow, ParishAccessRow } from '@/app/admin/farnosti/actions'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
+import ParishGalleryTab from '@/components/parish-zone/ParishGalleryTab'
+import { adminDeleteAlbum, adminDeletePhoto, adminGetGallery, adminListAlbumOptions, adminSaveAlbum, adminSetGalleryQuota, adminTakedownAlbum, adminUpdatePhotos, adminUploadPhoto } from '@/app/admin/farnosti/gallery-actions'
 import { adminGetParishTraffic, adminDeleteParishPost, adminSaveParishPost, adminSaveParishSacrament, adminSaveSocialLinks, adminUploadEditorImage, adminUploadParishFile } from '@/app/admin/farnosti/web-actions'
 import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
 import ParishTrafficCard from '@/components/parishes/ParishTrafficCard'
 import type { ParishPostRow, SacramentEditRow } from '@/lib/parishes/posts'
 
-const POST_ACTIONS = { save: adminSaveParishPost, remove: adminDeleteParishPost, upload: adminUploadParishFile, uploadEditorImage: adminUploadEditorImage }
+const POST_ACTIONS = { save: adminSaveParishPost, remove: adminDeleteParishPost, upload: adminUploadParishFile, uploadEditorImage: adminUploadEditorImage, listAlbums: adminListAlbumOptions }
+const GALLERY_ACTIONS = {
+  load: adminGetGallery,
+  saveAlbum: adminSaveAlbum,
+  upload: adminUploadPhoto,
+  updatePhotos: adminUpdatePhotos,
+  deletePhoto: adminDeletePhoto,
+  deleteAlbum: adminDeleteAlbum,
+  setQuota: adminSetGalleryQuota,
+  takedown: adminTakedownAlbum,
+}
 
-type TabKey = 'basic' | 'villages' | 'schedule' | 'posts' | 'sacraments' | 'clergy' | 'donations' | 'box' | 'traffic' | 'access'
+type TabKey = 'basic' | 'villages' | 'schedule' | 'posts' | 'gallery' | 'sacraments' | 'clergy' | 'donations' | 'box' | 'traffic' | 'access'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'basic', label: 'Základné údaje' },
   { key: 'villages', label: 'Obce a štatistika' },
   { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
   { key: 'posts', label: 'Oznamy a aktuality' },
+  { key: 'gallery', label: 'Galéria' },
   { key: 'sacraments', label: 'Sviatosti' },
   { key: 'clergy', label: 'Kňazi' },
   { key: 'donations', label: 'Dary a história' },
@@ -117,6 +130,7 @@ export default function ParishDetailView({
       {tab === 'villages' && <ParishVillagesTab parishId={parish.id} initial={detail.villages} />}
       {tab === 'schedule' && <ParishScheduleTab parishId={parish.id} schedules={detail.schedules} villages={detail.villages} />}
       {tab === 'posts' && <ParishPostsTab parishId={parish.id} parishSlug={parish.slug} posts={web.posts} actions={POST_ACTIONS} />}
+      {tab === 'gallery' && <ParishGalleryTab parishId={parish.id} parishSlug={parish.slug} actions={GALLERY_ACTIONS} isDiocese />}
       {tab === 'sacraments' && <ParishSacramentsTab parishId={parish.id} rows={web.sacraments} save={adminSaveParishSacrament} />}
       {tab === 'clergy' && <ParishClergyTab clergy={detail.clergy} />}
       {tab === 'box' && <ParishBoxTab parishId={parish.id} parishSlug={parish.slug} />}

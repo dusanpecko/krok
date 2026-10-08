@@ -5,10 +5,23 @@ import ParishHeader, { type ParishNavItem } from './ParishHeader'
 import ParishFooter from './ParishFooter'
 import MobileBar from './MobileBar'
 
-type Section = 'home' | 'announcement' | 'news'
+type Section = 'home' | 'announcement' | 'news' | 'gallery'
 
 /** Rámec štandardného motívu: hlavička farnosti (návrh A), obsah, pätička farnosti, mobilná lišta. */
-export default function Shell({ parish, active, children, compact = false }: { parish: PublicParish; active: Section; children: React.ReactNode; compact?: boolean }) {
+export default function Shell({
+  parish,
+  active,
+  children,
+  compact = false,
+  hideBackdrop = false,
+}: {
+  parish: PublicParish
+  active: Section
+  children: React.ReactNode
+  compact?: boolean
+  /** farnosť má pás fotiek kostola – stmavená titulná fotka v pozadí odpadá (O59) */
+  hideBackdrop?: boolean
+}) {
   const base = `/farnosti/${parish.slug}`
   const hasOffice = officeHoursFor(parish).items.length > 0
   // základná stránka (nezverejnená): bez oznamov, aktualít a sviatostí, bohoslužby len ak sú vyplnené
@@ -21,6 +34,7 @@ export default function Shell({ parish, active, children, compact = false }: { p
       : [
           { label: 'Oznamy', href: `${base}/oznamy`, page: true, active: active === 'announcement' },
           { label: 'Aktuality', href: `${base}/aktuality`, page: true, active: active === 'news' },
+          ...(parish.hasAlbums ? [{ label: 'Galéria', href: `${base}/galeria`, page: true, active: active === 'gallery' }] : []),
           { label: 'Sviatosti', href: `${base}#sviatosti` },
         ]),
     { label: 'Kontakt', href: `${base}#kontakt` },
@@ -45,7 +59,7 @@ export default function Shell({ parish, active, children, compact = false }: { p
       />
       <main className="relative flex-grow bg-paper-warm text-ink pb-16 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
-        {parish.image_url && !compact && (
+        {parish.image_url && !compact && !hideBackdrop && (
           <div className="absolute inset-x-0 top-0 h-[460px] pointer-events-none">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={parish.image_url} alt="" className="w-full h-full object-cover opacity-25" />

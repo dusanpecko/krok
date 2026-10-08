@@ -62,3 +62,8 @@ export function officeHoursFor<T extends { service_type: string; time_from: stri
   const season = p.currentSeason === 'summer' && pick('summer').length ? 'summer' : 'regular'
   return { season, items: pick(season).sort((a, b) => (a.time_from ?? '99').localeCompare(b.time_from ?? '99')) }
 }
+
+/** „1 fotka“, „3 fotky“, „12 fotiek“ */
+export function photoCount(n: number): string {
+  return `${n} ${n === 1 ? 'fotka' : n >= 2 && n <= 4 ? 'fotky' : 'fotiek'}`
+}

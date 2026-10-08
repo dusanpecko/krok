@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { ArrowLeft, CalendarDays, FileText } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CalendarDays, FileText, Images } from 'lucide-react'
 import type { ParishPostDetailProps } from '../types'
 import Shell from './Shell'
 import PostCard from './PostCard'
-import { formatDate, formatDateTime, validRange } from '@/lib/parishes/format'
+import PhotoGallery from './PhotoGallery'
+import { formatDate, formatDateTime, photoCount, validRange } from '@/lib/parishes/format'
 
 export default function PostDetail({ parish, post, related }: ParishPostDetailProps) {
   const isAnn = post.type === 'announcement'
@@ -36,6 +37,17 @@ export default function PostDetail({ parish, post, related }: ParishPostDetailPr
           </a>
         )}
       </article>
+      {post.album && (
+        <section className="mt-12">
+          <h3 className="text-xl font-light mb-5 flex items-center gap-2">
+            <Images size={20} className="text-gold-ink" /> Fotky – {photoCount(post.album.photo_count)}
+          </h3>
+          <PhotoGallery photos={post.album.photos} title={post.album.title} />
+          <Link href={`/farnosti/${parish.slug}/galeria/${post.album.slug}`} className="mt-4 inline-flex items-center gap-1 text-sm font-extrabold text-blue hover:underline">
+            Album „{post.album.title}“ <ArrowRight size={14} />
+          </Link>
+        </section>
+      )}
       {related.length > 0 && (
         <section className="mt-16">
           <h3 className="text-xl font-light mb-5">{isAnn ? 'Staršie oznamy' : 'Ďalšie aktuality'}</h3>

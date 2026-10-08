@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bell, Eye, EyeOff, FileText, Loader2, Newspaper, Pencil, Pin, Plus, Save, Trash2, Upload, X, AlertTriangle, ExternalLink } from 'lucide-react'
 import SimpleRichTextEditor from '@/components/admin/SimpleRichTextEditor'
@@ -14,6 +14,8 @@ export interface PostActions {
   remove: (parishId: string, postId: string) => Promise<{ success: true } | { success: false; error: string }>
   upload: (parishId: string, formData: FormData) => Promise<{ url?: string; name?: string; error?: string }>
   uploadEditorImage: (parishId: string, formData: FormData) => Promise<{ url?: string; error?: string }>
+  /** albumy galérie na pripojenie k aktualite (§ 17) */
+  listAlbums: (parishId: string) => Promise<{ id: string; title: string; event_date: string | null }[]>
 }
 
 const TYPE_LABEL: Record<ParishPostType, string> = { announcement: 'Oznamy', news: 'Aktuality' }
@@ -49,6 +51,7 @@ function emptyPost(type: ParishPostType): ParishPostInput {
     event_at: null,
     published: true,
     pinned: false,
+    album_id: null,
   }
 }
 
@@ -64,7 +67,7 @@ export default function ParishPostsTab({ parishId, parishSlug, posts, actions }:
     setEditing({
       id: p.id, type: p.type, title: p.title, content: p.content ?? '', excerpt: p.excerpt ?? '', image_url: p.image_url,
       attachment_url: p.attachment_url, attachment_name: p.attachment_name, valid_from: p.valid_from, valid_to: p.valid_to,
-      event_at: p.event_at, published: p.published, pinned: p.pinned,
+      event_at: p.event_at, published: p.published, pinned: p.pinned, album_id: p.album_id,
     })
 
   const remove = (p: ParishPostRow) => {
@@ -254,6 +257,8 @@ function PostEditor({ parishId, initial, actions, takenDown, onClose }: { parish
         )}
       </div>
 
+      {!isAnn && <AlbumPicker parishId={parishId} value={form.album_id ?? null} onChange={(v) => set('album_id', v)} list={actions.listAlbums} />}
+
       <Field label="Krátky popis (nepovinné)" hint="Zobrazí sa v zozname a vo vyhľadávačoch. Ak ho nevyplníte, vezme sa začiatok textu.">
         <textarea value={form.excerpt ?? ''} onChange={(e) => set('excerpt', e.target.value)} rows={2} className={inputCls} maxLength={300} />
       </Field>
@@ -267,5 +272,25 @@ function PostEditor({ parishId, initial, actions, takenDown, onClose }: { parish
         </button>
       </div>
     </div>
+  )
+}
+
+function AlbumPicker({ parishId, value, onChange, list }: { parishId: string; value: string | null; onChange: (v: string | null) => void; list: PostActions['listAlbums'] }) {
+  const [albums, setAlbums] = useState<{ id: string; title: string; event_date: string | null }[] | null>(null)
+  useEffect(() => {
+    list(parishId).then(setAlbums, () => setAlbums([]))
+  }, [list, parishId])
+  return (
+    <Field label="Fotky z galérie (nepovinné)" hint="Pripojte album zo záložky Galéria – fotky sa zobrazia pod aktualitou, netreba ich nahrávať znova.">
+      <select value={value ?? ''} onChange={(e) => onChange(e.target.value || null)} className={inputCls} disabled={!albums}>
+        <option value="">{albums ? (albums.length ? '— bez albumu —' : 'Zatiaľ žiadne albumy (vytvoríte ich v záložke Galéria)') : 'Načítavam…'}</option>
+        {albums?.map((a) => (
+          <option key={a.id} value={a.id}>
+            {a.title}
+            {a.event_date ? ` (${new Date(`${a.event_date}T12:00:00`).toLocaleDateString('sk-SK')})` : ''}
+          </option>
+        ))}
+      </select>
+    </Field>
   )
 }

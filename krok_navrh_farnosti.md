@@ -62,8 +62,9 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] Účelové zbierky farností (cieľová suma) – neskôr, O37
 
 **Fotogaléria farnosti (§ 17)**
-- [ ] Rozhodnúť G1–G6 (fotky kostola, albumy „Zo života farnosti“, kto nahráva, indexovanie, limit, externé albumy) – § 17.4
-- [ ] Realizácia: albumy a fotky, nahrávanie viacerých fotiek so zmenšením do WebP, sekcia na stránke farnosti, galéria + zväčšenie, prepojenie s aktualitou – § 17.1–17.2
+- [x] Rozhodnúť G1–G6 – § 17.4, O59–O64
+- [x] Realizácia (migrácie 044–045): albumy a fotky, nahrávanie viacerých fotiek so zmenšením do WebP, kvóta, sekcia na stránke farnosti, galéria + zväčšenie, prepojenie s aktualitou, externé albumy, stiahnutie diecézou, upozornenie GDPR + podmienky – § 17.1–17.2
+- [ ] Otestovať na test.mojkrok.sk (nahrávanie z mobilu, HEIC z iPhonu, kvóta)
 
 **Schematizmus kňazov (K0–K5, § 16)**
 - [x] Analýza `KNAZI - ZOZNAM AKTUALNY.xlsx` (11 listov, 274 kňazov, problémy v dátach) – § 16.1
@@ -155,6 +156,12 @@ Cieľ modulu:
 | O56 | Overovacia adresa | **Náhodný kód** v adrese (dnes je pri celebrete aj kód na odomknutie – nahradí ho náhodná adresa), **zákaz indexovania** vyhľadávačmi. |
 | O57 | Logo, pečiatka, podpis | Presunúť do Kroku a **dať ich meniť v admine** (zmena biskupa → nový podpis bez programovania). |
 | O58 | Kontakt na celebrete | Nadpis **Curia dioecesana** (dnešné „Oratio Dioecesis“ bol preklep). |
+| O59 | Fotky kostola (G1, 2026-10-08) | **Áno** – album „Kostol a farnosť“, pás fotiek hore na stránke farnosti (nahradí stmavenú titulnú fotku). |
+| O60 | Kvóta galérie (G5) | Určuje **diecéza pre každú farnosť**, predvolene **1 GB** (dá sa zvýšiť v admine). Fotky sa na serveri zmenšia (max. 2000 px) a prevedú do **WebP**. |
+| O61 | Kto nahráva (G3) | **Správca aj editor** farnosti; ide na web hneď, diecéza vie album stiahnuť. |
+| O62 | Indexovanie (G4) | Fotky kostola na hlavnej stránke farnosti áno, **albumy zo života farnosti `noindex`** (deti). |
+| O63 | Externé albumy (G6) | Popri vlastných albumoch aj **odkaz na externý album** (Facebook, Google Fotky, Zonerama) – dlaždica otvorí odkaz. |
+| O64 | GDPR | Upozornenie pri nahrávaní v zóne + odsek v **podmienkach používania** (súhlas rodičov pri deťoch, odstránenie na žiadosť). |
 | O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
@@ -1319,7 +1326,7 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 
 ---
 
-## 17. Fotogaléria farnosti – „Zo života farnosti“ (návrh 2026-10-08, ⬜ na rozhodnutie)
+## 17. Fotogaléria farnosti – „Zo života farnosti“ (návrh 2026-10-08, rozhodnuté O59–O64, ✅ realizované – migrácie 044, 045)
 
 **Podnet (pripomienky Julie, 2026-10-08):** na stránke farnosti chýbajú fotky – kostol, farnosť, život spoločenstva. Stránka je dnes vizuálne strohá (titulná fotka, erb, obrázok pri aktualite).
 
@@ -1348,11 +1355,11 @@ parish_posts.album_id → parish_albums (voliteľné prepojenie aktuality s albu
 
 - Na fotkách sú ľudia, často **deti** (prvé sväté prijímanie, birmovka). Zodpovednosť za súhlas so zverejnením nesie farnosť – v zóne pri nahrávaní krátke upozornenie + doplniť do podmienok používania stránok farností (§ 5.4).
 - Bez mien ľudí v popisoch (odporúčanie), vyhľadávače fotky môžu indexovať (otázka G4).
-- Limit, aby sa B2 nezahltilo: napr. **300 fotiek / 1 GB na farnosť** (dá sa zvýšiť).
+- Limit, aby sa B2 nezahltilo: **kvóta 1 GB na farnosť**, diecéza ju môže zmeniť (O60).
 
 ### 17.4 Otázky na rozhodnutie (G1–G6)
 
-| # | Otázka | Môj návrh |
+| # | Otázka | Môj návrh (rozhodnutie: O59–O64 – návrhy prijaté, limit 1 GB bez limitu počtu fotiek) |
 |---|---|---|
 | G1 | Stále **fotky kostola** hore na stránke (pás/slideshow) – áno? | **Áno**, 3–8 fotiek, nahradí stmavenú titulnú fotku |
 | G2 | **Albumy** (podujatia) alebo jedna spoločná galéria bez albumov? | **Albumy** – prehľadnejšie, dá sa pripojiť k aktualite |

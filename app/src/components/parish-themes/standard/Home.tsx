@@ -1,19 +1,21 @@
 import Link from 'next/link'
 import ParishBoxWidget from './ParishBoxWidget'
 import {
-  Bell, CalendarDays, Clock, ExternalLink, FileText, Globe, HandHeart, Mail, MapPin, Newspaper, Phone, Sparkles, Users, ArrowRight, Church, BookOpen,
+  Bell, CalendarDays, Clock, ExternalLink, FileText, Globe, HandHeart, Mail, MapPin, Newspaper, Phone, Sparkles, Users, ArrowRight, Church, BookOpen, Images,
 } from 'lucide-react'
 import type { ParishHomeProps } from '../types'
 import Shell, { SectionHeading, cardCls } from './Shell'
 import ScheduleView from './ScheduleView'
 import PostCard from './PostCard'
+import PhotoGallery from './PhotoGallery'
+import AlbumCard from './AlbumCard'
 import SacramentsSection from './SacramentsSection'
 import OfficeHours from './OfficeHours'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
 import { clergyName, dayMonth, formatDateTime, googleMapsUrl, hasParishSchedule, validRange } from '@/lib/parishes/format'
 
-export default function Home({ parish, announcements, news, events, sacraments }: ParishHomeProps) {
+export default function Home({ parish, announcements, news, events, sacraments, churchPhotos, albums }: ParishHomeProps) {
   const base = `/farnosti/${parish.slug}`
   const latest = announcements[0]
   const feast = dayMonth(parish.feast_day)
@@ -26,7 +28,14 @@ export default function Home({ parish, announcements, news, events, sacraments }
   const showSchedule = !parish.basic || hasParishSchedule(parish)
 
   return (
-    <Shell parish={parish} active="home">
+    <Shell parish={parish} active="home" hideBackdrop={churchPhotos.length > 0}>
+      {/* Kostol a farnosť – pás fotiek (§ 17, G1) */}
+      {churchPhotos.length > 0 && (
+        <div className="mb-12">
+          <PhotoGallery photos={churchPhotos} variant="strip" title={parish.name} />
+        </div>
+      )}
+
       {/* Úvod + najnovší oznam (základná stránka bez vlastného textu ho nemá) */}
       {(parish.intro || !parish.basic || latest) && (
         <div className="grid lg:grid-cols-5 gap-6 mb-16">
@@ -200,6 +209,21 @@ export default function Home({ parish, announcements, news, events, sacraments }
           </div>
           <Link href={`${base}/aktuality`} className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-blue hover:underline">
             Všetky aktuality <ArrowRight size={14} />
+          </Link>
+        </section>
+      )}
+
+      {/* Zo života farnosti – 3 najnovšie albumy (§ 17) */}
+      {albums.length > 0 && (
+        <section className="mb-16">
+          <SectionHeading icon={<Images size={22} />}>Zo života farnosti</SectionHeading>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {albums.map((a) => (
+              <AlbumCard key={a.id} album={a} base={base} />
+            ))}
+          </div>
+          <Link href={`${base}/galeria`} className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-blue hover:underline">
+            Všetky albumy <ArrowRight size={14} />
           </Link>
         </section>
       )}

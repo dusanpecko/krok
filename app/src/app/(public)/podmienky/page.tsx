@@ -155,6 +155,11 @@ export default function PodmienkyPage() {
       <ul>
         <li>Účet darcu je bezplatný. Darca zodpovedá za správnosť svojich údajov a za ochranu prihlasovacích údajov.</li>
         <li>Účty farností prideľuje biskupský úrad. Farnosť zodpovedá za obsah, ktorý na svojej stránke zverejní (oznamy, aktuality, fotografie, texty), najmä za to, že má právo ho zverejniť a že neporušuje práva iných osôb.</li>
+        <li>
+          Fotografie vo fotogalérii farnosti zverejňuje farnosť ako prevádzkovateľ (oprávnený záujem na informovaní o živote farnosti). Zverejňuje len fotografie, na ktoré má
+          právo; pri fotografiách detí a mladistvých sa vyžaduje súhlas zákonného zástupcu. Kto nesúhlasí so zverejnením svojej fotografie, môže požiadať farnosť alebo
+          prevádzkovateľa webu o jej odstránenie – fotografia sa odstráni bez zbytočného odkladu. Albumy zo života farnosti sa neindexujú vo vyhľadávačoch.
+        </li>
         <li>Úradné údaje farnosti (názov, adresa, IČO, štatistika veriacich a pod.) farnosť len navrhuje, zmeny schvaľuje biskupský úrad.</li>
         <li>Prevádzkovateľ môže bez náhrady stiahnuť obsah, ktorý je v rozpore s právom, s učením Katolíckej cirkvi alebo poškodzuje dobré meno iných.</li>
         <li>Obsah webu (texty, grafika, logo KROK) je chránený autorským právom; jeho ďalšie šírenie je možné len so súhlasom prevádzkovateľa, pri obsahu farností so súhlasom farnosti.</li>

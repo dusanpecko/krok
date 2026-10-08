@@ -23,6 +23,8 @@ export interface ParishPostRow {
   published: boolean
   published_at: string | null
   pinned: boolean
+  /** pripojený album zo života farnosti (len aktuality, § 17) */
+  album_id: string | null
   taken_down_at: string | null
   takedown_reason: string | null
   created_at: string
@@ -43,10 +45,11 @@ export interface ParishPostInput {
   event_at?: string | null
   published: boolean
   pinned?: boolean
+  album_id?: string | null
 }
 
 export const POST_COLUMNS =
-  'id, parish_id, type, title, slug, excerpt, content, image_url, attachment_url, attachment_name, valid_from, valid_to, event_at, published, published_at, pinned, taken_down_at, takedown_reason, created_at, updated_at'
+  'id, parish_id, type, title, slug, excerpt, content, image_url, attachment_url, attachment_name, valid_from, valid_to, event_at, published, published_at, pinned, album_id, taken_down_at, takedown_reason, created_at, updated_at'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const httpsUrl = (v: string | null | undefined) => (v && /^https?:\/\//i.test(v.trim()) ? v.trim() : null)
@@ -82,6 +85,13 @@ export async function writeParishPost(
   if (validFrom && validTo && validTo < validFrom) return { success: false, error: 'Dátum „platí do“ je skôr ako „platí od“.' }
   const eventAt = input.type === 'news' && input.event_at && !Number.isNaN(Date.parse(input.event_at)) ? new Date(input.event_at).toISOString() : null
 
+  let albumId: string | null = null
+  if (input.type === 'news' && input.album_id) {
+    const { data: album } = await db.from('parish_albums').select('id').eq('id', input.album_id).eq('parish_id', parishId).eq('kind', 'life').maybeSingle()
+    if (!album) return { success: false, error: 'Vybraný album sa nenašiel.' }
+    albumId = album.id
+  }
+
   let existing: Pick<ParishPostRow, 'id' | 'slug' | 'title' | 'published_at' | 'taken_down_at'> | null = null
   if (input.id) {
     const { data } = await db.from('parish_posts').select('id, slug, title, published_at, taken_down_at').eq('id', input.id).eq('parish_id', parishId).maybeSingle()
@@ -106,6 +116,7 @@ export async function writeParishPost(
     published: !!input.published,
     published_at: input.published ? existing?.published_at ?? new Date().toISOString() : existing?.published_at ?? null,
     pinned: !!input.pinned,
+    album_id: albumId,
     updated_by: userId,
   }
 

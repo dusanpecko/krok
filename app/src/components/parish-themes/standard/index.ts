@@ -2,6 +2,8 @@ import type { ParishTheme } from '../types'
 import Home from './Home'
 import PostList from './PostList'
 import PostDetail from './PostDetail'
+import Gallery from './Gallery'
+import AlbumDetail from './AlbumDetail'
 
 export const standardTheme: ParishTheme = {
   key: 'standard',
@@ -10,4 +12,6 @@ export const standardTheme: ParishTheme = {
   Home,
   PostList,
   PostDetail,
+  Gallery,
+  AlbumDetail,
 }

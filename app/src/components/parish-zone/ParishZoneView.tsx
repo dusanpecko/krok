@@ -15,6 +15,8 @@ import {
 import ParishScheduleTab from '@/components/admin/parishes/ParishScheduleTab'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
+import ParishGalleryTab from '@/components/parish-zone/ParishGalleryTab'
+import { deleteMyAlbum, deleteMyPhoto, getMyGallery, listMyAlbumOptions, saveMyAlbum, updateMyPhotos, uploadMyPhoto } from '@/app/moja-farnost/gallery-actions'
 import { getMyParishTraffic, deleteMyPost, setMyWebVisibility, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
 import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
 import ParishTrafficCard from '@/components/parishes/ParishTrafficCard'
@@ -24,9 +26,10 @@ import type { ParishClergyEntry } from '@/lib/parishes/parish-clergy'
 import { clergyName } from '@/lib/parishes/format'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
-type TabKey = 'overview' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'sacraments' | 'population' | 'clergy'
+type TabKey = 'overview' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'gallery' | 'sacraments' | 'population' | 'clergy'
 
-const POST_ACTIONS = { save: saveMyPost, remove: deleteMyPost, upload: uploadMyParishFile, uploadEditorImage: uploadMyEditorImage }
+const POST_ACTIONS = { save: saveMyPost, remove: deleteMyPost, upload: uploadMyParishFile, uploadEditorImage: uploadMyEditorImage, listAlbums: listMyAlbumOptions }
+const GALLERY_ACTIONS = { load: getMyGallery, saveAlbum: saveMyAlbum, upload: uploadMyPhoto, updatePhotos: updateMyPhotos, deletePhoto: deleteMyPhoto, deleteAlbum: deleteMyAlbum }
 
 const eur = (n: number | null | undefined) => (n == null ? '—' : n.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
@@ -38,6 +41,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
     { key: 'traffic', label: 'Návštevnosť' },
     { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
     { key: 'posts', label: 'Oznamy a aktuality' },
+    { key: 'gallery', label: 'Galéria' },
     { key: 'presentation', label: 'Prezentácia' },
     { key: 'sacraments', label: 'Sviatosti' },
     { key: 'official', label: 'Úradné údaje' },
@@ -99,6 +103,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
       {tab === 'schedule' && <ParishScheduleTab parishId={p.id} schedules={view.schedules} villages={view.villages} save={saveMySchedule} />}
       {tab === 'traffic' && <ParishTrafficCard parishId={p.id} load={getMyParishTraffic} />}
       {tab === 'posts' && <ParishPostsTab parishId={p.id} parishSlug={p.slug} posts={view.posts} actions={POST_ACTIONS} />}
+      {tab === 'gallery' && <ParishGalleryTab parishId={p.id} parishSlug={p.slug} actions={GALLERY_ACTIONS} />}
       {tab === 'sacraments' && <ParishSacramentsTab parishId={p.id} rows={view.sacraments} save={saveMySacrament} />}
       {tab === 'presentation' && (
         <div className="space-y-6">

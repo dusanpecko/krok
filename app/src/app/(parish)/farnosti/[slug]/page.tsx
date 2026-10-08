@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getParishPosts, getParishSacraments, getPublicParishBySlug, getUpcomingEvents } from '@/lib/parishes/public'
+import { getParishAlbums, getParishChurchPhotos, getParishPosts, getParishSacraments, getPublicParishBySlug, getUpcomingEvents } from '@/lib/parishes/public'
 import { jsonLdScript, parishJsonLd, parishMetadata } from '@/lib/parishes/seo'
 import { getParishTheme } from '@/components/parish-themes'
 
@@ -24,20 +24,22 @@ export default async function ParishPage({ params }: PageProps) {
   if (!parish) notFound()
 
   // základná stránka (verejná stránka nie je zapnutá) – bez oznamov, aktualít a sviatostí
-  const [announcements, news, events, sacraments] = parish.basic
-    ? [[], [], [], []]
+  const [announcements, news, events, sacraments, churchPhotos, albums] = parish.basic
+    ? [[], [], [], [], [], []]
     : await Promise.all([
         getParishPosts(parish.id, 'announcement', 2),
         getParishPosts(parish.id, 'news', 6),
         getUpcomingEvents(parish.id),
         getParishSacraments(parish.id),
+        getParishChurchPhotos(parish.id),
+        parish.hasAlbums ? getParishAlbums(parish.id, 3) : Promise.resolve([]),
       ])
   const { Home } = getParishTheme(parish.theme)
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(parishJsonLd(parish))} />
-      <Home parish={parish} announcements={announcements} news={news} events={events} sacraments={sacraments} />
+      <Home parish={parish} announcements={announcements} news={news} events={events} sacraments={sacraments} churchPhotos={churchPhotos} albums={albums} />
     </>
   )
 }

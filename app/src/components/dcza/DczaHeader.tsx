@@ -25,6 +25,7 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-blue/10">
       <div className="hidden md:block bg-blue-deep text-white/80 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-end gap-5">
+          <a href="https://www.facebook.com/zilinskadieceza" target="_blank" rel="noopener noreferrer" className="hover:text-white">Facebook</a>
           <Link href="/kuria/urady/nahlasovanie-zneuzivania" className="hover:text-white">Nahlásenie zneužívania</Link>
           <Link href="/knazska-zona" className="hover:text-white">Kňazská zóna</Link>
           <a href="https://mojkrok.sk" className="hover:text-white font-bold text-gold-bright/90">KROK – Pastoračný fond</a>

@@ -40,6 +40,10 @@ export default async function DczaPost({ params }: { params: Promise<{ slug: str
           <img src={post.image_url!} alt="" className="mt-8 w-full rounded-3xl" />
         )}
         {post.content && <div className="dcza-prose mt-8" dangerouslySetInnerHTML={{ __html: post.content }} />}
+        <div className="mt-12 pt-6 border-t border-blue/10 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-mute">Páčil sa vám článok? Pošlite ho ďalej.</p>
+          <ShareButton path={`/aktuality/${post.slug}`} title={post.title} text={post.excerpt ? `${post.title}\n${post.excerpt}` : post.title} bare align="right" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue text-white font-extrabold text-sm hover:bg-blue/90 cursor-pointer" />
+        </div>
       </article>
       {related.length > 0 && (
         <section className="mt-20">

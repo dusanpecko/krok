@@ -1,16 +1,21 @@
 import type { Metadata } from 'next'
-import { getPastEvents, getUpcomingEvents } from '@/lib/diocese/public'
+import { getCalendarEvents, getPastEvents, getUpcomingEvents } from '@/lib/diocese/public'
+import MonthCalendar from '@/components/dcza/MonthCalendar'
 import EventItem from '@/components/dcza/EventItem'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Kalendár akcií' }
 
 export default async function DczaCalendar() {
-  const [upcoming, past] = await Promise.all([getUpcomingEvents(50), getPastEvents(24)])
+  const [upcoming, past, all] = await Promise.all([getUpcomingEvents(50), getPastEvents(24), getCalendarEvents()])
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Bratislava' })
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-wine mb-2">Žilinská diecéza</p>
       <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-10">Kalendár akcií</h1>
+      <div className="mb-14">
+        <MonthCalendar events={all} today={today} />
+      </div>
       <h2 className="text-xl font-light mb-4">Pripravujeme</h2>
       {upcoming.length ? (
         <div className="grid md:grid-cols-2 gap-3 mb-12">

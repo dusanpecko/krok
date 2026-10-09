@@ -17,6 +17,8 @@ const HREF_OVERRIDE: Record<string, string> = {
   'kontakty/farnosti': '/farnosti',
   'o-nas/schematizmus/farnosti': '/farnosti',
   'cinnost/krok': 'https://mojkrok.sk',
+  'cinnost/charita': 'https://www.charitaza.sk',
+  'cinnost/lectio-divina': 'https://www.lectio.one',
   'dokumenty/homilie': '/aktuality?kategoria=homilie',
   'dokumenty/pastierske-listy': '/aktuality?kategoria=pastierske-listy',
 }
@@ -37,7 +39,14 @@ export function mainNav(tree: DiocesePageNode[]): NavItem[] {
   const items = roots.map(toItem)
   // Aktuality: pevné podsekcie (články, kalendár, časopis) namiesto prázdnych stránok bety
   const akt = items.find((i) => i.href === '/aktuality')
-  if (akt) akt.children = [{ label: 'Články', href: '/aktuality' }, { label: 'Kalendár akcií', href: '/kalendar' }, { label: 'Časopis Naša Žilinská diecéza', href: '/casopis' }, ...(akt.children ?? []).filter((c) => !['/aktuality', '/kalendar', '/casopis'].includes(c.href))]
+  if (akt)
+    akt.children = [
+      { label: 'Pozvánky', href: '/aktuality?kategoria=pozvanky' },
+      { label: 'Zo života farností', href: '/aktuality?kategoria=zo-zivota-farnosti' },
+      { label: 'Všetky aktuality', href: '/aktuality' },
+      { label: 'Kalendár akcií', href: '/kalendar' },
+      { label: 'Časopis Naša Žilinská diecéza', href: '/casopis' },
+    ]
   items.splice(Math.max(1, items.length - 1), 0, { label: 'Farnosti', href: '/farnosti' })
   return items
 }

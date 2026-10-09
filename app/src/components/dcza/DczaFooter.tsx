@@ -27,6 +27,9 @@ export default function DczaFooter({ nav }: { nav: NavItem[] }) {
               <Mail size={16} className="text-gold shrink-0 mt-0.5" /> <a href="mailto:sekretariat@dcza.sk" className="hover:text-white">sekretariat@dcza.sk</a>
             </li>
           </ul>
+          <a href="https://www.facebook.com/zilinskadieceza" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold">
+            <span className="w-5 h-5 rounded-full bg-[#1877F2] text-white text-xs font-black flex items-center justify-center">f</span> Sledujte nás na Facebooku
+          </a>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-sm">
           {nav.slice(0, 6).map((item) => (

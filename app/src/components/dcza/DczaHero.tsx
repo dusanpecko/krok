@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowRight, Church } from 'lucide-react'
+import { ArrowRight, Church, HandHeart } from 'lucide-react'
 
 /** Úvodné hero webu diecézy – rovnaká stavba ako hero na mojkrok.sk (O71). */
 
@@ -84,8 +84,8 @@ export default function DczaHero({ parishes, deaneries, priests }: { parishes: n
           >
             <Church size={20} /> Nájsť svoju farnosť <ArrowRight className="group-hover:translate-x-1.5 transition-transform" size={20} />
           </Link>
-          <a href="#aktuality" className="px-8 py-4 bg-white hover:bg-blue-soft/50 text-ink/80 rounded-xl text-lg font-bold transition-all flex items-center justify-center border border-blue/10">
-            Aktuality z diecézy
+          <a href="https://mojkrok.sk" className="px-8 py-4 bg-white hover:bg-blue-soft/50 text-ink/80 rounded-xl text-lg font-bold transition-all flex items-center justify-center gap-2 border border-blue/10">
+            <HandHeart size={20} className="text-gold-ink" /> Podporiť diecézu
           </a>
         </motion.div>
       </div>

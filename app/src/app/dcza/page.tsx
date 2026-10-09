@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, BookOpen, Church, ExternalLink, HandHeart, Lock, Search, ShieldAlert } from 'lucide-react'
-import { dioceseDb, getMagazine, getPastEvents, getPosts, getUpcomingEvents } from '@/lib/diocese/public'
+import { dioceseDb, getMagazine, getPastEvents, getPosts, getUpcomingEvents, type DiocesePostSummary } from '@/lib/diocese/public'
 import DczaHero from '@/components/dcza/DczaHero'
 import PostCard from '@/components/dcza/PostCard'
 import EventItem from '@/components/dcza/EventItem'
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function DczaHome() {
   const db = dioceseDb()
   const [posts, upcoming, past, magazine, { count: parishes }, { count: deaneries }, { count: priests }] = await Promise.all([
-    getPosts({ limit: 7 }),
+    getPosts({ limit: 30 }),
     getUpcomingEvents(4),
     getPastEvents(4),
     getMagazine(4),
@@ -19,71 +19,50 @@ export default async function DczaHome() {
     db.from('deaneries').select('id', { count: 'exact', head: true }),
     db.from('clergy').select('id', { count: 'exact', head: true }).in('category', ['priest', 'bishop']).eq('status', 'active'),
   ])
-  const [lead, ...rest] = posts
+  const inCat = (p: (typeof posts)[number], slug: string) => p.categories.some((c) => c.slug === slug)
+  const [invites, parishLife] = await Promise.all([getPosts({ limit: 4, category: 'pozvanky' }), getPosts({ limit: 4, category: 'zo-zivota-farnosti' })])
+  const others = posts.filter((p) => !inCat(p, 'pozvanky') && !inCat(p, 'zo-zivota-farnosti')).slice(0, 4)
 
   return (
     <>
       <DczaHero parishes={parishes ?? 0} deaneries={deaneries ?? 0} priests={priests ?? 0} />
 
-      {/* Najnovšie */}
-      <section id="aktuality" className="relative overflow-hidden bg-white border-t border-blue/10 scroll-mt-28">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-16">
-          <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-wine mb-2">Aktuality</p>
-              <h2 className="text-3xl sm:text-4xl font-light tracking-tight">Z diecézy</h2>
-            </div>
-            <Link href="/aktuality" className="inline-flex items-center gap-1.5 text-sm font-extrabold text-blue hover:underline">
-              Všetky aktuality <ArrowRight size={15} />
-            </Link>
-          </div>
-          {lead && (
-            <div className="grid lg:grid-cols-[1.4fr_1fr] gap-5">
-              <PostCard post={lead} big />
-              <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-5">
-                {rest.slice(0, 2).map((p) => (
-                  <PostCard key={p.id} post={p} />
-                ))}
-              </div>
-            </div>
-          )}
-          {rest.length > 2 && (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
-              {rest.slice(2, 6).map((p) => (
-                <PostCard key={p.id} post={p} />
-              ))}
-            </div>
-          )}
+      {/* Aktuality v pásoch podľa sekcií (pripomienky Julie) */}
+      <section id="aktuality" className="bg-white border-t border-blue/10 scroll-mt-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 space-y-16">
+          <NewsStrip title="Pozvánky" href="/aktuality?kategoria=pozvanky" posts={invites} />
+          <NewsStrip title="Zo života farností" href="/aktuality?kategoria=zo-zivota-farnosti" posts={parishLife} />
+          <NewsStrip title="Ďalšie aktuality" subtitle="Z diecézy, KROK – Pastoračný fond Žilinskej diecézy, homílie a zamyslenia" href="/aktuality" posts={others} />
         </div>
       </section>
 
       {/* Farnosti + rýchle odkazy */}
       <section className="bg-paper-warm border-y border-blue/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 grid lg:grid-cols-[1.1fr_1fr] gap-14 items-center">
           <div>
             <h2 className="text-3xl font-light tracking-tight flex items-center gap-3">
               <Church className="text-gold-ink" size={28} /> Nájdite svoju farnosť
             </h2>
-            <p className="text-mute mt-2">Sväté omše, spovedanie, farské oznamy a kontakty vo farnostiach Žilinskej diecézy – stačí zadať obec.</p>
-            <form action="/farnosti" className="mt-5 relative max-w-xl">
+            <p className="text-mute mt-3 leading-relaxed">Sväté omše, spovedanie, farské oznamy a kontakty vo farnostiach Žilinskej diecézy – stačí zadať obec.</p>
+            <form action="/farnosti" className="mt-6 relative max-w-xl">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-mute" />
-              <input name="q" placeholder="Obec alebo farnosť…" className="w-full pl-11 pr-28 py-3.5 rounded-2xl bg-paper-warm border border-blue/15 focus:outline-none focus:ring-4 focus:ring-blue/10" />
+              <input name="q" placeholder="Obec alebo farnosť…" className="w-full pl-11 pr-28 py-3.5 rounded-2xl bg-white border border-blue/15 focus:outline-none focus:ring-4 focus:ring-blue/10" />
               <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-2.5 rounded-xl bg-blue text-white text-sm font-extrabold hover:bg-blue/90 cursor-pointer">
                 Hľadať
               </button>
             </form>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-5">
             {[
-              { href: '/o-nas/biskup/zivotopis', label: 'Biskup', text: 'Mons. Tomáš Galis', icon: BookOpen },
+              { href: '/o-nas/biskup', label: 'Biskup', text: 'Mons. Tomáš Galis', icon: BookOpen },
               { href: '/kuria/urady/nahlasovanie-zneuzivania', label: 'Nahlásenie zneužívania', text: 'Úrad pre ochranu maloletých', icon: ShieldAlert },
               { href: '/knazska-zona', label: 'Kňazská zóna', text: 'Dokumenty pre kňazov', icon: Lock },
-              { href: 'https://mojkrok.sk', label: 'KROK', text: 'Pastoračný fond diecézy', icon: HandHeart },
+              { href: 'https://mojkrok.sk', label: 'KROK', text: 'Pastoračný fond Žilinskej diecézy', icon: HandHeart },
             ].map((l) => (
-              <Link key={l.href} href={l.href} className="group rounded-2xl border border-blue/10 bg-paper-warm p-4 hover:border-gold/60 transition-colors">
-                <l.icon size={20} className="text-gold-ink mb-2" />
+              <Link key={l.href} href={l.href} className="group rounded-2xl border border-blue/10 bg-white p-6 shadow-sm hover:shadow-md hover:border-gold/60 transition-all">
+                <l.icon size={22} className="text-gold-ink mb-3" />
                 <p className="font-extrabold group-hover:text-blue">{l.label}</p>
-                <p className="text-xs text-mute">{l.text}</p>
+                <p className="text-sm text-mute mt-0.5">{l.text}</p>
               </Link>
             ))}
           </div>
@@ -155,5 +134,27 @@ export default async function DczaHome() {
         </section>
       )}
     </>
+  )
+}
+
+function NewsStrip({ title, subtitle, href, posts }: { title: string; subtitle?: string; href: string; posts: DiocesePostSummary[] }) {
+  if (!posts.length) return null
+  return (
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-3xl font-light tracking-tight">{title}</h2>
+          {subtitle && <p className="text-sm text-mute mt-1">{subtitle}</p>}
+        </div>
+        <Link href={href} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-blue hover:underline">
+          Všetky <ArrowRight size={15} />
+        </Link>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {posts.map((p) => (
+          <PostCard key={p.id} post={p} />
+        ))}
+      </div>
+    </div>
   )
 }

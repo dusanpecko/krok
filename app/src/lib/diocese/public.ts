@@ -47,7 +47,7 @@ export interface DiocesePost extends DiocesePostSummary {
 }
 
 /** Aktuality Kroku na dcza.sk ako kategória (O74) – na mojkrok.sk sa aktuality diecézy nezobrazujú. */
-export const KROK_CATEGORY = { slug: 'krok', name: 'KROK – Pastoračný fond' }
+export const KROK_CATEGORY = { slug: 'krok', name: 'KROK – Pastoračný fond Žilinskej diecézy' }
 
 export interface DioceseEvent {
   id: string
@@ -147,7 +147,7 @@ export async function getKrokPost(slug: string): Promise<DiocesePost | null> {
 
 async function getDiocesePosts(opts: { limit?: number; offset?: number; category?: string | null } = {}): Promise<DiocesePostSummary[]> {
   const limit = opts.limit ?? 12
-  let q = dioceseDb().from('diocese_posts').select(opts.category ? POST_COLUMNS.replace('diocese_post_category_links(', 'diocese_post_category_links!inner(') : POST_COLUMNS).eq('published', true)
+  let q = dioceseDb().from('diocese_posts').select(opts.category ? POST_COLUMNS.replace('diocese_post_category_links(diocese_post_categories(', 'diocese_post_category_links!inner(diocese_post_categories!inner(') : POST_COLUMNS).eq('published', true)
     .lte('published_at', new Date().toISOString())
   if (opts.category) q = q.eq('diocese_post_category_links.diocese_post_categories.slug', opts.category)
   const { data } = await q.order('pinned', { ascending: false }).order('published_at', { ascending: false }).range(opts.offset ?? 0, (opts.offset ?? 0) + limit - 1)
@@ -178,6 +178,13 @@ export async function getPastEvents(limit = 6): Promise<DioceseEvent[]> {
   const today = new Date().toISOString().slice(0, 10)
   const { data } = await dioceseDb().from('diocese_events').select(EVENT_COLUMNS).eq('published', true).lt('starts_on', today).order('starts_on', { ascending: false }).limit(limit)
   return ((data ?? []) as DioceseEvent[]).filter((e) => !e.ends_on || e.ends_on < today)
+}
+
+/** Akcie v rozsahu mesiacov okolo dneška – kalendár. */
+export async function getCalendarEvents(): Promise<DioceseEvent[]> {
+  const from = new Date(Date.now() - 400 * 86400000).toISOString().slice(0, 10)
+  const { data } = await dioceseDb().from('diocese_events').select(EVENT_COLUMNS).eq('published', true).gte('starts_on', from).order('starts_on').limit(1000)
+  return (data ?? []) as DioceseEvent[]
 }
 
 export async function getEvent(slug: string): Promise<DioceseEvent | null> {

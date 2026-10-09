@@ -690,3 +690,25 @@ body {
 .dcza-prose table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
 .dcza-prose th, .dcza-prose td { border: 1px solid color-mix(in srgb, var(--color-blue) 15%, transparent); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
 .dcza-prose hr { border-color: color-mix(in srgb, var(--color-blue) 15%, transparent); margin: 2rem 0; }
+
+/* Prílohy (PDF, Word) v obsahu webu diecézy – samostatný riadok s ikonou a „Stiahnuť“ (pripomienky Julie) */
+.dcza-prose a[href$=".pdf"], .dcza-prose a[href$=".doc"], .dcza-prose a[href$=".docx"] {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem; margin: 0.4rem 0;
+  border: 1px solid color-mix(in srgb, var(--color-blue) 15%, transparent); border-radius: 0.9rem;
+  background: #fff; text-decoration: none; color: var(--color-ink); font-weight: 700;
+}
+.dcza-prose a[href$=".pdf"]::before, .dcza-prose a[href$=".doc"]::before, .dcza-prose a[href$=".docx"]::before {
+  content: "PDF"; flex-shrink: 0; font-size: 0.65rem; font-weight: 900; letter-spacing: 0.05em; color: #fff;
+  background: #c8332e; border-radius: 0.4rem; padding: 0.35rem 0.45rem;
+}
+.dcza-prose a[href$=".doc"]::before, .dcza-prose a[href$=".docx"]::before { content: "DOC"; background: var(--color-blue); }
+.dcza-prose a[href$=".pdf"]::after, .dcza-prose a[href$=".doc"]::after, .dcza-prose a[href$=".docx"]::after {
+  content: "Stiahnuť"; margin-left: auto; flex-shrink: 0; font-size: 0.8rem; font-weight: 800; color: var(--color-blue);
+}
+.dcza-prose a[href$=".pdf"]:hover, .dcza-prose a[href$=".doc"]:hover, .dcza-prose a[href$=".docx"]:hover { border-color: var(--color-gold); }
+.dcza-prose p:has(> a[href$=".pdf"]), .dcza-prose p:has(> a[href$=".docx"]) { margin-top: 0; }
+/* fotky na výšku (portréty) nie cez celú šírku */
+.dcza-prose img { max-height: 30rem; width: auto; }
+.dcza-prose figure img { display: block; }
+/* obsahové stránky (kúria, osoby) – portréty menšie ako v článkoch */
+.dcza-page img { max-height: 20rem; }

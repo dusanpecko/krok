@@ -29,7 +29,12 @@ export default async function DczaPage({ params }: Props) {
     if (parts[0] === 'sk') permanentRedirect('/aktuality')
   }
   const [page, tree] = await Promise.all([getPage(path), getPageTree()])
-  if (!page) notFound()
+  if (!page) {
+    // zlúčené alebo presunuté stránky (napr. /o-nas/biskup/zivotopis → /o-nas/biskup)
+    const to = await findRedirect(`/${path}`)
+    if (to) permanentRedirect(to)
+    notFound()
+  }
   const { trail, section } = locate(tree, path)
   const current = trail[trail.length - 1]
   const children = current?.children ?? []
@@ -69,7 +74,7 @@ export default async function DczaPage({ params }: Props) {
         <article className="order-1 lg:order-2 min-w-0 max-w-3xl">
           <h1 className="text-4xl sm:text-5xl font-light tracking-tight leading-tight">{page.title}</h1>
           {page.content ? (
-            <div className="dcza-prose mt-8" dangerouslySetInnerHTML={{ __html: page.content }} />
+            <div className="dcza-prose dcza-page mt-8" dangerouslySetInnerHTML={{ __html: page.content }} />
           ) : (
             children.length === 0 && <p className="mt-8 text-mute">Obsah pripravujeme.</p>
           )}

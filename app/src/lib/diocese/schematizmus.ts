@@ -4,13 +4,14 @@ import { personName, roleRank, type BodyKind } from './bodies'
 
 /**
  * Verejný schematizmus na dcza.sk (K5 / D4, O47): meno s titulmi, funkcia, pôvod, diakonát a kňazská
- * vysviacka, história pôsobenia po rokoch, dekanát a farnosť. NIKDY fotka, kontakty, dátum narodenia,
- * adresa ani iné súkromné údaje – preto sa číta vždy len vymenovaný zoznam stĺpcov. Serverový modul.
+ * vysviacka, história pôsobenia po rokoch, dekanát a farnosť, diecézny e-mail (@dcza.sk). NIKDY fotka,
+ * súkromný e-mail, telefón, dátum narodenia, adresa ani iné súkromné údaje – preto sa číta vždy len
+ * vymenovaný zoznam stĺpcov. Serverový modul.
  */
 
 const PUBLIC_CATEGORIES = ['bishop', 'priest', 'deacon', 'permanent_deacon']
 const PUBLIC_STATUSES = ['active', 'retired', 'studying']
-const PUBLIC_COLUMNS = 'id, slug, schematizmus_slug, category, status, first_name, last_name, title_before, title_after, ecclesiastical_titles, religious_order_id'
+const PUBLIC_COLUMNS = 'id, slug, schematizmus_slug, category, status, first_name, last_name, title_before, title_after, ecclesiastical_titles, religious_order_id, work_email'
 
 type ClergyRow = {
   id: string
@@ -24,6 +25,7 @@ type ClergyRow = {
   title_after: string | null
   ecclesiastical_titles: string[] | null
   religious_order_id: string | null
+  work_email: string | null
 }
 type AssignmentRow = {
   clergy_id: string
@@ -54,6 +56,8 @@ export interface PublicClergySummary {
   order: string | null
   category: string
   retired: boolean
+  /** len diecézna adresa @dcza.sk – iné pracovné e-maily sa nezverejňujú */
+  email: string | null
   functions: PublicFunction[]
   deanery: { id: string; name: string } | null
 }
@@ -77,6 +81,7 @@ export function displayName(c: Pick<ClergyRow, 'first_name' | 'last_name' | 'tit
   return [before, c.first_name, c.last_name, orderCode, c.title_after ? `, ${c.title_after}` : null].filter(Boolean).join(' ').replace(' ,', ',')
 }
 
+const dioceseEmail = (e: string | null) => (e && /^[^@\s]+@dcza\.sk$/i.test(e.trim()) ? e.trim().toLowerCase() : null)
 const slugOf = (c: ClergyRow) => c.slug || c.schematizmus_slug || c.id
 const isCurrent = (a: AssignmentRow) => !a.date_to && !a.year_to
 const place = (a: AssignmentRow) => a.parishes?.name.replace(/^Farnosť /, '') ?? a.deaneries?.name ?? a.organization ?? null
@@ -106,6 +111,7 @@ function summarize(c: ClergyRow, asg: AssignmentRow[], orders: Map<string, strin
     order,
     category: c.category,
     retired: c.status === 'retired',
+    email: dioceseEmail(c.work_email),
     functions: dedupeFunctions(
       current
         .filter((a) => a.role?.trim())

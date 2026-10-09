@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Church, MapPin } from 'lucide-react'
+import { ArrowLeft, Church, Mail, MapPin } from 'lucide-react'
 import { getPublicClergy } from '@/lib/diocese/schematizmus'
 import { shortDate } from '@/lib/diocese/format'
 
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: c.name, description: [fn ? `${fn.role}${fn.place ? ` – ${fn.place}` : ''}` : null, 'Schematizmus Žilinskej diecézy'].filter(Boolean).join(' · ') }
 }
 
-/** Profil v schematizme (O47) – bez fotky a kontaktov. */
+/** Profil v schematizme (O47) – bez fotky a súkromných kontaktov; len diecézny e-mail. */
 export default async function ClergyProfile({ params }: { params: Promise<{ slug: string }> }) {
   const c = await getPublicClergy((await params).slug)
   if (!c) notFound()
@@ -58,6 +58,11 @@ export default async function ClergyProfile({ params }: { params: Promise<{ slug
         )
       )}
       <div className="mt-6 flex flex-wrap gap-3 text-sm">
+        {c.email && (
+          <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-soft/50 text-blue font-bold hover:underline">
+            <Mail size={14} /> {c.email}
+          </a>
+        )}
         {c.deanery && (
           <Link href={`/schematizmus/dekanaty#dekanat-${c.deanery.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-soft/50 text-blue font-bold">
             <Church size={14} /> Dekanát {c.deanery.name}

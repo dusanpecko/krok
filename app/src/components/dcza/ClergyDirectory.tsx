@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import { Mail, Search } from 'lucide-react'
 import type { PublicClergySummary } from '@/lib/diocese/schematizmus'
 
 type Filter = 'all' | 'priests' | 'deacons' | 'retired'
@@ -28,7 +28,7 @@ export default function ClergyDirectory({ clergy, deaneries }: { clergy: PublicC
       if (filter === 'retired' && !c.retired) return false
       if (deanery && c.deanery?.id !== deanery) return false
       if (!needle) return true
-      return fold(`${c.name} ${c.functions.map((f) => `${f.role} ${f.place ?? ''}`).join(' ')}`).includes(needle)
+      return fold(`${c.name} ${c.email ?? ''} ${c.functions.map((f) => `${f.role} ${f.place ?? ''}`).join(' ')}`).includes(needle)
     })
   }, [clergy, q, filter, deanery])
 
@@ -77,13 +77,20 @@ export default function ClergyDirectory({ clergy, deaneries }: { clergy: PublicC
               {list
                 .filter((c) => c.letter === l)
                 .map((c) => (
-                  <li key={c.slug}>
-                    <Link href={`/schematizmus/knazi/${c.slug}`} className="block rounded-2xl bg-white border border-blue/10 px-4 py-3 hover:border-gold/60 transition-colors">
+                  <li key={c.slug} className="rounded-2xl bg-white border border-blue/10 hover:border-gold/60 transition-colors">
+                    <Link href={`/schematizmus/knazi/${c.slug}`} className="block px-4 pt-3 pb-1">
                       <p className="font-extrabold">{c.name}</p>
                       <p className="text-sm text-mute">
                         {c.retired ? 'na odpočinku' : c.functions.slice(0, 2).map((f) => (f.place ? `${f.role} – ${f.place}` : f.role)).join(', ') || '—'}
                       </p>
                     </Link>
+                    {c.email ? (
+                      <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1.5 px-4 pb-3 text-sm font-bold text-blue hover:underline break-all">
+                        <Mail size={13} className="shrink-0" /> {c.email}
+                      </a>
+                    ) : (
+                      <div className="pb-2" />
+                    )}
                   </li>
                 ))}
             </ul>

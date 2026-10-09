@@ -130,6 +130,8 @@ export interface ClergyAssignment {
   deanery_id: string | null
   deanery_name: string | null
   organization: string | null
+  body_id?: string | null
+  body_role?: string | null
   date_from: string | null
   date_to: string | null
   year_from: number | null

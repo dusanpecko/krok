@@ -39,7 +39,7 @@ function errorMessage(err: unknown) {
 }
 
 const ASSIGNMENT_COLUMNS =
-  'id, kind, role, parish_id, deanery_id, organization, date_from, date_to, year_from, year_to, is_primary, note, source, parishes(name), deaneries(name)'
+  'id, kind, role, parish_id, deanery_id, organization, body_id, body_role, date_from, date_to, year_from, year_to, is_primary, note, source, parishes(name), deaneries(name)'
 
 type AssignmentRow = Omit<ClergyAssignment, 'parish_name' | 'deanery_name'> & {
   parishes: { name: string } | { name: string }[] | null
@@ -331,6 +331,91 @@ export async function addAssignment(clergyId: string, input: AssignmentInput, en
     })
     if (error) return { success: false, error: error.message }
     await log(clergyId, user.id, 'assignment', 'create', { role, kind: input.kind, parish_id: input.parish_id ?? null, date_from: dateFrom, ended })
+    revalidatePath(`/admin/knazi/${clergyId}`)
+    revalidatePath('/admin/knazi')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: errorMessage(err) }
+  }
+}
+
+export interface AssignmentEdit {
+  kind: AssignmentKind
+  role: string
+  parish_id?: string | null
+  deanery_id?: string | null
+  organization?: string | null
+  body_id?: string | null
+  /** „2015“ alebo „2015-09-01“; prázdne = neznáme */
+  from?: string | null
+  /** prázdne = aktuálne pôsobenie */
+  to?: string | null
+  note?: string | null
+}
+
+/** „2015“ → len rok, „2015-09-01“ → dátum aj rok. */
+function parsePeriod(v: string | null | undefined, label: string): { date: string | null; year: number | null } | string {
+  const t = v?.trim() ?? ''
+  if (!t) return { date: null, year: null }
+  if (/^\d{4}$/.test(t)) return { date: null, year: Number(t) }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return { date: t, year: Number(t.slice(0, 4)) }
+  return `${label} zadajte ako rok (2015) alebo dátum (2015-09-01).`
+}
+
+/** Oprava záznamu o pôsobení (preklep, zlá farnosť, obdobie…). */
+export async function updateAssignment(clergyId: string, assignmentId: string, input: AssignmentEdit): Promise<Result> {
+  try {
+    const { user } = await requirePermission(MANAGE)
+    let role = input.role?.trim()
+    if (!role) return { success: false, error: 'Zadajte funkciu.' }
+    if (input.kind === 'parish' && !input.parish_id) return { success: false, error: 'Vyberte farnosť.' }
+    const from = parsePeriod(input.from, 'Začiatok')
+    if (typeof from === 'string') return { success: false, error: from }
+    const to = parsePeriod(input.to, 'Koniec')
+    if (typeof to === 'string') return { success: false, error: to }
+    if (from.year && to.year && to.year < from.year) return { success: false, error: 'Koniec je pred začiatkom.' }
+
+    const client = db()
+    const { data: before } = await client.from('clergy_assignments').select('*').eq('id', assignmentId).eq('clergy_id', clergyId).maybeSingle()
+    if (!before) return { success: false, error: 'Záznam neexistuje.' }
+
+    const bodyId = input.kind === 'diocese' ? input.body_id || null : null
+    let bodyRole: string | null = null
+    let organization = input.kind === 'parish' ? null : input.organization?.trim() || null
+    if (bodyId) {
+      const { data: body } = await client.from('diocese_bodies').select('name, name_genitive, kind').eq('id', bodyId).maybeSingle()
+      if (!body) return { success: false, error: 'Orgán neexistuje.' }
+      bodyRole = role
+      role = assignmentRoleText(role, body)
+      // pri nezmenenom orgáne ostáva pôvodná organizácia (napr. „Biskupský úrad“ pri ekonómovi)
+      organization = bodyId === before.body_id && before.organization ? before.organization : body.name
+    }
+    let deaneryId = input.kind === 'deanery' ? input.deanery_id || null : before.deanery_id
+    if (input.kind === 'parish' && input.parish_id) {
+      const { data: p } = await client.from('parishes').select('deanery_id').eq('id', input.parish_id).maybeSingle()
+      deaneryId = p?.deanery_id ?? null
+    }
+    const patch = {
+      kind: input.kind,
+      role,
+      parish_id: input.kind === 'parish' ? input.parish_id : null,
+      deanery_id: deaneryId,
+      organization,
+      body_id: bodyId,
+      body_role: bodyRole,
+      date_from: from.date,
+      year_from: from.year,
+      date_to: to.date,
+      year_to: to.year,
+      ...(to.year ? { is_primary: false } : {}),
+      note: input.note?.trim() || null,
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await client.from('clergy_assignments').update(patch).eq('id', assignmentId)
+    if (error) return { success: false, error: error.message }
+    const changes: Record<string, { from: unknown; to: unknown }> = {}
+    for (const [k, v] of Object.entries(patch)) if (k !== 'updated_at' && (before as Record<string, unknown>)[k] !== v) changes[k] = { from: (before as Record<string, unknown>)[k], to: v }
+    await log(clergyId, user.id, 'assignment', 'update', { assignment_id: assignmentId, ...changes })
     revalidatePath(`/admin/knazi/${clergyId}`)
     revalidatePath('/admin/knazi')
     return { success: true }

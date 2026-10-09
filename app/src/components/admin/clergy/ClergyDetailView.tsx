@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ExternalLink, Loader2, Plus, Save, Star, Trash2, UserCog, X } from 'lucide-react'
+import { ArrowLeft, Check, ExternalLink, Loader2, Pencil, Plus, Save, Star, Trash2, UserCog, X } from 'lucide-react'
 import { btnIcon, btnIconDanger, btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 import {
   addAssignment,
@@ -11,7 +11,9 @@ import {
   endAssignment,
   promoteClergy,
   setPrimaryAssignment,
+  updateAssignment,
   updateClergy,
+  type AssignmentEdit,
   type AssignmentInput,
   type ClergyDetail,
 } from '@/app/admin/knazi/actions'
@@ -333,7 +335,110 @@ function AssignmentsTab({ detail }: { detail: ClergyDetail }) {
   const current = assignments.filter(isCurrent)
   const history = assignments.filter((a) => !isCurrent(a))
 
-  const row = (a: ClergyDetail['assignments'][number], cur: boolean) => (
+  // oprava záznamu priamo v tabuľke
+  const [editId, setEditId] = useState<string | null>(null)
+  const [edit, setEdit] = useState<AssignmentEdit | null>(null)
+  const startEdit = (a: ClergyDetail['assignments'][number]) => {
+    setEditId(a.id)
+    setEdit({
+      kind: a.kind,
+      role: a.body_id ? a.body_role ?? a.role : a.role,
+      parish_id: a.parish_id ?? '',
+      deanery_id: a.deanery_id ?? '',
+      organization: a.organization ?? '',
+      body_id: a.body_id ?? '',
+      from: a.date_from ?? (a.year_from ? String(a.year_from) : ''),
+      to: a.date_to ?? (a.year_to ? String(a.year_to) : ''),
+      note: a.note ?? '',
+    })
+  }
+  const cancelEdit = () => {
+    setEditId(null)
+    setEdit(null)
+  }
+
+  const editRow = (a: ClergyDetail['assignments'][number]) =>
+    edit && (
+      <tr key={a.id} className="bg-amber-50/50">
+        <td colSpan={6} className="p-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <Field label="Druh">
+              <select value={edit.kind} onChange={(e) => setEdit({ ...edit, kind: e.target.value as AssignmentKind })} className={inputCls}>
+                {(Object.keys(KIND_LABEL) as AssignmentKind[]).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
+              </select>
+            </Field>
+            <Field label={edit.body_id ? 'Funkcia v orgáne' : 'Funkcia'}>
+              <input list="clergy-roles" value={edit.role} onChange={(e) => setEdit({ ...edit, role: e.target.value })} className={inputCls} />
+            </Field>
+            {edit.kind === 'parish' ? (
+              <Field label="Farnosť" className="md:col-span-2">
+                <select value={edit.parish_id ?? ''} onChange={(e) => setEdit({ ...edit, parish_id: e.target.value })} className={inputCls}>
+                  <option value="">— vyberte —</option>
+                  {lookups.parishes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </Field>
+            ) : edit.kind === 'deanery' ? (
+              <Field label="Dekanát" className="md:col-span-2">
+                <select value={edit.deanery_id ?? ''} onChange={(e) => setEdit({ ...edit, deanery_id: e.target.value })} className={inputCls}>
+                  <option value="">— vyberte —</option>
+                  {lookups.deaneries.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </Field>
+            ) : (
+              <>
+                {edit.kind === 'diocese' && (
+                  <Field label="Rada, komisia, úrad">
+                    <select value={edit.body_id ?? ''} onChange={(e) => setEdit({ ...edit, body_id: e.target.value })} className={inputCls}>
+                      <option value="">— žiadny (organizácia) —</option>
+                      {lookups.bodies.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </Field>
+                )}
+                {!(edit.kind === 'diocese' && edit.body_id) && (
+                  <Field label="Organizácia / miesto" className={edit.kind === 'diocese' ? '' : 'md:col-span-2'}>
+                    <input value={edit.organization ?? ''} onChange={(e) => setEdit({ ...edit, organization: e.target.value })} className={inputCls} />
+                  </Field>
+                )}
+              </>
+            )}
+            <Field label="Od" hint="rok alebo RRRR-MM-DD">
+              <input value={edit.from ?? ''} onChange={(e) => setEdit({ ...edit, from: e.target.value })} placeholder="2015" className={inputCls} />
+            </Field>
+            <Field label="Do" hint="prázdne = aktuálne">
+              <input value={edit.to ?? ''} onChange={(e) => setEdit({ ...edit, to: e.target.value })} placeholder="" className={inputCls} />
+            </Field>
+            <Field label="Poznámka" className="md:col-span-2">
+              <input value={edit.note ?? ''} onChange={(e) => setEdit({ ...edit, note: e.target.value })} className={inputCls} />
+            </Field>
+          </div>
+          <div className="flex justify-end gap-2 mt-3">
+            <button type="button" onClick={cancelEdit} className={btnSecondary}>
+              <X size={14} /> Zrušiť
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  setMsg(null)
+                  const res = await updateAssignment(person.id, a.id, edit)
+                  setMsg(res.success ? { kind: 'success', text: 'Záznam opravený.' } : { kind: 'error', text: res.error ?? 'Chyba' })
+                  if (res.success) {
+                    cancelEdit()
+                    router.refresh()
+                  }
+                })
+              }
+              className={btnPrimary}
+            >
+              {pending ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Uložiť opravu
+            </button>
+          </div>
+        </td>
+      </tr>
+    )
+
+  const row = (a: ClergyDetail['assignments'][number], cur: boolean) => editId === a.id ? editRow(a) : (
     <tr key={a.id} className={a.is_primary ? 'bg-blue-50/40' : ''}>
       <td className="py-2 px-2">
         <span className="font-bold text-gray-900">{a.role}</span>
@@ -347,6 +452,9 @@ function AssignmentsTab({ detail }: { detail: ClergyDetail }) {
       <td className="py-2 px-2 text-gray-500 text-xs whitespace-nowrap">{assignmentPeriod(a)}</td>
       <td className="py-2 px-2 text-[10px] text-gray-400">{a.source === 'schematizmus' ? 'dcza.sk' : a.source === 'excel' ? 'Excel' : a.source === 'admin' ? 'admin' : ''}</td>
       <td className="py-2 px-2 text-right whitespace-nowrap">
+        <button type="button" title="Opraviť záznam" onClick={() => startEdit(a)} className={btnIcon}>
+          <Pencil size={14} />
+        </button>
         {cur && !a.is_primary && (
           <button type="button" title="Označiť ako hlavné" onClick={() => run(() => setPrimaryAssignment(person.id, a.id), 'Hlavné pôsobenie zmenené.')} className={btnIcon}>
             <Star size={14} />

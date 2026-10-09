@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Church, Mail, MapPin } from 'lucide-react'
+import { ArrowLeft, Church, MapPin } from 'lucide-react'
+import ProtectedEmail from '@/components/dcza/ProtectedEmail'
 import { getPublicClergy } from '@/lib/diocese/schematizmus'
 import { shortDate } from '@/lib/diocese/format'
 
@@ -58,10 +59,8 @@ export default async function ClergyProfile({ params }: { params: Promise<{ slug
         )
       )}
       <div className="mt-6 flex flex-wrap gap-3 text-sm">
-        {c.email && (
-          <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-soft/50 text-blue font-bold hover:underline">
-            <Mail size={14} /> {c.email}
-          </a>
+        {c.emailCode && (
+          <ProtectedEmail code={c.emailCode} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-soft/50 text-blue font-bold hover:underline" />
         )}
         {c.deanery && (
           <Link href={`/schematizmus/dekanaty#dekanat-${c.deanery.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-soft/50 text-blue font-bold">

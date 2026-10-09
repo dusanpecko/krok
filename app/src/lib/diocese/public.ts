@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { hideEmails } from './email-code'
 
 /** Web diecézy dcza.sk – čítanie obsahu (§ 20, D2). Serverový modul, service role, len zverejnené. */
 
@@ -88,7 +89,7 @@ export const getPageTree = cache(async (): Promise<DiocesePageNode[]> => {
 
 export async function getPage(path: string): Promise<DiocesePage | null> {
   const { data } = await dioceseDb().from('diocese_pages').select('id, path, title, excerpt, content, image_url, updated_at').eq('path', path).eq('published', true).maybeSingle()
-  return (data as DiocesePage | null) ?? null
+  return data ? ({ ...data, excerpt: hideEmails(data.excerpt) } as DiocesePage) : null
 }
 
 const POST_COLUMNS = 'id, slug, title, excerpt, image_url, published_at, pinned, diocese_post_category_links(diocese_post_categories(slug, name))'
@@ -96,6 +97,7 @@ const POST_COLUMNS = 'id, slug, title, excerpt, image_url, published_at, pinned,
 type PostRow = Omit<DiocesePostSummary, 'categories'> & { content?: string | null; diocese_post_category_links: { diocese_post_categories: { slug: string; name: string } | null }[] }
 const toPost = ({ diocese_post_category_links: links, ...p }: PostRow) => ({
   ...p,
+  excerpt: hideEmails(p.excerpt),
   href: `/aktuality/${p.slug}`,
   categories: (links ?? []).map((l) => l.diocese_post_categories).filter((c): c is { slug: string; name: string } => !!c),
 })
@@ -106,7 +108,7 @@ const krokToPost = (k: KrokRow) => ({
   slug: k.slug,
   href: `/aktuality/krok/${k.slug}`,
   title: k.title,
-  excerpt: k.excerpt,
+  excerpt: hideEmails(k.excerpt),
   image_url: k.featured_image,
   published_at: k.published_at,
   categories: [KROK_CATEGORY],

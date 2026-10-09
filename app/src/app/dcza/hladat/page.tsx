@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import { dioceseDb } from '@/lib/diocese/public'
 import { pageHref } from '@/lib/diocese/nav'
 import { longDate } from '@/lib/diocese/format'
+import { hideEmails } from '@/lib/diocese/email-code'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Hľadať', robots: { index: false } }
@@ -44,7 +45,7 @@ export default async function DczaSearch({ searchParams }: { searchParams: Promi
             <Link href={`/aktuality/${p.slug}`} className="block rounded-2xl bg-white border border-blue/10 p-4 hover:border-gold/60">
               <p className="text-xs text-mute">{longDate(p.published_at)}</p>
               <p className="font-extrabold">{p.title}</p>
-              {p.excerpt && <p className="text-sm text-mute line-clamp-2 mt-1">{p.excerpt}</p>}
+              {p.excerpt && <p className="text-sm text-mute line-clamp-2 mt-1">{hideEmails(p.excerpt)}</p>}
             </Link>
           </li>
         ))}
@@ -55,7 +56,7 @@ export default async function DczaSearch({ searchParams }: { searchParams: Promi
                 {longDate(p.published_at)} · <span className="font-black uppercase tracking-wider text-wine">KROK</span>
               </p>
               <p className="font-extrabold">{p.title}</p>
-              {p.excerpt && <p className="text-sm text-mute line-clamp-2 mt-1">{p.excerpt}</p>}
+              {p.excerpt && <p className="text-sm text-mute line-clamp-2 mt-1">{hideEmails(p.excerpt)}</p>}
             </Link>
           </li>
         ))}

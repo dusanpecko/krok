@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Mail, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
+import ProtectedEmail from './ProtectedEmail'
 import type { PublicClergySummary } from '@/lib/diocese/schematizmus'
 
 type Filter = 'all' | 'priests' | 'deacons' | 'retired'
@@ -28,7 +29,7 @@ export default function ClergyDirectory({ clergy, deaneries }: { clergy: PublicC
       if (filter === 'retired' && !c.retired) return false
       if (deanery && c.deanery?.id !== deanery) return false
       if (!needle) return true
-      return fold(`${c.name} ${c.email ?? ''} ${c.functions.map((f) => `${f.role} ${f.place ?? ''}`).join(' ')}`).includes(needle)
+      return fold(`${c.name} ${c.functions.map((f) => `${f.role} ${f.place ?? ''}`).join(' ')}`).includes(needle)
     })
   }, [clergy, q, filter, deanery])
 
@@ -84,10 +85,8 @@ export default function ClergyDirectory({ clergy, deaneries }: { clergy: PublicC
                         {c.retired ? 'na odpočinku' : c.functions.slice(0, 2).map((f) => (f.place ? `${f.role} – ${f.place}` : f.role)).join(', ') || '—'}
                       </p>
                     </Link>
-                    {c.email ? (
-                      <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1.5 px-4 pb-3 text-sm font-bold text-blue hover:underline break-all">
-                        <Mail size={13} className="shrink-0" /> {c.email}
-                      </a>
+                    {c.emailCode ? (
+                      <ProtectedEmail code={c.emailCode} iconSize={13} className="inline-flex items-center gap-1.5 px-4 pb-3 text-sm font-bold text-blue hover:underline break-all" />
                     ) : (
                       <div className="pb-2" />
                     )}

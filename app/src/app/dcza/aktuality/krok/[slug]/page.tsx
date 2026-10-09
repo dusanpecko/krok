@@ -7,6 +7,8 @@ import { longDate } from '@/lib/diocese/format'
 import { getBaseUrl } from '@/lib/mollie/client'
 import PostCard from '@/components/dcza/PostCard'
 import ShareButton from '@/components/parishes/ShareButton'
+import EmailDecoder from '@/components/dcza/EmailDecoder'
+import { protectEmails } from '@/lib/diocese/email-code'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,7 +51,8 @@ export default async function DczaKrokPost({ params }: { params: Promise<{ slug:
           // eslint-disable-next-line @next/next/no-img-element
           <img src={post.image_url} alt="" className="mt-8 w-full rounded-3xl" />
         )}
-        {post.content && <div className="dcza-prose mt-8" dangerouslySetInnerHTML={{ __html: post.content }} />}
+        {post.content && <div className="dcza-prose mt-8" dangerouslySetInnerHTML={{ __html: protectEmails(post.content) }} />}
+        <EmailDecoder />
         <div className="mt-12 pt-6 border-t border-blue/10 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-mute">Páčil sa vám článok? Pošlite ho ďalej.</p>
           <ShareButton path={`/aktuality/krok/${post.slug}`} title={post.title} bare align="right" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue text-white font-extrabold text-sm hover:bg-blue/90 cursor-pointer" />

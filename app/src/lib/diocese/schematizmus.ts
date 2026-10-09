@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { dioceseDb } from './public'
 import { personName, roleRank, type BodyKind } from './bodies'
+import { encodeEmail } from './email-code'
 
 /**
  * Verejný schematizmus na dcza.sk (K5 / D4, O47): meno s titulmi, funkcia, pôvod, diakonát a kňazská
@@ -56,8 +57,8 @@ export interface PublicClergySummary {
   order: string | null
   category: string
   retired: boolean
-  /** len diecézna adresa @dcza.sk – iné pracovné e-maily sa nezverejňujú */
-  email: string | null
+  /** len diecézna adresa @dcza.sk, zakódovaná (encodeEmail) – čitateľne ju poskladá až prehliadač */
+  emailCode: string | null
   functions: PublicFunction[]
   deanery: { id: string; name: string } | null
 }
@@ -111,7 +112,7 @@ function summarize(c: ClergyRow, asg: AssignmentRow[], orders: Map<string, strin
     order,
     category: c.category,
     retired: c.status === 'retired',
-    email: dioceseEmail(c.work_email),
+    emailCode: dioceseEmail(c.work_email) ? encodeEmail(dioceseEmail(c.work_email)!) : null,
     functions: dedupeFunctions(
       current
         .filter((a) => a.role?.trim())

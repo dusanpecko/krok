@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import type { NavItem } from '@/lib/diocese/nav'
 import NewsletterSignup from '@/components/public/NewsletterSignup'
+import ProtectedEmail from './ProtectedEmail'
+import { encodeEmail } from '@/lib/diocese/email-code'
 
 /** Pätička webu diecézy. */
 export default function DczaFooter({ nav }: { nav: NavItem[] }) {
@@ -25,7 +27,7 @@ export default function DczaFooter({ nav }: { nav: NavItem[] }) {
               <Phone size={16} className="text-gold shrink-0 mt-0.5" /> <a href="tel:+421415002215" className="hover:text-white">+421 41 500 22 15</a>
             </li>
             <li className="flex gap-2">
-              <Mail size={16} className="text-gold shrink-0 mt-0.5" /> <a href="mailto:sekretariat@dcza.sk" className="hover:text-white">sekretariat@dcza.sk</a>
+              <Mail size={16} className="text-gold shrink-0 mt-0.5" /> <ProtectedEmail code={encodeEmail('sekretariat@dcza.sk')} icon={false} className="hover:text-white" />
             </li>
           </ul>
           <a href="https://www.facebook.com/zilinskadieceza" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold">

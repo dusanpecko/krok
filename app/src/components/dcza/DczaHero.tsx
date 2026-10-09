@@ -67,7 +67,9 @@ export default function DczaHero({ parishes, deaneries, priests }: { parishes: n
           className="text-4xl md:text-5xl lg:text-6xl font-light text-ink leading-tight mb-6"
         >
           Žilinská diecéza <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink font-extrabold">spoločenstvo viery, nádeje a lásky</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue via-blue via-60% to-gold-ink font-extrabold">
+            spoločenstvo viery, <span className="whitespace-nowrap">nádeje a lásky</span>
+          </span>
         </motion.h1>
         <motion.p
           initial={reduced ? { opacity: 1 } : { opacity: 0 }}

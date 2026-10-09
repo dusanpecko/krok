@@ -78,7 +78,11 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] K2: výročia (kňazstvo od 10. každých 5 r., život od 40., úmrtie 1. a každých 5 r.), meniny, export XLSX pre KN, adresné štítky 3 × 8 – `/admin/knazi/vyrocia`, `/admin/knazi/stitky` – § 16.5
 - [x] K3: kňazi na stránkach farností z registra – verejne len meno, tituly, funkcia (O47); v zóne farnosti a v admine farnosti len na čítanie, úprava kontaktu a fotky kňaza odstránená (O48); doplnené väzby 11 duchovných správ / farností (`scripts/link-clergy-parishes.ts`). `parish_clergy` ostáva len ako archív starého importu – zmazať neskôr – § 16.2
 - [x] K4: kňazská zóna – účet kňaza z registra (`clergy.auth_user_id`, pozvánka z adminu) – § 15
-- [x] K5: verejný schematizmus na dcza.sk (2026-10-09) – `/schematizmus/knazi` (vyhľadávanie, dekanát, kňazi/diakoni/na odpočinku, abeceda), profil `/schematizmus/knazi/<slug>` (O47 – bez fotky a kontaktov), `/schematizmus/dekanaty` (dekan, farnosti), `/schematizmus/zomreli`; staré adresy `/sk/schematizmus/...` presmerované – § 14, § 20 (D4)
+- [x] K5: verejný schematizmus na dcza.sk (2026-10-09) – `/schematizmus/knazi` (vyhľadávanie, dekanát, kňazi/diakoni/na odpočinku, abeceda), profil `/schematizmus/knazi/<slug>` (O47 – bez fotky a súkromných kontaktov; diecézny e-mail @dcza.sk – O78), `/schematizmus/dekanaty` (dekan, farnosti), `/schematizmus/zomreli`; staré adresy `/sk/schematizmus/...` presmerované – § 14, § 20 (D4)
+- [x] K5b: **Kúria, rady a komisie** (migrácia 051, 2026-10-09) – admin `/admin/knazi/kuria` (orgány, členovia z registra aj mimo registra – laici, rehoľníci), web `/schematizmus/kuria` (jedna stránka, menu Kúria → Rady a komisie odkazuje na kotvy) – O79, § 16.10
+- [x] K1b: **oprava záznamu o pôsobení** (funkcia, miesto, orgán, obdobie rokom alebo dátumom, poznámka) priamo v tabuľke pôsobenia, zmena v histórii zmien – § 16.4
+- [x] **Ochrana e-mailov pred botmi** na dcza.sk (schematizmus, pätička, obsah stránok a aktualít, perexy) – O78, § 20.4
+- [ ] Ochrana e-mailov aj na mojkrok.sk a na stránkach farností (kontakt farnosti) – O78
 - [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 – **závisí od webu dcza.sk** (overovacia adresa)
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
@@ -178,6 +182,8 @@ Cieľ modulu:
 | O75 | Podpora, newsletter, galéria dcza.sk (2026-10-09) | Podpora diecézy = **KROK** (tlačidlo „Podporiť diecézu“ → mojkrok.sk); newsletter = **newsletter Kroku** (formulár v pätičke dcza.sk, zdroj „dcza“); **fotogaléria diecézy** – rovnaký editor ako farnosti (albumy, videá, externé odkazy), `/galeria`. |
 | O76 | Správy TK KBS | Pás **„Z Cirkvi na Slovensku“** na úvode dcza.sk z RSS tkkbs.sk (cache 30 min, odkazy na tkkbs.sk). |
 | O77 | Dokumenty pápežov | **Synchronizácia z kbs.sk** (každú noc + tlačidlo v admine) – dokumenty z KBS sa otvárajú na kbs.sk; **vlastné dokumenty diecézy** (súbor alebo odkaz) sa otvárajú na dcza.sk. |
+| O78 | E-mail kňaza vo verejnom schematizme (2026-10-09) | **Diecézny e-mail (@dcza.sk) sa zverejňuje** v zozname kňazov aj v profile (mení O47 „bez kontaktov“). Len pole *pracovný e-mail* a len doména @dcza.sk – súkromný e-mail, telefón ani adresa nikdy. **Ochrana pred botmi:** adresa nie je v HTML čitateľne, prehliadač ju poskladá až po načítaní (rovnako pre všetky e-maily na dcza.sk). |
+| O79 | Kúria, rady a komisie (2026-10-09) | **Jedna stránka** `/schematizmus/kuria` s kotvami, menu „Rady a komisie“ odkazuje na jednotlivé orgány. Členov spravuje kúria v admine: **kňaz/diakon z registra** = menovanie v registri (zobrazí sa aj v jeho profile a histórii), **laik alebo rehoľník mimo registra** = meno, tituly, poznámka. Ukončené členstvo ostáva v histórii. |
 | O52 | Celebrety (K9) | Súčasťou registra bude **tvorba digitálnych celebretov** (dnes sa robia v programe na vizitky, napr. celebret.dcza.sk/dusan-pecko) – zjednotiť do Kroku (§ 16.9). |
 
 Dôsledok O8+O9: verejná stránka farnosti **prestáva byť voliteľnou fázou** a stáva sa jadrom modulu.
@@ -1259,7 +1265,7 @@ CREATE TABLE clergy_assignments (
 - Údaje o kňazoch prezrádzajú náboženské vyznanie (osobitná kategória, čl. 9 GDPR) – spracúva ich cirkev o svojich členoch, čl. 9 ods. 2 písm. d). Navyše citlivé súkromné údaje (rodné údaje, trvalý pobyt, krst, súkromné kontakty).
 - **Nové oprávnenia:** `manage_clergy` (úpravy) a `view_clergy` (čítanie) – zatiaľ **len KROK a kúria** (O46). Dekani, farnosti ani samotní kňazi do registra nevidia (O48).
 - RLS: žiadne verejné politiky, čítanie len cez server (service role) s overením oprávnenia – ako pri farnostiach.
-- **Verejne (O47 – rovnako ako dnes dcza.sk/schematizmus):** meno s titulmi, funkcia, *Pochádza*, diakonát a kňazská vysviacka (dátum + miesto), **história pôsobenia po rokoch** (vrátane diecéznych funkcií), dekanát a farnosť ako odkazy. **Bez fotky a bez kontaktov.** Nikdy dátum narodenia, adresa, krst, súkromné údaje.
+- **Verejne (O47 – rovnako ako dnes dcza.sk/schematizmus):** meno s titulmi, funkcia, *Pochádza*, diakonát a kňazská vysviacka (dátum + miesto), **história pôsobenia po rokoch** (vrátane diecéznych funkcií), dekanát a farnosť ako odkazy. **Bez fotky.** Od 2026-10-09 **diecézny e-mail @dcza.sk** (O78, chránený pred botmi); súkromný e-mail, telefón, dátum narodenia, adresa, krst a iné súkromné údaje nikdy.
 - Dôsledok O48 pre stránky farností: kontakt kňaza na stránke farnosti sa prestane zobrazovať (dnes ho kňaz vie zverejniť v zóne farnosti – § 3.8) – verejný ostáva kontakt farského úradu. Úpravu kontaktu kňaza v zóne farnosti odstrániť vo fáze K3.
 
 ### 16.4 Obrazovky v admine (`/admin/knazi`)
@@ -1269,6 +1275,8 @@ CREATE TABLE clergy_assignments (
 - **Detail osoby – záložky:** Základné (meno, tituly, oslovenie, kategória, stav, rehoľa, foto) · Kontakty · Pôsobenie (história + „Nové menovanie“ – ukončí doterajšie a založí nové) · Funkcie (dekan, KR, súd…) · Osobné údaje · Sviatosti a formácia · Svätenia · Poznámka · História zmien.
 - **Export XLSX** v rovnakej štruktúre ako dnešný súbor (aby kúria mohla Excel prestať udržiavať) + **adresné štítky / hromadná pošta** (oslovenie, meno s titulmi, farnosť, adresa).
 - **Archív:** odišli zo ŽD, zomrelí (s dátumom úmrtia), samostatný filter.
+- **Oprava záznamu o pôsobení ✅ (2026-10-09):** ceruzka pri každom riadku (aktuálne aj história) – druh, funkcia, miesto (farnosť / dekanát / rada, komisia, úrad / organizácia), od–do (rok `2015` alebo dátum `2015-09-01`, prázdne „do“ = aktuálne), poznámka. Vyplnené „do“ zruší príznak hlavného pôsobenia. Každá oprava ide do histórie zmien (pôvodná → nová hodnota).
+- **Nové menovanie s druhom „diecéza“** ponúkne výber rady / komisie / úradu (§ 16.10) a predvolene neukončuje hlavné pôsobenie.
 
 ### 16.5 Výročia a meniny (náhrada listov „výročia…“)
 
@@ -1348,6 +1356,15 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 - Dnešná stránka sa načítava vyše minúty (504 – pomalý server mypro.one, 2026-10-07) → v Kroku ide o rýchlu statickú stránku.
 
 ---
+
+### 16.10 Kúria, rady a komisie (O79) – ✅ realizované (migrácia 051, 2026-10-09)
+
+- **Dátový model:** `diocese_bodies` (názov, názov v 2. páde pre text funkcie – „člen *Presbyterskej rady*“, druh `kuria` / `rada` / `usek`, popis, poradie, zverejnenie); `clergy_assignments.body_id` + `body_role` (funkcia v orgáne: predseda, tajomník, člen…) pre kňazov a diakonov z registra; `diocese_body_members` pre ľudí mimo registra (laici, rehoľníci – tituly, meno, poznámka na webe, od–do).
+- **Admin:** Schematizmus → **Kúria, rady a komisie** (`/admin/knazi/kuria`) – orgány v troch skupinách (Diecézna kúria, Rady a komisie, Pastoračné úseky), poradie, nový orgán; detail orgánu: aktuálni a bývalí členovia, pridanie kňaza z registra (zapíše sa ako funkcia do schematizmu, náhľad textu v profile) alebo človeka mimo registra, zmena funkcie, ukončenie, zmazanie chybného záznamu; premenovanie orgánu prepíše texty aktuálnych funkcií.
+- **Web:** `/schematizmus/kuria` – rýchla navigácia, karta každého orgánu s kotvou (`#ekonomicka-rada`…), popis „O orgáne“ (Presbyterská rada, Kolégium konzultorov); poradie predseda → podpredseda → tajomník → ostatní → členovia. Menu Kúria → Rady a komisie sa generuje z orgánov; staré stránky `/kuria/rady-a-komisie/...` presmerované na kotvy.
+- **Úvodné naplnenie** (`scripts/dcza/seed-bodies.ts`): 21 orgánov, 76 súčasných diecéznych funkcií z registra prepojených (ukončené nie – napr. funkcie v iných diecézach), členovia zo stránky bety „Rady a komisie“ – kňazi zapísaní do registra (zdroj „web“), ostatní ako členovia mimo registra.
+- **Čistenie duplicít (2026-10-09):** 9 duplicitných funkcií (Excel + schematizmus) zmazaných (Galis, Kramara, Dubec, Kocifaj, Možiešik, Seko, Pecko, Kuciak, Laššo), 2 nahradené funkcie ukončené (Laššo – sudca do 2023, Vančo – obhajca zväzku do 2022); zmeny v histórii zmien.
+- **Na kontrolu kúriou:** zloženie rád podľa bety vs. register (napr. Kolégium konzultorov 7 členov), Kramara v Pastoračnej rade s funkciou „generálny vikár“, R. Mikula dvakrát s rôznymi titulmi, chýbajúci zástupcovia miništrantov za dekanáty, „doc. UK v Bratislave“ ako funkcia biskupa.
 
 ## 17. Fotogaléria farnosti – „Zo života farnosti“ (návrh 2026-10-08, rozhodnuté O59–O64, ✅ realizované – migrácie 044, 045)
 
@@ -1457,3 +1474,6 @@ V zóne farnosti je Zdieľať pri každom zverejnenom oznamy/aktualite a albume,
 - **O75–O77 ✅ (2026-10-09):** migrácia **050** (`diocese_documents`, `diocese_albums`, `diocese_photos`); newsletter Kroku v pätičke dcza.sk; galéria (admin Web diecézy → Galéria, `/galeria`, pás na úvode); správy TK KBS na úvode; Dokumenty pápežov – 411 dokumentov od 10 pápežov z kbs.sk, cron `/api/cron/dcza-sync` (3:30 – kbs.sk + časopis zo Zachej.sk), admin Web diecézy → Dokumenty pápežov.
 - **Ostáva:** stránka „Čo zriaďujeme“ (školy, detský domov…) – čaká na podklady od kúrie.
 - **D4 = K5 ✅ (2026-10-09):** verejný schematizmus z registra kňazov – `lib/diocese/schematizmus.ts` číta len verejné stĺpce (O47); pred menom len „Mons.“, čestné tituly (honorárny dekan, kanonik) zvlášť, ostatné hodnoty `ecclesiastical_titles` z importu (názvy obcí, „laicizovaný“…) sa verejne nezobrazujú – **na kontrolu v registri**. Bohoslovci sa verejne nezobrazujú.
+- **Schematizmus – doplnky (2026-10-09):** Kúria, rady a komisie (§ 16.10, O79); **diecézny e-mail** v zozname a profile (O78) – zobrazí sa 247 z 284 osôb, 37 bez pracovného e-mailu (zoznam pre kúriu `chybajuce-pracovne-emaily.md`, okrem iného celý dekanát Dubnica nad Váhom).
+- **Ochrana e-mailov pred botmi ✅ (O78):** `lib/diocese/email-code.ts` – server posiela adresu zakódovanú (obrátene + base64), čitateľne ju poskladá až prehliadač (`ProtectedEmail`, `EmailDecoder`). Platí pre schematizmus, pätičku (`sekretariat@dcza.sk`) a **obsah stránok a aktualít** (`protectEmails` pri zobrazení – aj novo vpísané adresy sú chránené automaticky); v perexoch, meta popisoch a výsledkoch hľadania sa adresa nahradí slovom „e-mail“. Overené: v HTML pre botov nie je žiadna skutočná adresa, v prehliadači sú všetky klikateľné. Nechráni pred robotmi so spusteným prehliadačom ani pred ručným opísaním. **Zostáva:** mojkrok.sk a stránky farností.
+- **Opravy (2026-10-09):** kňazská zóna padala vo vývojovom režime (Supabase klient v props) – opravené; `/moja-farnost` pridaná medzi spoločné cesty (na dcza.sk končila 404); úvod – „nádeje a lásky“ vždy na jednom riadku; čísla v hero (farnosti, dekanáty, kňazi v službe) sa počítajú živo z registrov.

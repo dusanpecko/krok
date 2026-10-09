@@ -203,3 +203,51 @@ export async function listPublicDeaneries() {
     }
   })
 }
+
+// ------------------------------------------------------------ kúria (zo súčasných diecéznych funkcií)
+
+/** Sekcie kúrie – funkcie sa priraďujú podľa názvu (register má funkcie zapísané voľným textom). */
+const CURIA_SECTIONS: { title: string; re: RegExp; members?: boolean }[] = [
+  { title: 'Diecézny biskup', re: /^diecézny biskup/i },
+  { title: 'Generálny vikár', re: /^generálny vikár/i },
+  { title: 'Kancelária biskupského úradu', re: /kancelár|notár|tajomník a ceremoniár/i },
+  { title: 'Ekonomický úrad', re: /ekonóm/i },
+  { title: 'Tribunál Žilinskej diecézy', re: /s[uú]dny vikár|sudca|obhajca|promo?tor/i },
+  { title: 'Úrady, sekcie a poverenia', re: /riaditeľ (DKÚ|Diecézneho|sekcie|Pastoračného fondu)|hovorca|cenzor|penitenciár|biskupský delegát|koordinátor|správca Katedrálneho/i },
+  { title: 'Kolégium konzultorov', re: /Kolégia konzultorov/i, members: true },
+  { title: 'Presbyterská rada', re: /Presbyterskej rady/i, members: true },
+  { title: 'Diecézna ekonomická rada', re: /ekonomickej rady/i, members: true },
+  { title: 'Diecézna pastoračná rada', re: /pastoračnej rady/i, members: true },
+  { title: 'Diecézna liturgická komisia', re: /liturgickej komisie/i, members: true },
+  { title: 'Komisia pre posvätné rády a ministériá', re: /posvätné r[áa]dy/i, members: true },
+]
+
+export interface CuriaSection {
+  title: string
+  members: boolean
+  people: { name: string; slug: string; role: string }[]
+}
+
+export async function listCuria(): Promise<CuriaSection[]> {
+  const db = dioceseDb()
+  const { data } = await db
+    .from('clergy_assignments')
+    .select('role, clergy:clergy_id(slug, schematizmus_slug, category, status, first_name, last_name, title_before, title_after, ecclesiastical_titles)')
+    .eq('kind', 'diocese')
+    .is('date_to', null)
+    .is('year_to', null)
+  const rows = (data ?? []) as unknown as { role: string | null; clergy: (ClergyRow & { status: string; category: string }) | null }[]
+  return CURIA_SECTIONS.map((sec) => {
+    const people: CuriaSection['people'] = []
+    for (const r of rows) {
+      const c = r.clergy
+      const role = r.role?.trim().replace(/^[–-]\s*/, '') ?? ''
+      if (!c || !role || !sec.re.test(role) || !PUBLIC_CATEGORIES.includes(c.category) || !PUBLIC_STATUSES.includes(c.status)) continue
+      const slug = c.slug || c.schematizmus_slug || ''
+      if (people.some((p) => p.slug === slug)) continue
+      people.push({ name: displayName(c), slug, role })
+    }
+    people.sort((a, b) => a.name.split(' ').pop()!.localeCompare(b.name.split(' ').pop()!, 'sk'))
+    return { title: sec.title, members: !!sec.members, people }
+  }).filter((s) => s.people.length > 0)
+}

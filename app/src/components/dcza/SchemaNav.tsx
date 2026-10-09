@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 const ITEMS = [
   { href: '/schematizmus/knazi', label: 'Kňazi a diakoni' },
+  { href: '/schematizmus/kuria', label: 'Kúria' },
   { href: '/schematizmus/dekanaty', label: 'Dekanáty' },
   { href: '/farnosti', label: 'Farnosti' },
   { href: '/o-nas/schematizmus/rehole', label: 'Rehole' },

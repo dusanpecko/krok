@@ -54,6 +54,7 @@ export function mainNav(tree: DiocesePageNode[]): NavItem[] {
   if (schema)
     schema.children = [
       { label: 'Kňazi a diakoni', href: '/schematizmus/knazi' },
+      { label: 'Kúria', href: '/schematizmus/kuria' },
       { label: 'Dekanáty', href: '/schematizmus/dekanaty' },
       { label: 'Farnosti', href: '/farnosti' },
       { label: 'Rehole', href: '/o-nas/schematizmus/rehole' },

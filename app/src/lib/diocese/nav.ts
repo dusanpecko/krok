@@ -17,6 +17,7 @@ const HREF_OVERRIDE: Record<string, string> = {
   'kontakty/farnosti': '/farnosti',
   'o-nas/schematizmus/farnosti': '/farnosti',
   'cinnost/krok': 'https://mojkrok.sk',
+  'o-nas/schematizmus': '/schematizmus/knazi',
   'cinnost/charita': 'https://www.charitaza.sk',
   'cinnost/lectio-divina': 'https://www.lectio.one',
   'dokumenty/homilie': '/aktuality?kategoria=homilie',
@@ -47,6 +48,16 @@ export function mainNav(tree: DiocesePageNode[]): NavItem[] {
       { label: 'Kalendár akcií', href: '/kalendar' },
       { label: 'Časopis Naša Žilinská diecéza', href: '/casopis' },
       { label: 'Galéria', href: '/galeria' },
+    ]
+  // Schematizmus z registra kňazov (K5) namiesto statických stránok bety
+  const schema = items.flatMap((i) => i.children ?? []).find((c) => c.href === '/schematizmus/knazi')
+  if (schema)
+    schema.children = [
+      { label: 'Kňazi a diakoni', href: '/schematizmus/knazi' },
+      { label: 'Dekanáty', href: '/schematizmus/dekanaty' },
+      { label: 'Farnosti', href: '/farnosti' },
+      { label: 'Rehole', href: '/o-nas/schematizmus/rehole' },
+      { label: 'Zomrelí kňazi', href: '/schematizmus/zomreli' },
     ]
   items.splice(Math.max(1, items.length - 1), 0, { label: 'Farnosti', href: '/farnosti' })
   return items

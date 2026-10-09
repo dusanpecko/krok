@@ -22,6 +22,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DczaPage({ params }: Props) {
   const parts = (await params).path
   const path = joinPath(parts)
+  // starý schematizmus dcza.sk → schematizmus z registra (profily podľa pôvodného slugu)
+  const legacy = `/${path}`
+  const schema =
+    legacy.match(/^\/sk\/schematizmus\/knazi\/([^/]+)/)?.[1] ? `/schematizmus/knazi/${legacy.split('/')[4]}`
+    : /^\/sk\/(schematizmus\/knazi|dokumenty\/knazi)/.test(legacy) || legacy === '/sk/schematizmus' ? '/schematizmus/knazi'
+    : /^\/sk\/schematizmus\/dekanaty/.test(legacy) ? '/schematizmus/dekanaty'
+    : /^\/sk\/schematizmus\/(farnosti|filialky)|^\/sk\/dokumenty\/dieceza\/dekanaty-a-farnosti/.test(legacy) ? '/farnosti'
+    : /^\/sk\/schematizmus\/zomreli/.test(legacy) ? '/schematizmus/zomreli'
+    : null
+  if (schema) permanentRedirect(schema)
   if (parts[0] === 'sk' || parts[0] === 'index.php') {
     const to = parts[0] === 'sk' ? await findRedirect(`/${path}`) : `/${path}`
     if (to) permanentRedirect(to)

@@ -78,7 +78,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] K2: výročia (kňazstvo od 10. každých 5 r., život od 40., úmrtie 1. a každých 5 r.), meniny, export XLSX pre KN, adresné štítky 3 × 8 – `/admin/knazi/vyrocia`, `/admin/knazi/stitky` – § 16.5
 - [x] K3: kňazi na stránkach farností z registra – verejne len meno, tituly, funkcia (O47); v zóne farnosti a v admine farnosti len na čítanie, úprava kontaktu a fotky kňaza odstránená (O48); doplnené väzby 11 duchovných správ / farností (`scripts/link-clergy-parishes.ts`). `parish_clergy` ostáva len ako archív starého importu – zmazať neskôr – § 16.2
 - [x] K4: kňazská zóna – účet kňaza z registra (`clergy.auth_user_id`, pozvánka z adminu) – § 15
-- [ ] K5: verejný schematizmus – **súčasť webu dcza.sk** – § 14
+- [x] K5: verejný schematizmus na dcza.sk (2026-10-09) – `/schematizmus/knazi` (vyhľadávanie, dekanát, kňazi/diakoni/na odpočinku, abeceda), profil `/schematizmus/knazi/<slug>` (O47 – bez fotky a kontaktov), `/schematizmus/dekanaty` (dekan, farnosti), `/schematizmus/zomreli`; staré adresy `/sk/schematizmus/...` presmerované – § 14, § 20 (D4)
 - [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 – **závisí od webu dcza.sk** (overovacia adresa)
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
@@ -1291,7 +1291,7 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 | **K2** ✅ | výročia a meniny, adresné štítky |
 | **K3** ✅ | prepojenie so stránkami farností – kňazi z registra, `parish_clergy` zaniká; ~~foto a kontakt si kňaz spravuje sám~~ → verejne bez fotky a kontaktov (O47, O48) |
 | **K4** ✅ | kňazská zóna (§ 15) – účet kňaza = osoba z registra (`clergy.auth_user_id`), pozvánky z registra |
-| **K5** ⬜ | verejný schematizmus pre web diecézy (§ 14) – údaje podľa O47 |
+| **K5** ✅ | verejný schematizmus pre web diecézy (§ 14) – údaje podľa O47 |
 | **K6** ⬜ | digitálne celebrety (§ 16.9) |
 
 ### 16.8 Otázky K1–K9 – ✅ rozhodnuté 2026-10-07 (O44–O52)
@@ -1456,3 +1456,4 @@ V zóne farnosti je Zdieľať pri každom zverejnenom oznamy/aktualite a albume,
 - **Pripomienky Julie k dcza.sk (2026-10-09) ✅ čiastočne:** úvod – 3 pásy po 4 článkoch (Pozvánky, Zo života farností, Ďalšie aktuality vrátane KROK), tlačidlo „Podporiť diecézu“ (mojkrok.sk) namiesto „Aktuality z diecézy“, viac miesta pri rýchlych odkazoch, „KROK – Pastoračný fond Žilinskej diecézy“; kalendár ako mesačná mriežka s akciami dňa; menu Aktuality: Pozvánky, Zo života farností, Všetky, Kalendár, Časopis; Biskup = životopis + erb, Diecéza = erb + patróni (staré adresy presmerované); Projekty z Kúrie do Činnosti; Činnosť: Charita → charitaza.sk, KROK → mojkrok.sk, Lectio divina → lectio.one; Pastorácia: Chorí, Deti, Mládež, Miništranti, Rodiny a snúbenci; Lednické Rovne bez zlého odkazu; Rady a komisie s nadpismi a opraveným preklepom; prílohy PDF/DOC ako riadok s ikonou a „Stiahnuť“; menšie portréty na stránkach; úrady – školský, katechetický, nahlásenie zneužívania (zo živého webu); zdieľanie na konci článkov; Facebook v hlavičke a pätičke; text pod článkami Kroku „Viac informácií a možnosť podpory na mojkrok.sk“; oprava filtra kategórií. Skript `scripts/dcza/fix-julia-1.ts`.
 - **O75–O77 ✅ (2026-10-09):** migrácia **050** (`diocese_documents`, `diocese_albums`, `diocese_photos`); newsletter Kroku v pätičke dcza.sk; galéria (admin Web diecézy → Galéria, `/galeria`, pás na úvode); správy TK KBS na úvode; Dokumenty pápežov – 411 dokumentov od 10 pápežov z kbs.sk, cron `/api/cron/dcza-sync` (3:30 – kbs.sk + časopis zo Zachej.sk), admin Web diecézy → Dokumenty pápežov.
 - **Ostáva:** stránka „Čo zriaďujeme“ (školy, detský domov…) – čaká na podklady od kúrie.
+- **D4 = K5 ✅ (2026-10-09):** verejný schematizmus z registra kňazov – `lib/diocese/schematizmus.ts` číta len verejné stĺpce (O47); pred menom len „Mons.“, čestné tituly (honorárny dekan, kanonik) zvlášť, ostatné hodnoty `ecclesiastical_titles` z importu (názvy obcí, „laicizovaný“…) sa verejne nezobrazujú – **na kontrolu v registri**. Bohoslovci sa verejne nezobrazujú.

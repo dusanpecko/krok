@@ -68,7 +68,16 @@ const mainLinks: NavLink[] = [
     ],
   },
   { href: '/admin/farnosti', label: 'Farnosti', icon: Church, permission: 'manage_parishes' },
-  { href: '/admin/knazi', label: 'Schematizmus kňazov', icon: BookUser, permission: 'view_clergy' },
+  {
+    href: '#schematizmus',
+    label: 'Schematizmus',
+    icon: BookUser,
+    permission: 'view_clergy',
+    children: [
+      { href: '/admin/knazi', label: 'Register kňazov', icon: Users },
+      { href: '/admin/knazi/kuria', label: 'Kúria, rady a komisie', icon: Landmark },
+    ],
+  },
   { href: '/admin/knazska-zona', label: 'Kňazská zóna', icon: FolderLock, permission: 'manage_clergy_docs' },
   {
     href: '/admin/web-dieceza',
@@ -210,7 +219,8 @@ export default function AdminSidebar({ isCollapsed = false, onToggle, isMobile =
                       <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-2">
                         {link.children.map((sub) => {
                           const SubIcon = sub.icon
-                          const subActive = isActive(sub.href)
+                          // najkonkrétnejší odkaz (napr. /admin/knazi/kuria pred /admin/knazi)
+                          const subActive = isActive(sub.href) && !link.children!.some((o) => o.href.length > sub.href.length && isActive(o.href))
                           return (
                             <Link
                               key={sub.href}

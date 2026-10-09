@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getPageTree } from '@/lib/diocese/public'
 import { mainNav } from '@/lib/diocese/nav'
+import { listCuriaLinks } from '@/lib/diocese/schematizmus'
 import DczaHeader from '@/components/dcza/DczaHeader'
 import DczaFooter from '@/components/dcza/DczaFooter'
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 export default async function DczaLayout({ children }: { children: React.ReactNode }) {
-  const nav = mainNav(await getPageTree())
+  const nav = mainNav(await getPageTree(), await listCuriaLinks())
   return (
     <div className="flex flex-col min-h-screen bg-paper-warm text-ink">
       <DczaHeader nav={nav} />

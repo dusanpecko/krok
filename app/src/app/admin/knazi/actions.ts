@@ -19,6 +19,7 @@ import {
   type ClergyRecord,
   type ClergyStatus,
 } from '@/lib/clergy/types'
+import { assignmentRoleText, type BodyKind } from '@/lib/diocese/bodies'
 import { KIND_LABEL as ANNIVERSARY_LABEL, computeAnniversaries, dayLabel, type AnniversaryPerson } from '@/lib/clergy/anniversaries'
 
 /**
@@ -114,6 +115,7 @@ export interface ClergyDetail {
     ordainers: { id: string; name: string }[]
     parishes: { id: string; name: string; deanery_id: string | null }[]
     deaneries: { id: string; name: string }[]
+    bodies: { id: string; name: string; name_genitive: string | null; kind: BodyKind }[]
   }
 }
 
@@ -123,13 +125,14 @@ export async function getClergy(id: string): Promise<ClergyDetail | null> {
   const { data: person } = await client.from('clergy').select('*').eq('id', id).maybeSingle()
   if (!person) return null
 
-  const [{ data: asg }, { data: log }, { data: orders }, { data: ordainers }, { data: parishes }, { data: deaneries }] = await Promise.all([
+  const [{ data: asg }, { data: log }, { data: orders }, { data: ordainers }, { data: parishes }, { data: deaneries }, { data: bodies }] = await Promise.all([
     client.from('clergy_assignments').select(ASSIGNMENT_COLUMNS).eq('clergy_id', id),
     client.from('clergy_change_log').select('id, entity, action, changes, created_at, user_id').eq('clergy_id', id).order('created_at', { ascending: false }).limit(100),
     client.from('religious_orders').select('id, code').order('code'),
     client.from('ordainers').select('id, name').order('name'),
     client.from('parishes').select('id, name, deanery_id').eq('is_active', true).order('name'),
     client.from('deaneries').select('id, name').order('name'),
+    client.from('diocese_bodies').select('id, name, name_genitive, kind').order('kind').order('sort_order'),
   ])
 
   const assignments = ((asg ?? []) as unknown as AssignmentRow[]).map(mapAssignment).sort((a, b) => {
@@ -148,7 +151,7 @@ export async function getClergy(id: string): Promise<ClergyDetail | null> {
     person: person as ClergyRecord,
     assignments,
     log: (log ?? []).map((l) => ({ id: l.id, entity: l.entity, action: l.action, changes: l.changes ?? {}, created_at: l.created_at, user_email: l.user_id ? emails.get(l.user_id) ?? null : null })),
-    lookups: { orders: orders ?? [], ordainers: ordainers ?? [], parishes: parishes ?? [], deaneries: deaneries ?? [] },
+    lookups: { orders: orders ?? [], ordainers: ordainers ?? [], parishes: parishes ?? [], deaneries: deaneries ?? [], bodies: (bodies ?? []) as ClergyDetail['lookups']['bodies'] },
   }
 }
 
@@ -263,6 +266,7 @@ export interface AssignmentInput {
   parish_id?: string | null
   deanery_id?: string | null
   organization?: string | null
+  body_id?: string | null // rada, komisia, úrad kúrie (051) – funkcia = funkcia v orgáne (člen, predseda…)
   date_from?: string | null
   is_primary?: boolean
   note?: string | null
@@ -275,13 +279,23 @@ export interface AssignmentInput {
 export async function addAssignment(clergyId: string, input: AssignmentInput, endPrevious: boolean): Promise<Result> {
   try {
     const { user } = await requirePermission(MANAGE)
-    const role = input.role?.trim()
+    let role = input.role?.trim()
     if (!role) return { success: false, error: 'Zadajte funkciu.' }
     if (input.kind === 'parish' && !input.parish_id) return { success: false, error: 'Vyberte farnosť.' }
     const dateFrom = input.date_from?.trim() || null
     if (dateFrom && !/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) return { success: false, error: 'Dátum nástupu má tvar RRRR-MM-DD.' }
 
     const client = db()
+    const bodyId = input.kind === 'diocese' ? input.body_id || null : null
+    let bodyRole: string | null = null
+    let organization = input.kind === 'parish' ? null : input.organization?.trim() || null
+    if (bodyId) {
+      const { data: body } = await client.from('diocese_bodies').select('name, name_genitive, kind').eq('id', bodyId).maybeSingle()
+      if (!body) return { success: false, error: 'Orgán neexistuje.' }
+      bodyRole = role
+      role = assignmentRoleText(role, body)
+      organization = body.name
+    }
     let deaneryId = input.deanery_id || null
     if (input.kind === 'parish' && input.parish_id) {
       const { data: p } = await client.from('parishes').select('deanery_id').eq('id', input.parish_id).maybeSingle()
@@ -306,7 +320,9 @@ export async function addAssignment(clergyId: string, input: AssignmentInput, en
       role,
       parish_id: input.kind === 'parish' ? input.parish_id : null,
       deanery_id: deaneryId,
-      organization: input.kind === 'parish' ? null : input.organization?.trim() || null,
+      organization,
+      body_id: bodyId,
+      body_role: bodyRole,
       date_from: dateFrom,
       year_from: dateFrom ? Number(dateFrom.slice(0, 4)) : null,
       is_primary: !!input.is_primary,

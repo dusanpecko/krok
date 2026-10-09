@@ -320,7 +320,7 @@ function AssignmentsTab({ detail }: { detail: ClergyDetail }) {
   const [pending, startTransition] = useTransition()
   const [msg, setMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const today = new Date().toISOString().slice(0, 10)
-  const [form, setForm] = useState<AssignmentInput & { endPrevious: boolean }>({ kind: 'parish', role: 'farár', parish_id: '', deanery_id: '', organization: '', date_from: today, is_primary: true, note: '', endPrevious: true })
+  const [form, setForm] = useState<AssignmentInput & { endPrevious: boolean }>({ kind: 'parish', role: 'farár', parish_id: '', deanery_id: '', organization: '', body_id: '', date_from: today, is_primary: true, note: '', endPrevious: true })
 
   const run = (fn: () => Promise<{ success: boolean; error?: string }>, ok: string) =>
     startTransition(async () => {
@@ -405,7 +405,15 @@ function AssignmentsTab({ detail }: { detail: ClergyDetail }) {
         <SectionTitle title="Nové menovanie" description="Pridá nové pôsobenie; doterajšie hlavné pôsobenie sa môže ukončiť ku dňu pred nástupom." />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Field label="Druh">
-            <select value={form.kind} onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value as AssignmentKind }))} className={inputCls}>
+            <select
+              value={form.kind}
+              onChange={(e) => {
+                const kind = e.target.value as AssignmentKind
+                // diecézna funkcia (rada, komisia…) býva popri farnosti – nemá ukončiť hlavné pôsobenie
+                setForm((f) => ({ ...f, kind, ...(kind === 'diocese' ? { is_primary: false, endPrevious: false } : {}) }))
+              }}
+              className={inputCls}
+            >
               {(Object.keys(KIND_LABEL) as AssignmentKind[]).map((k) => (
                 <option key={k} value={k}>{KIND_LABEL[k]}</option>
               ))}
@@ -429,9 +437,28 @@ function AssignmentsTab({ detail }: { detail: ClergyDetail }) {
                 {lookups.deaneries.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </Field>
+          ) : form.kind === 'diocese' && lookups.bodies.length > 0 && form.body_id ? (
+            <Field label="Rada, komisia, úrad" hint="funkcia v orgáne: člen, predseda, tajomník…">
+              <select value={form.body_id ?? ''} onChange={(e) => setForm((f) => ({ ...f, body_id: e.target.value }))} className={inputCls}>
+                <option value="">— iná funkcia (zadať organizáciu) —</option>
+                {lookups.bodies.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </Field>
           ) : (
             <Field label="Organizácia / miesto">
               <input value={form.organization ?? ''} onChange={(e) => setForm((f) => ({ ...f, organization: e.target.value }))} placeholder="Biskupský úrad, nemocnica…" className={inputCls} />
+            </Field>
+          )}
+          {form.kind === 'diocese' && lookups.bodies.length > 0 && !form.body_id && (
+            <Field label="Člen rady, komisie, úradu?">
+              <select
+                value=""
+                onChange={(e) => e.target.value && setForm((f) => ({ ...f, body_id: e.target.value, role: f.role && f.role !== 'farár' ? f.role : 'člen' }))}
+                className={inputCls}
+              >
+                <option value="">— vybrať orgán —</option>
+                {lookups.bodies.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
             </Field>
           )}
           <Field label="Od">

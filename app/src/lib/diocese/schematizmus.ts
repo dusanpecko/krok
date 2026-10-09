@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { dioceseDb } from './public'
+import { personName, roleRank, type BodyKind } from './bodies'
 
 /**
  * Verejný schematizmus na dcza.sk (K5 / D4, O47): meno s titulmi, funkcia, pôvod, diakonát a kňazská
@@ -204,50 +205,58 @@ export async function listPublicDeaneries() {
   })
 }
 
-// ------------------------------------------------------------ kúria (zo súčasných diecéznych funkcií)
+// ------------------------------------------------------------ kúria, rady a komisie (051)
 
-/** Sekcie kúrie – funkcie sa priraďujú podľa názvu (register má funkcie zapísané voľným textom). */
-const CURIA_SECTIONS: { title: string; re: RegExp; members?: boolean }[] = [
-  { title: 'Diecézny biskup', re: /^diecézny biskup/i },
-  { title: 'Generálny vikár', re: /^generálny vikár/i },
-  { title: 'Kancelária biskupského úradu', re: /kancelár|notár|tajomník a ceremoniár/i },
-  { title: 'Ekonomický úrad', re: /ekonóm/i },
-  { title: 'Tribunál Žilinskej diecézy', re: /s[uú]dny vikár|sudca|obhajca|promo?tor/i },
-  { title: 'Úrady, sekcie a poverenia', re: /riaditeľ (DKÚ|Diecézneho|sekcie|Pastoračného fondu)|hovorca|cenzor|penitenciár|biskupský delegát|koordinátor|správca Katedrálneho/i },
-  { title: 'Kolégium konzultorov', re: /Kolégia konzultorov/i, members: true },
-  { title: 'Presbyterská rada', re: /Presbyterskej rady/i, members: true },
-  { title: 'Diecézna ekonomická rada', re: /ekonomickej rady/i, members: true },
-  { title: 'Diecézna pastoračná rada', re: /pastoračnej rady/i, members: true },
-  { title: 'Diecézna liturgická komisia', re: /liturgickej komisie/i, members: true },
-  { title: 'Komisia pre posvätné rády a ministériá', re: /posvätné r[áa]dy/i, members: true },
-]
-
-export interface CuriaSection {
-  title: string
-  members: boolean
-  people: { name: string; slug: string; role: string }[]
+export interface CuriaPerson {
+  name: string
+  slug: string | null // profil v schematizme (len kňazi a diakoni z registra)
+  role: string
+  note: string | null
 }
 
-export async function listCuria(): Promise<CuriaSection[]> {
+export interface CuriaBody {
+  slug: string
+  name: string
+  kind: BodyKind
+  description: string | null
+  people: CuriaPerson[]
+}
+
+/** Zverejnené orgány s aktuálnymi členmi: kňazi z registra (menovanie s body_id) + členovia mimo registra. */
+export const listCuria = cache(async (): Promise<CuriaBody[]> => {
   const db = dioceseDb()
-  const { data } = await db
-    .from('clergy_assignments')
-    .select('role, clergy:clergy_id(slug, schematizmus_slug, category, status, first_name, last_name, title_before, title_after, ecclesiastical_titles)')
-    .eq('kind', 'diocese')
-    .is('date_to', null)
-    .is('year_to', null)
-  const rows = (data ?? []) as unknown as { role: string | null; clergy: (ClergyRow & { status: string; category: string }) | null }[]
-  return CURIA_SECTIONS.map((sec) => {
-    const people: CuriaSection['people'] = []
-    for (const r of rows) {
+  const [{ data: bodies }, { data: asg }, { data: ext }] = await Promise.all([
+    db.from('diocese_bodies').select('id, slug, name, kind, description').eq('published', true).order('sort_order'),
+    db
+      .from('clergy_assignments')
+      .select(`body_id, body_role, role, clergy:clergy_id(${PUBLIC_COLUMNS})`)
+      .not('body_id', 'is', null)
+      .is('date_to', null)
+      .is('year_to', null),
+    db.from('diocese_body_members').select('body_id, title_before, first_name, last_name, title_after, affiliation, body_role').is('date_to', null),
+  ])
+  const clergyRows = (asg ?? []) as unknown as { body_id: string; body_role: string | null; role: string; clergy: ClergyRow | null }[]
+  return (bodies ?? []).map((b) => {
+    const people: { p: CuriaPerson; sort: string; rank: number }[] = []
+    for (const r of clergyRows) {
       const c = r.clergy
-      const role = r.role?.trim().replace(/^[–-]\s*/, '') ?? ''
-      if (!c || !role || !sec.re.test(role) || !PUBLIC_CATEGORIES.includes(c.category) || !PUBLIC_STATUSES.includes(c.status)) continue
-      const slug = c.slug || c.schematizmus_slug || ''
-      if (people.some((p) => p.slug === slug)) continue
-      people.push({ name: displayName(c), slug, role })
+      if (r.body_id !== b.id || !c || !PUBLIC_CATEGORIES.includes(c.category) || !PUBLIC_STATUSES.includes(c.status)) continue
+      const slug = c.slug || c.schematizmus_slug || null
+      const role = (r.body_role || r.role).trim().replace(/^[–-]\s*/, '')
+      if (people.some((x) => x.p.slug && x.p.slug === slug)) continue
+      people.push({ p: { name: displayName(c), slug, role, note: null }, sort: c.last_name, rank: roleRank(role) })
     }
-    people.sort((a, b) => a.name.split(' ').pop()!.localeCompare(b.name.split(' ').pop()!, 'sk'))
-    return { title: sec.title, members: !!sec.members, people }
-  }).filter((s) => s.people.length > 0)
+    for (const m of ext ?? []) {
+      if (m.body_id !== b.id) continue
+      people.push({ p: { name: personName(m), slug: null, role: m.body_role, note: m.affiliation }, sort: m.last_name, rank: roleRank(m.body_role) })
+    }
+    people.sort((x, y) => x.rank - y.rank || x.sort.localeCompare(y.sort, 'sk'))
+    return { slug: b.slug, name: b.name, kind: b.kind as BodyKind, description: b.description, people: people.map((x) => x.p) }
+  })
+})
+
+/** Odkazy do menu (Kúria → Rady a komisie → …). */
+export async function listCuriaLinks(): Promise<{ name: string; slug: string; kind: BodyKind }[]> {
+  const { data } = await dioceseDb().from('diocese_bodies').select('slug, name, kind').eq('published', true).order('sort_order')
+  return (data ?? []) as { name: string; slug: string; kind: BodyKind }[]
 }

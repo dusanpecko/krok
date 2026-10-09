@@ -32,6 +32,8 @@ export default async function DczaPage({ params }: Props) {
     : /^\/sk\/schematizmus\/zomreli/.test(legacy) ? '/schematizmus/zomreli'
     : null
   if (schema) permanentRedirect(schema)
+  // rady a komisie – jedna stránka v schematizme s kotvami (051)
+  if (path === 'kuria/rady-a-komisie' || path.startsWith('kuria/rady-a-komisie/')) permanentRedirect(pageHref(path))
   if (parts[0] === 'sk' || parts[0] === 'index.php') {
     const to = parts[0] === 'sk' ? await findRedirect(`/${path}`) : `/${path}`
     if (to) permanentRedirect(to)

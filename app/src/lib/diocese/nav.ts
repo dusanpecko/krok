@@ -17,6 +17,7 @@ const HREF_OVERRIDE: Record<string, string> = {
   'kontakty/farnosti': '/farnosti',
   'o-nas/schematizmus/farnosti': '/farnosti',
   'cinnost/krok': 'https://mojkrok.sk',
+  'kuria/rady-a-komisie': '/schematizmus/kuria#rady-a-komisie',
   'o-nas/schematizmus': '/schematizmus/knazi',
   'cinnost/charita': 'https://www.charitaza.sk',
   'cinnost/lectio-divina': 'https://www.lectio.one',
@@ -24,7 +25,8 @@ const HREF_OVERRIDE: Record<string, string> = {
   'dokumenty/pastierske-listy': '/aktuality?kategoria=pastierske-listy',
 }
 
-export const pageHref = (path: string) => HREF_OVERRIDE[path] ?? `/${path}`
+export const pageHref = (path: string) =>
+  HREF_OVERRIDE[path] ?? (path.startsWith('kuria/rady-a-komisie/') ? `/schematizmus/kuria#${path.split('/')[2]}` : `/${path}`)
 
 const toItem = (n: DiocesePageNode): NavItem => ({
   label: n.title,
@@ -35,7 +37,7 @@ const toItem = (n: DiocesePageNode): NavItem => ({
 /** Hlavné menu: poradie ako na bete, farnosti doplnené. */
 const TOP_ORDER = ['o-nas', 'kuria', 'cinnost', 'aktuality', 'dokumenty', 'kontakty']
 
-export function mainNav(tree: DiocesePageNode[]): NavItem[] {
+export function mainNav(tree: DiocesePageNode[], bodies: { name: string; slug: string; kind: string }[] = []): NavItem[] {
   const roots = tree.filter((n) => n.show_in_menu && TOP_ORDER.includes(n.path)).sort((a, b) => TOP_ORDER.indexOf(a.path) - TOP_ORDER.indexOf(b.path))
   const items = roots.map(toItem)
   // Aktuality: pevné podsekcie (články, kalendár, časopis) namiesto prázdnych stránok bety
@@ -59,6 +61,13 @@ export function mainNav(tree: DiocesePageNode[]): NavItem[] {
       { label: 'Farnosti', href: '/farnosti' },
       { label: 'Rehole', href: '/o-nas/schematizmus/rehole' },
       { label: 'Zomrelí kňazi', href: '/schematizmus/zomreli' },
+    ]
+  // Kúria → Rady a komisie: orgány z administrácie (jedna stránka, kotvy na jednotlivé rady)
+  const rady = items.flatMap((i) => i.children ?? []).find((c) => c.href === '/schematizmus/kuria#rady-a-komisie')
+  if (rady && bodies.length)
+    rady.children = [
+      ...bodies.filter((b) => b.kind === 'rada').map((b) => ({ label: b.name, href: `/schematizmus/kuria#${b.slug}` })),
+      ...(bodies.some((b) => b.kind === 'usek') ? [{ label: 'Pastoračné úseky', href: '/schematizmus/kuria#pastoracne-useky' }] : []),
     ]
   items.splice(Math.max(1, items.length - 1), 0, { label: 'Farnosti', href: '/farnosti' })
   return items

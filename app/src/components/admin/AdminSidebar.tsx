@@ -20,7 +20,7 @@ import {
   Megaphone,
   Mail,
   BookUser,
-  Handshake, FolderLock, Building2, BookOpen, HandHeart } from 'lucide-react'
+  Handshake, FolderLock, Building2, BookOpen, HandHeart, Images } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
@@ -78,6 +78,8 @@ const mainLinks: NavLink[] = [
     children: [
       { href: '/admin/web-dieceza/aktuality', label: 'Aktuality', icon: FileText },
       { href: '/admin/web-dieceza/casopis', label: 'Naša Žilinská diecéza', icon: BookOpen },
+      { href: '/admin/web-dieceza/dokumenty', label: 'Dokumenty pápežov', icon: FileText },
+      { href: '/admin/web-dieceza/galeria', label: 'Galéria', icon: Images },
     ],
   },
 ]

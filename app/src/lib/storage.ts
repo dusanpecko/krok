@@ -47,11 +47,11 @@ export async function uploadImage(file: File, folder: string = 'uploads'): Promi
 /**
  * Nahrá programovo vygenerovaný Buffer (napr. MP3 nahrávku z ElevenLabs) do Backblaze B2.
  */
-export async function uploadBuffer(buffer: Buffer, mimeType: string, folder: string = 'generated'): Promise<UploadResult | null> {
+export async function uploadBuffer(buffer: Buffer, mimeType: string, folder: string = 'generated', extension?: string): Promise<UploadResult | null> {
     try {
         const timestamp = Date.now()
         const randomSuffix = Math.random().toString(36).substring(7)
-        const ext = mimeType.split('/')[1] || 'mp3'
+        const ext = extension || mimeType.split('/')[1] || 'mp3'
         const key = `${folder}/${timestamp}-${randomSuffix}.${ext}`
 
         await s3.send(new PutObjectCommand({

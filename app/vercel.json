@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/sync-bank",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/dcza-sync",
+      "schedule": "30 3 * * *"
     }
   ]
 }

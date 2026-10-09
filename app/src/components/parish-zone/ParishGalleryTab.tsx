@@ -51,7 +51,37 @@ async function shrinkForUpload(file: File): Promise<File> {
   }
 }
 
-export default function ParishGalleryTab({ parishId, parishSlug, actions, isDiocese = false }: { parishId: string; parishSlug: string | null; actions: GalleryActions; isDiocese?: boolean }) {
+/** Texty podľa toho, či ide o galériu farnosti (zóna, admin farnosti) alebo galériu webu diecézy (O75). */
+const TEXTS = {
+  parish: {
+    intro: 'Fotky kostola sa zobrazia hore na stránke farnosti, albumy „Zo života farnosti“ v samostatnej sekcii a na podstránke Galéria.',
+    section: 'Zo života farnosti',
+    published: 'Zverejnené na stránke farnosti',
+    videoHint: 'Napr. záznam z podujatia na YouTube farnosti. Videá sa zobrazia v albume nad fotkami; album môže mať aj len videá.',
+  },
+  diocese: {
+    intro: 'Albumy fotiek a videí z diecézy – na dcza.sk v sekcii Galéria. Nové albumy sú hore.',
+    section: 'Albumy',
+    published: 'Zverejnené na dcza.sk',
+    videoHint: 'Napr. záznam z podujatia na YouTube. Videá sa zobrazia v albume nad fotkami; album môže mať aj len videá.',
+  },
+}
+type Variant = keyof typeof TEXTS
+
+export default function ParishGalleryTab({
+  parishId,
+  parishSlug,
+  actions,
+  isDiocese = false,
+  variant = 'parish',
+}: {
+  parishId: string
+  parishSlug: string | null
+  actions: GalleryActions
+  isDiocese?: boolean
+  variant?: Variant
+}) {
+  const t = TEXTS[variant]
   const [data, setData] = useState<GalleryOverview | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -73,7 +103,7 @@ export default function ParishGalleryTab({ parishId, parishSlug, actions, isDioc
 
   const open = data.albums.find((a) => a.id === openId)
   if (open) {
-    return <AlbumEditor parishId={parishId} parishSlug={parishSlug} album={open} overview={data} actions={actions} isDiocese={isDiocese} onBack={() => setOpenId(null)} reload={reload} />
+    return <AlbumEditor parishId={parishId} parishSlug={parishSlug} album={open} overview={data} actions={actions} isDiocese={isDiocese} variant={variant} onBack={() => setOpenId(null)} reload={reload} />
   }
   if (creating) {
     return (
@@ -81,6 +111,7 @@ export default function ParishGalleryTab({ parishId, parishSlug, actions, isDioc
         <AlbumForm
           initial={{ title: '', description: '', event_date: new Date().toISOString().slice(0, 10), external_url: '', published: true }}
           isChurch={false}
+          variant={variant}
           onCancel={() => setCreating(false)}
           onSave={async (input) => {
             const res = await actions.saveAlbum(parishId, null, input)
@@ -102,7 +133,7 @@ export default function ParishGalleryTab({ parishId, parishSlug, actions, isDioc
     <div className="space-y-6">
       <div className={`${cardCls} space-y-5`}>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <SectionTitle title="Fotogaléria" description="Fotky kostola sa zobrazia hore na stránke farnosti, albumy „Zo života farnosti“ v samostatnej sekcii a na podstránke Galéria." />
+          <SectionTitle title="Fotogaléria" description={t.intro} />
           <button type="button" onClick={() => setCreating(true)} className={btnPrimary}>
             <Plus size={16} /> Nový album
           </button>
@@ -126,7 +157,7 @@ export default function ParishGalleryTab({ parishId, parishSlug, actions, isDioc
       )}
 
       <div className={`${cardCls} space-y-3`}>
-        <p className="font-black text-gray-900">Zo života farnosti</p>
+        <p className="font-black text-gray-900">{t.section}</p>
         {life.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 text-center">Zatiaľ žiadne albumy. Začnite tlačidlom „Nový album“.</p>
         ) : (
@@ -249,9 +280,11 @@ function AlbumForm({
   isChurch,
   onSave,
   onCancel,
+  variant = 'parish',
 }: {
   initial: AlbumInput
   isChurch: boolean
+  variant?: Variant
   onSave: (input: AlbumInput) => Promise<string | null>
   onCancel: () => void
 }) {
@@ -299,12 +332,12 @@ function AlbumForm({
         <VideoLinksField
           value={form.video_urls ?? []}
           onChange={(v) => set('video_urls', v)}
-          hint="Napr. záznam z podujatia na YouTube farnosti. Videá sa zobrazia v albume nad fotkami; album môže mať aj len videá."
+          hint={TEXTS[variant].videoHint}
         />
       )}
       <label className="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
         <input type="checkbox" checked={form.published !== false} onChange={(e) => set('published', e.target.checked)} className={checkboxCls} />
-        Zverejnené na stránke farnosti
+        {TEXTS[variant].published}
       </label>
       {err && <Notice kind="error">{err}</Notice>}
       <div className="flex gap-2">
@@ -328,6 +361,7 @@ function AlbumEditor({
   overview,
   actions,
   isDiocese,
+  variant = 'parish',
   onBack,
   reload,
 }: {
@@ -337,6 +371,7 @@ function AlbumEditor({
   overview: GalleryOverview
   actions: GalleryActions
   isDiocese: boolean
+  variant?: Variant
   onBack: () => void
   reload: () => Promise<void>
 }) {
@@ -392,7 +427,8 @@ function AlbumEditor({
     run(() => actions.updatePhotos(parishId, album.id, { order }), 'Poradie uložené.')
   }
 
-  const publicUrl = parishSlug && !isChurch && album.published && !album.taken_down_at && !album.external_url ? `/farnosti/${parishSlug}/galeria/${album.slug}` : null
+  const visible = !isChurch && album.published && !album.taken_down_at && !album.external_url
+  const publicUrl = !visible ? null : variant === 'diocese' ? `/galeria/${album.slug}` : parishSlug ? `/farnosti/${parishSlug}/galeria/${album.slug}` : null
 
   return (
     <div className="space-y-6">
@@ -459,6 +495,7 @@ function AlbumEditor({
             <AlbumForm
               initial={{ title: album.title, description: album.description ?? '', event_date: album.event_date, external_url: album.external_url ?? '', video_urls: album.videos.map((v) => v.url), published: album.published }}
               isChurch={isChurch}
+              variant={variant}
               onCancel={() => setEditingMeta(false)}
               onSave={async (input) => {
                 const res = await actions.saveAlbum(parishId, album.id, input)

@@ -2,6 +2,10 @@ import Link from 'next/link'
 import { ArrowRight, BookOpen, Church, ExternalLink, HandHeart, Lock, Search, ShieldAlert } from 'lucide-react'
 import { dioceseDb, getMagazine, getPastEvents, getPosts, getUpcomingEvents, type DiocesePostSummary } from '@/lib/diocese/public'
 import DczaHero from '@/components/dcza/DczaHero'
+import { getTkkbsNews } from '@/lib/diocese/tkkbs'
+import { getDioceseAlbums } from '@/lib/diocese/gallery'
+import AlbumTile from '@/components/dcza/AlbumTile'
+import { longDate } from '@/lib/diocese/format'
 import PostCard from '@/components/dcza/PostCard'
 import EventItem from '@/components/dcza/EventItem'
 
@@ -20,7 +24,8 @@ export default async function DczaHome() {
     db.from('clergy').select('id', { count: 'exact', head: true }).in('category', ['priest', 'bishop']).eq('status', 'active'),
   ])
   const inCat = (p: (typeof posts)[number], slug: string) => p.categories.some((c) => c.slug === slug)
-  const [invites, parishLife] = await Promise.all([getPosts({ limit: 4, category: 'pozvanky' }), getPosts({ limit: 4, category: 'zo-zivota-farnosti' })])
+  const [invites, parishLife, tkkbs] = await Promise.all([getPosts({ limit: 4, category: 'pozvanky' }), getPosts({ limit: 4, category: 'zo-zivota-farnosti' }), getTkkbsNews()])
+  const albums = await getDioceseAlbums(db, 4)
   const others = posts.filter((p) => !inCat(p, 'pozvanky') && !inCat(p, 'zo-zivota-farnosti')).slice(0, 4)
 
   return (
@@ -35,6 +40,54 @@ export default async function DczaHome() {
           <NewsStrip title="Ďalšie aktuality" subtitle="Z diecézy, KROK – Pastoračný fond Žilinskej diecézy, homílie a zamyslenia" href="/aktuality" posts={others} />
         </div>
       </section>
+
+      {/* Galéria (O75) */}
+      {albums.length > 0 && (
+        <section className="bg-white border-t border-blue/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+            <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+              <h2 className="text-3xl font-light tracking-tight">Galéria</h2>
+              <Link href="/galeria" className="inline-flex items-center gap-1.5 text-sm font-extrabold text-blue hover:underline">
+                Všetky albumy <ArrowRight size={15} />
+              </Link>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {albums.map((a) => (
+                <AlbumTile key={a.id} album={a} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Z Cirkvi na Slovensku – TK KBS (O76) */}
+      {tkkbs.length > 0 && (
+        <section className="bg-blue-soft/30 border-t border-blue/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+            <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-wine mb-2">Správy TK KBS</p>
+                <h2 className="text-3xl font-light tracking-tight">Z Cirkvi na Slovensku</h2>
+              </div>
+              <a href="https://www.tkkbs.sk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-extrabold text-blue hover:underline">
+                Všetky na tkkbs.sk <ExternalLink size={14} />
+              </a>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {tkkbs.slice(0, 8).map((n) => (
+                <a key={n.link} href={n.link} target="_blank" rel="noopener noreferrer" className="group rounded-2xl bg-white border border-blue/10 p-5 hover:border-gold/60 hover:shadow-md transition-all flex flex-col">
+                  {n.date && <p className="text-xs text-mute mb-1.5">{longDate(n.date)}</p>}
+                  <p className="font-extrabold leading-snug group-hover:text-blue">{n.title}</p>
+                  {n.excerpt && <p className="text-sm text-mute mt-2 line-clamp-3">{n.excerpt}</p>}
+                  <p className="mt-auto pt-3 text-xs font-bold text-blue inline-flex items-center gap-1">
+                    tkkbs.sk <ExternalLink size={11} />
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Farnosti + rýchle odkazy */}
       <section className="bg-paper-warm border-y border-blue/10">

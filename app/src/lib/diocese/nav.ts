@@ -46,6 +46,7 @@ export function mainNav(tree: DiocesePageNode[]): NavItem[] {
       { label: 'Všetky aktuality', href: '/aktuality' },
       { label: 'Kalendár akcií', href: '/kalendar' },
       { label: 'Časopis Naša Žilinská diecéza', href: '/casopis' },
+      { label: 'Galéria', href: '/galeria' },
     ]
   items.splice(Math.max(1, items.length - 1), 0, { label: 'Farnosti', href: '/farnosti' })
   return items

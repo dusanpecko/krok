@@ -14,7 +14,8 @@ export default function ZoneShell({
   query = '',
   children,
 }: {
-  access: ZoneAccess
+  /** len zobrazované údaje – nie celý ZoneAccess (Supabase klient v props padá v dev režime pri prenose do prehliadača) */
+  access: Pick<ZoneAccess, 'name' | 'canManage'>
   categories: ZoneNavCategory[]
   activeSlug?: string | null
   query?: string

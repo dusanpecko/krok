@@ -19,7 +19,7 @@ export function siteFromHost(host: string | null | undefined): SiteKey | null {
 }
 
 /** Cesty spoločné pre oba weby (admin, prihlásenie, farnosti, kňazská zóna…) – na dcza.sk sa neprepisujú. */
-const SHARED = /^\/(admin|api|auth|prihlasenie|nastavit-heslo|zabudnute-heslo|knazska-zona|farnosti|web|_next|favicon\.ico|images|downloads|logo)(\/|$)/
+const SHARED = /^\/(admin|api|auth|prihlasenie|nastavit-heslo|zabudnute-heslo|knazska-zona|moja-farnost|farnosti|web|_next|favicon\.ico|images|downloads|logo)(\/|$)/
 
 export function isSharedPath(pathname: string): boolean {
   return SHARED.test(pathname)

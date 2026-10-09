@@ -17,7 +17,7 @@ export default async function ZoneDocPage({ params }: { params: Promise<{ id: st
   if (!doc) notFound()
 
   return (
-    <ZoneShell access={access} categories={categories} activeSlug={doc.category_slug}>
+    <ZoneShell access={{ name: access.name, canManage: access.canManage }} categories={categories} activeSlug={doc.category_slug}>
       <Link href={`/knazska-zona/kategoria/${doc.category_slug}${doc.status === 'archived' ? '?archiv=1' : ''}`} className="inline-flex items-center gap-1.5 text-sm font-extrabold text-blue hover:underline mb-5">
         <ArrowLeft size={14} /> {doc.category_name}
       </Link>

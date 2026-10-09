@@ -28,7 +28,7 @@ export default async function ZoneSearchPage({ searchParams }: PageProps) {
   const chip = (active: boolean) => `px-3 py-1.5 rounded-full text-sm font-bold ${active ? 'bg-blue text-white' : 'bg-white border border-blue/15 text-ink/80 hover:border-blue/40'}`
 
   return (
-    <ZoneShell access={access} categories={categories} activeSlug={cat?.slug} query={query}>
+    <ZoneShell access={{ name: access.name, canManage: access.canManage }} categories={categories} activeSlug={cat?.slug} query={query}>
       <h2 className="text-2xl font-light mb-1">{terms.length ? <>Výsledky pre „{query}“</> : 'Hľadanie'}</h2>
       <p className="text-sm text-mute mb-5">
         {terms.length

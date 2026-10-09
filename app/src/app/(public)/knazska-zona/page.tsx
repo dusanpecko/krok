@@ -16,7 +16,7 @@ export default async function ClergyZonePage() {
   const fresh = recent.filter((d) => isNewDoc(d.published_at))
 
   return (
-    <ZoneShell access={access} categories={categories}>
+    <ZoneShell access={{ name: access.name, canManage: access.canManage }} categories={categories}>
       <section className="mb-12">
         <h2 className="flex items-center gap-2 text-xl font-light mb-4">
           <Sparkles size={20} className="text-gold-ink" /> {fresh.length ? `Nové za posledných ${NEW_DAYS} dní` : 'Naposledy pridané'}

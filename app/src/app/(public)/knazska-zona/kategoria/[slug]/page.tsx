@@ -34,7 +34,7 @@ export default async function ZoneCategoryPage({ params, searchParams }: PagePro
   const chip = (active: boolean) => `px-3 py-1.5 rounded-full text-sm font-bold ${active ? 'bg-blue text-white' : 'bg-white border border-blue/15 text-ink/80 hover:border-blue/40'}`
 
   return (
-    <ZoneShell access={access} categories={categories} activeSlug={slug}>
+    <ZoneShell access={{ name: access.name, canManage: access.canManage }} categories={categories} activeSlug={slug}>
       <h2 className="text-3xl font-light">{cat.name}</h2>
       {cat.description && <p className="text-mute mt-1">{cat.description}</p>}
       <div className="flex flex-wrap items-center gap-2 mt-5 mb-6">

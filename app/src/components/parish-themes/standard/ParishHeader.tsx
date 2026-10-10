@@ -24,10 +24,12 @@ interface Props {
   manageUrl: string | null
   /** tlačidlo „Časy omší“ – základná stránka bohoslužby nemá */
   showMassTimes?: boolean
+  /** web diecézy – v tenkom páse „Žilinská diecéza · Farnosti“ namiesto „KROK · Farnosti Žilinskej diecézy“ */
+  dcza?: boolean
 }
 
 /** Hlavička stránky farnosti (návrh A): tenký pás KROK + lepkavá lišta farnosti, na mobile vysúvacie menu. */
-export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHref, items, supportHref, manageUrl, showMassTimes = true }: Props) {
+export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHref, items, supportHref, manageUrl, showMassTimes = true, dcza = false }: Props) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -58,7 +60,15 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
           <Link href="/farnosti" className="inline-flex items-center gap-1 hover:text-gold-bright min-w-0">
             <ChevronLeft size={14} className="shrink-0" />
             <span className="truncate">
-              <strong className="font-black tracking-wider text-white">KROK</strong> · Farnosti Žilinskej diecézy
+              {dcza ? (
+                <>
+                  <strong className="font-black tracking-wider text-white">Žilinská diecéza</strong> · Farnosti
+                </>
+              ) : (
+                <>
+                  <strong className="font-black tracking-wider text-white">KROK</strong> · Farnosti Žilinskej diecézy
+                </>
+              )}
             </span>
           </Link>
           <div className="flex items-center gap-4 shrink-0">

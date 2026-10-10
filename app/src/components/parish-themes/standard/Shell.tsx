@@ -29,7 +29,8 @@ export default async function Shell({
 }) {
   const base = `/farnosti/${parish.slug}`
   // registrácia, ochrana údajov a úvod Kroku sú len na mojkrok.sk
-  const krokBase = (await getSite()) === 'dcza' ? siteBaseUrl('mojkrok') : ''
+  const dcza = (await getSite()) === 'dcza'
+  const krokBase = dcza ? siteBaseUrl('mojkrok') : ''
   const supportHref = await parishSupportHref(parish.slug)
   const hasOffice = officeHoursFor(parish).items.length > 0
   // základná stránka (nezverejnená): bez oznamov, aktualít a sviatostí, bohoslužby len ak sú vyplnené
@@ -64,6 +65,7 @@ export default async function Shell({
         supportHref={supportHref}
         manageUrl={parish.manageUrl}
         showMassTimes={hasSchedule}
+        dcza={dcza}
       />
       <main className="relative flex-grow bg-paper-warm text-ink pb-16 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />

@@ -24,11 +24,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** Zoznam všetkých aktívnych farností + vyhľadávanie podľa obce, patróna a polohy (návrh § 4.2). */
 export default async function FarnostiPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const [parishes, { q }] = await Promise.all([getPublicParishList(), searchParams])
+  const [parishes, { q }, site] = await Promise.all([getPublicParishList(), searchParams, getSite()])
+  // na mojkrok.sk sa stránka podsúva pod priehľadný navbar; na dcza.sk je hlavička v toku stránky (tmavá lišta + lepkavé menu)
+  const dcza = site === 'dcza'
   return (
-    <div className="relative -mt-24 lg:-mt-32 bg-paper-warm min-h-screen text-ink pb-24 overflow-hidden">
+    <div className={`relative ${dcza ? '' : '-mt-24 lg:-mt-32'} bg-paper-warm min-h-screen text-ink pb-24 overflow-hidden`}>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-36 sm:pt-44">
+      <div className={`relative max-w-6xl mx-auto px-4 sm:px-6 ${dcza ? 'pt-12 sm:pt-16' : 'pt-36 sm:pt-44'}`}>
         <header className="text-center max-w-2xl mx-auto mb-10">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-blue mb-4">Žilinská diecéza</p>
           <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-5">Farnosti</h1>

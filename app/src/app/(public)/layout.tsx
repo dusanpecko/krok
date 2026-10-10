@@ -14,7 +14,7 @@ export default async function PublicLayout({ children }: { children: React.React
     return (
       <div className="flex flex-col min-h-screen">
         <DczaHeader nav={nav} />
-        {/* hlavička diecézy zaberá miesto (sticky) – stránky s -mt-24 sa podsunú pod ňu */}
+        {/* hlavička diecézy je v toku stránky (tmavá lišta odíde hore, menu je lepkavé) – stránky s -mt-24 ho na dcza.sk nesmú použiť */}
         <main className="flex-grow">{children}</main>
         <DczaFooter nav={nav} />
       </div>

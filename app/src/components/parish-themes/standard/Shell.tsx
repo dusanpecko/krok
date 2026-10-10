@@ -67,7 +67,7 @@ export default async function Shell({
         showMassTimes={hasSchedule}
         dcza={dcza}
       />
-      <main className="relative flex-grow bg-paper-warm text-ink pb-16 overflow-hidden">
+      <main className="relative grow bg-paper-warm text-ink pb-16 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
         {parish.image_url && !compact && !hideBackdrop && (
           <div className="absolute inset-x-0 top-0 h-[460px] pointer-events-none">

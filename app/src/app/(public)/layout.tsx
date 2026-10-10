@@ -15,7 +15,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <div className="flex flex-col min-h-screen">
         <DczaHeader nav={nav} />
         {/* hlavička diecézy je v toku stránky (tmavá lišta odíde hore, menu je lepkavé) – stránky s -mt-24 ho na dcza.sk nesmú použiť */}
-        <main className="flex-grow">{children}</main>
+        <main className="grow">{children}</main>
         <DczaFooter nav={nav} />
       </div>
     )
@@ -23,7 +23,7 @@ export default async function PublicLayout({ children }: { children: React.React
   return (
     <div className="flex flex-col min-h-screen">
       <NavBar />
-      <main className="flex-grow pt-24 lg:pt-32">
+      <main className="grow pt-24 lg:pt-32">
         {children}
       </main>
       <Footer />

@@ -29,7 +29,7 @@ export default async function DczaLayout({ children }: { children: React.ReactNo
     <div className="flex flex-col min-h-screen bg-paper-warm text-ink">
       <ScrollProgress />
       <DczaHeader nav={nav} />
-      <main className="flex-grow">{children}</main>
+      <main className="grow">{children}</main>
       <DczaFooter nav={nav} />
     </div>
   )

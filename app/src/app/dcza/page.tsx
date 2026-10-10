@@ -8,6 +8,7 @@ import AlbumTile from '@/components/dcza/AlbumTile'
 import { longDate } from '@/lib/diocese/format'
 import PostCard from '@/components/dcza/PostCard'
 import EventItem from '@/components/dcza/EventItem'
+import LectioTodaySection from '@/components/public/LectioTodaySection'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,6 +93,9 @@ export default async function DczaHome() {
           </div>
         </div>
       </section>
+
+      {/* Lectio Divina na dnes – živé dáta z verejného API lectio.one */}
+      <LectioTodaySection variant="dcza" />
 
       {/* Kalendár */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">

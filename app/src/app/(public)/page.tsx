@@ -22,6 +22,7 @@ import { getPublicStats } from './actions';
 import FeaturedProjects from '@/components/public/FeaturedProjects';
 import SponsorsStrip from '@/components/public/SponsorsStrip';
 import DonationSection from '@/components/public/DonationSection';
+import LectioTodaySection from '@/components/public/LectioTodaySection';
 import ParishFinder from '@/components/public/parishes/ParishFinder';
 
 // ==========================================
@@ -866,6 +867,9 @@ export default function KrokLandingPage() {
         </div>
       </section>
       )}
+
+      {/* Lectio Divina na dnes – živé dáta z verejného API lectio.one */}
+      <LectioTodaySection />
 
       {/* Podporili nás – logá sponzorov (ak nejakí sú) */}
       <SponsorsStrip />

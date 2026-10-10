@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import { ChevronDown, Menu, Search, X } from 'lucide-react'
 import type { NavItem } from '@/lib/diocese/nav'
 
-/** Hlavička webu diecézy: horná lišta, erb, hlavné menu s rozbaľovaním, mobilné menu. */
+/** Hlavička webu diecézy: horná lišta (pri skrolovaní odíde hore), lepkavá lišta s erbom a hlavným menu, mobilné menu. */
 export default function DczaHeader({ nav }: { nav: NavItem[] }) {
   const [open, setOpen] = useState<string | null>(null)
   const [mobile, setMobile] = useState(false)
@@ -22,7 +22,7 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
   const isActive = (href: string) => href !== '/' && !href.startsWith('http') && pathname.startsWith(href.split('?')[0])
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-blue/10">
+    <>
       <div className="hidden md:block bg-blue-deep text-white/80 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-end gap-5">
           <a href="https://www.facebook.com/zilinskadieceza" target="_blank" rel="noopener noreferrer" className="hover:text-white">Facebook</a>
@@ -31,6 +31,7 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
           <a href="https://mojkrok.sk" className="hover:text-white font-bold text-gold-bright/90">KROK – Pastoračný fond</a>
         </div>
       </div>
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-blue/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-6">
         <Link href="/" className="flex items-center gap-3 shrink-0">
           <Image src="/dcza/erb-240.png" alt="Erb Žilinskej diecézy" width={41} height={48} priority />
@@ -115,5 +116,6 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
         </div>
       )}
     </header>
+    </>
   )
 }

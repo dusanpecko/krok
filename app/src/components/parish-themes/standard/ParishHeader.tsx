@@ -55,7 +55,7 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
   return (
     <>
       {/* Tenký pás KROK */}
-      <div className="bg-blue text-[11px] sm:text-xs text-white/85">
+      <div className="bg-blue-deep text-[11px] sm:text-xs text-white/85">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-8 flex items-center justify-between gap-3">
           <Link href="/farnosti" className="inline-flex items-center gap-1 hover:text-gold-bright min-w-0">
             <ChevronLeft size={14} className="shrink-0" />

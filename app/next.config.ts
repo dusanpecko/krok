@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Dev server Next 16 blokuje JS/HMR pri prístupe z inej adresy než localhost.
   // Povolené LAN adresy na testovanie z iných zariadení (len vývoj, na produkciu nemá vplyv).
-  allowedDevOrigins: ['10.130.2.107', '192.168.*.*', '10.*.*.*'],
+  // + Tailscale (prístup na Mac Studio cez SSH / VPN): adresy 100.x a názvy *.ts.net
+  allowedDevOrigins: ['10.130.2.107', '192.168.*.*', '10.*.*.*', '100.*.*.*', '*.ts.net'],
   // Staré adresy výziev z mojkrok.dcza.sk (WordPress) → nové /vyzvy/[slug]
   // Mimo produkcie (staging / preview) – žiadne indexovanie ani pri odkaze odinakiaľ
   async headers() {

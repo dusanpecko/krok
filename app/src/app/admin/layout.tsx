@@ -5,6 +5,9 @@ import { useUserRole } from '@/hooks/useUserRole'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import Link from 'next/link'
+import { CircleHelp } from 'lucide-react'
+import { adminHelpSlug, helpHref } from '@/lib/help-links'
 
 const routePermissionsMap: Record<string, string> = {
   '/admin/darcovia': 'view_donors',
@@ -20,6 +23,7 @@ const routePermissionsMap: Record<string, string> = {
   '/admin/nastavenia/dekanaty': 'manage_config',
   '/admin/emaily': 'manage_config',
   '/admin/exporty': 'view_donors',
+  '/admin/pomoc/sprava': 'manage_help',
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -52,6 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     route => pathname === route || pathname.startsWith(route + '/')
   )
   const requiredPermission = matchedRoute ? routePermissionsMap[matchedRoute] : null
+  const helpSlug = adminHelpSlug(pathname)
 
   // Prístup do administrácie vyžaduje buď rolu administrator, alebo aspoň jednu priradenú rolu
   const hasAccess = isAdmin || roles.length > 0
@@ -135,6 +140,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
 
         <div className="p-6 lg:p-8">
+          {helpSlug && (
+            <div className="flex justify-end -mt-2 mb-2 lg:-mt-4">
+              <Link href={helpHref('admin', helpSlug)} className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-blue-600">
+                <CircleHelp size={14} /> Návod k tejto stránke
+              </Link>
+            </div>
+          )}
           {children}
         </div>
       </main>

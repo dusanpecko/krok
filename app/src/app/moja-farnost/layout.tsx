@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { LifeBuoy } from 'lucide-react'
 import ParishZoneLogout from '@/components/parish-zone/ParishZoneLogout'
 
 export const metadata: Metadata = {
@@ -19,6 +20,9 @@ export default function ParishZoneLayout({ children }: { children: React.ReactNo
             <span className="text-sm font-bold tracking-wide border-l border-white/20 pl-3">Moja farnosť</span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
+            <Link href="/moja-farnost/pomoc" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white">
+              <LifeBuoy size={15} /> Pomoc
+            </Link>
             <Link href="/" className="text-white/70 hover:text-white">Web KROK</Link>
             <ParishZoneLogout />
           </div>

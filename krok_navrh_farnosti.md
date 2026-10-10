@@ -86,6 +86,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 – **závisí od webu dcza.sk** (overovacia adresa)
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
+- [x] **Pomoc – návody na použitie** (migrácie 052–054, 2026-10-10): `/moja-farnost/pomoc` (12 návodov, odkaz „Návod k záložke“ pod lištou záložiek) a `/admin/pomoc` (24 návodov, odkaz „Návod k tejto stránke“ podľa adresy – `lib/help-links.ts`); úprava v `/admin/pomoc/sprava` (oprávnenie `manage_help`) – **migrácie spustiť ručne**
 - [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13 *(až keď bude všetko hotové)*
 - [ ] Web diecézy na platforme Krok (doména `dcza.sk`) – migrácia z **beta.dcza.dev** + články zo živého webu, presun domény; odblokuje K5, K6 a F6 – § 14, **§ 20 (O70–O73, fázy D0–D6)**
 - [x] **Kňazská zóna** (migrácia 048) – `/knazska-zona` (kategórie, nové, archív, roky, fulltext v PDF/DOCX bez diakritiky s úryvkami), admin `/admin/knazska-zona` (dokumenty, súbory priamo do B2, zverejnenie + e-mail kňazom, kategórie, pozvánky kňazov z registra) – § 15, O39–O42, O67–O69

@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import ParishBoxZoneTab from './ParishBoxZoneTab'
+import { helpHref } from '@/lib/help-links'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft, Globe, Upload, X } from 'lucide-react'
+import { CircleHelp, Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft, Globe, Upload, X } from 'lucide-react'
 import {
   saveMySchedule,
   submitParishChange,
@@ -33,6 +34,20 @@ const GALLERY_ACTIONS = { load: getMyGallery, saveAlbum: saveMyAlbum, upload: up
 
 const eur = (n: number | null | undefined) => (n == null ? '—' : n.toLocaleString('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
+
+/** Návod v Pomoci ku každej záložke (/moja-farnost/pomoc/<slug>, migrácia 052). */
+const TAB_HELP: Record<TabKey, string> = {
+  overview: 'prehlad-a-e-zvoncek',
+  traffic: 'navstevnost',
+  schedule: 'bohosluzby-a-uradne-hodiny',
+  posts: 'oznamy-a-aktuality',
+  gallery: 'galeria',
+  presentation: 'prezentacia-a-verejna-stranka',
+  sacraments: 'sviatosti',
+  official: 'uradne-udaje',
+  population: 'obce-a-statistika',
+  clergy: 'knazi',
+}
 
 export default function ParishZoneView({ view }: { view: MyParishView }) {
   const isAdmin = view.role === 'admin'
@@ -92,6 +107,11 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
             {t.label}
           </button>
         ))}
+      </div>
+      <div className="-mt-3 flex justify-end">
+        <Link href={helpHref('parish', TAB_HELP[tab])} className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-blue-600">
+          <CircleHelp size={14} /> Návod k záložke „{tabs.find((t) => t.key === tab)?.label}“
+        </Link>
       </div>
 
       {tab === 'overview' && (

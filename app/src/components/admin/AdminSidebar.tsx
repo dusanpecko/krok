@@ -20,7 +20,7 @@ import {
   Megaphone,
   Mail,
   BookUser,
-  Handshake, FolderLock, Building2, BookOpen, HandHeart, Images } from 'lucide-react'
+  Handshake, FolderLock, Building2, BookOpen, HandHeart, Images, LifeBuoy } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
@@ -51,6 +51,7 @@ type NavLink = {
 const mainLinks: NavLink[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/', label: 'Zobraziť web', icon: Globe, external: true },
+  { href: '/admin/pomoc', label: 'Pomoc', icon: LifeBuoy },
   {
     href: '#web-krok',
     label: 'Web KROK',

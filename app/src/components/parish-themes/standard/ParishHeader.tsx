@@ -85,7 +85,7 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
       </div>
 
       {/* Lišta farnosti */}
-      <header className={`sticky top-0 z-40 border-b transition-colors ${scrolled ? 'bg-white/95 backdrop-blur border-blue/10 shadow-md shadow-blue/5' : 'bg-white border-blue/10'}`}>
+      <header className={`sticky top-0 z-40 border-b transition-colors ${scrolled ? 'bg-white/75 backdrop-blur-md border-blue/10 shadow-md shadow-blue/5' : 'bg-white/85 backdrop-blur-md border-blue/10'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link href={homeHref} className="flex items-center gap-3 min-w-0">
             {logoUrl ? (

@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { sendTemplateEmail } from '@/lib/email/send'
 import { generateEmailLink } from '@/lib/auth/email-links'
+import { accessEmailError, isWorkspaceEmail } from '@/lib/parishes/access-policy'
 import { getBaseUrl } from '@/lib/mollie/client'
 import { ZONE_CATEGORIES, ZONE_STATUSES } from './access'
 
@@ -13,7 +14,7 @@ export interface ZoneMember {
   status: string
   email: string | null
   /** odkiaľ je e-mail: účet, pracovný, súkromný */
-  email_source: 'account' | 'work' | 'private' | null
+  email_source: 'account' | 'work' | null
   auth_user_id: string | null
   account_active: boolean
   invited_at: string | null
@@ -41,14 +42,16 @@ export async function listZoneMembers(db: SupabaseClient): Promise<ZoneMember[]>
   }
   return rows.map((r) => {
     const acc = r.auth_user_id ? accounts.get(r.auth_user_id) : undefined
-    const email = acc?.email ?? r.work_email ?? r.private_email ?? null
+    // pozvánka len na diecéznu adresu (@dcza.sk, Google Workspace); súkromný e-mail sa nepoužíva
+    const work = r.work_email && !accessEmailError(r.work_email) ? r.work_email : null
+    const email = acc?.email ?? work ?? null
     return {
       clergy_id: r.id,
       name: [r.title_before, r.first_name, r.last_name].filter(Boolean).join(' '),
       category: r.category,
       status: r.status,
       email: email?.trim().toLowerCase() || null,
-      email_source: acc?.email ? 'account' : r.work_email ? 'work' : r.private_email ? 'private' : null,
+      email_source: acc?.email ? 'account' : work ? 'work' : null,
       auth_user_id: r.auth_user_id,
       account_active: !!acc?.last_sign_in_at,
       invited_at: r.zone_invited_at,
@@ -95,13 +98,16 @@ export async function inviteClergyToZone(
     const { data } = await db.auth.admin.getUserById(c.auth_user_id)
     user = data?.user ?? null
   }
-  const email = (opts.email?.trim() || user?.email || c.work_email || c.private_email || '').toLowerCase()
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Chýba e-mail – doplňte pracovný e-mail v registri alebo ho zadajte.' }
+  const email = (opts.email?.trim() || user?.email || c.work_email || '').toLowerCase()
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Chýba e-mail – doplňte diecézny e-mail (@dcza.sk) v registri alebo ho zadajte.' }
+  const emailError = accessEmailError(email, 'kňazskej zóny')
+  if (emailError) return { success: false, error: emailError }
 
   if (!user || user.email?.toLowerCase() !== email) user = await findAuthUserByEmail(db, email)
   let invited = false
   if (!user) {
-    const { data, error } = await db.auth.admin.createUser({ email, email_confirm: false })
+    // adresa @dcza.sk je overená Google Workspace-om – prihlásenie cez Google sa k účtu pripojí
+    const { data, error } = await db.auth.admin.createUser({ email, email_confirm: isWorkspaceEmail(email) })
     if (error || !data?.user) return { success: false, error: `Účet sa nepodarilo založiť: ${error?.message ?? 'neznáma chyba'}` }
     user = data.user
     invited = true
@@ -112,11 +118,17 @@ export async function inviteClergyToZone(
   await db.from('clergy').update({ auth_user_id: user.id, zone_invited_at: new Date().toISOString() }).eq('id', clergyId)
 
   const salutation = opts.salutation?.trim() || defaultClergySalutation(c.category)
+  const loginUrl = `${getBaseUrl()}/prihlasenie?redirect=${encodeURIComponent('/knazska-zona')}`
+  // diecézna adresa – prihlásenie cez Google, bez hesla
+  if (isWorkspaceEmail(email)) {
+    const res = await sendTemplateEmail({ templateKey: 'clergy_zone_google', to: email, variables: { salutation, email, login_url: loginUrl } })
+    return res.success ? { success: true, invited } : { success: false, error: `E-mail sa nepodarilo odoslať: ${res.error}` }
+  }
   if (user.last_sign_in_at) {
     const res = await sendTemplateEmail({
       templateKey: 'clergy_zone_granted',
       to: email,
-      variables: { salutation, email, login_url: `${getBaseUrl()}/prihlasenie?redirect=${encodeURIComponent('/knazska-zona')}` },
+      variables: { salutation, email, login_url: loginUrl },
     })
     return res.success ? { success: true, invited: false } : { success: false, error: `E-mail sa nepodarilo odoslať: ${res.error}` }
   }

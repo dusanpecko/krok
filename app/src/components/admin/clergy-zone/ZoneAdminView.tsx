@@ -298,7 +298,7 @@ function MembersTab() {
     <div className={`${cardCls} space-y-4`}>
       <SectionTitle
         title="Kňazi a prístupy"
-        description="Kňazi a diakoni z registra (v službe, na odpočinku, na štúdiu). Pozvánka príde na e-mail z registra (pracovný, inak súkromný); aktivujú si účet nastavením hesla. Účty farností vidia zónu automaticky."
+        description="Kňazi a diakoni z registra (v službe, na odpočinku, na štúdiu). Pozvánka príde len na diecézny e-mail @dcza.sk z registra; prihlasujú sa cez Google, bez hesla. Účty farností vidia zónu automaticky."
       />
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
       <div className="flex flex-wrap gap-2 items-center">
@@ -358,7 +358,6 @@ function MembersTab() {
                 <p className="text-xs text-gray-400">
                   {CATEGORY_LABEL[m.category as ClergyCategory] ?? m.category}
                   {m.email && ` · ${m.email}`}
-                  {m.email_source === 'private' && ' (súkromný)'}
                   {m.invited_at && ` · pozvaný ${fmtDate(m.invited_at)}`}
                 </p>
               </div>

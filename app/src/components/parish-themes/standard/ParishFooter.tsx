@@ -6,12 +6,12 @@ import { socialLabel } from '@/lib/parishes/social'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import KrokLogo from '@/components/KrokLogo'
 
-/** Pätička stránky farnosti – kontakt farnosti, jej siete a odkaz na prevádzkovateľa (KROK). */
-export default function ParishFooter({ parish }: { parish: PublicParish }) {
+/** Pätička stránky farnosti – kontakt farnosti, jej siete a odkaz na prevádzkovateľa (KROK; na dcza.sk nasleduje pätička diecézy). */
+export default function ParishFooter({ parish, operator = true }: { parish: PublicParish; operator?: boolean }) {
   const base = `/farnosti/${parish.slug}`
   const address = [parish.street, [parish.postal_code, parish.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   return (
-    <footer className="bg-[#03172c] text-blue-100/70 border-t border-white/10 pb-20 lg:pb-0">
+    <footer className={`bg-[#03172c] text-blue-100/70 border-t border-white/10 ${operator ? 'pb-20 lg:pb-0' : ''}`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 text-sm">
         <div className="space-y-2">
           <p className="font-extrabold text-white text-base flex items-center gap-3">
@@ -56,6 +56,7 @@ export default function ParishFooter({ parish }: { parish: PublicParish }) {
           </div>
         )}
       </div>
+      {operator && (
       <div className="border-t border-white/5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <Link href="/" className="flex items-center gap-3 hover:text-white">
@@ -68,6 +69,7 @@ export default function ParishFooter({ parish }: { parish: PublicParish }) {
           </div>
         </div>
       </div>
+      )}
     </footer>
   )
 }

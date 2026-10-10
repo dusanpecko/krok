@@ -23,13 +23,13 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   if (!album) return { title: 'Album nenájdený | KROK' }
   const shared = album.photos[photoIndex(foto) ?? -1]
   return {
-    ...parishMetadata(parish, {
+    ...(await parishMetadata(parish, {
       title: album.title,
       description: shared?.caption || album.description || undefined,
       path: `/galeria/${album.slug}`,
       image: shared?.url ?? album.cover_url,
       ogQuery: shared ? `foto=${foto}` : undefined,
-    }),
+    })),
     robots: { index: false, follow: !parish.preview },
   }
 }

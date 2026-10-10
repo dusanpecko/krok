@@ -24,10 +24,12 @@ interface Props {
   manageUrl: string | null
   /** tlačidlo „Časy omší“ – základná stránka bohoslužby nemá */
   showMassTimes?: boolean
+  /** tenký pás „KROK · Farnosti“ – na dcza.sk ho nahrádza hlavička diecézy */
+  krokStrip?: boolean
 }
 
 /** Hlavička stránky farnosti (návrh A): tenký pás KROK + lepkavá lišta farnosti, na mobile vysúvacie menu. */
-export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHref, items, supportHref, manageUrl, showMassTimes = true }: Props) {
+export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHref, items, supportHref, manageUrl, showMassTimes = true, krokStrip = true }: Props) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -52,7 +54,8 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
 
   return (
     <>
-      {/* Tenký pás KROK */}
+      {/* Tenký pás KROK (na dcza.sk je nad lištou hlavička diecézy) */}
+      {krokStrip && (
       <div className="bg-blue text-[11px] sm:text-xs text-white/85">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-8 flex items-center justify-between gap-3">
           <Link href="/farnosti" className="inline-flex items-center gap-1 hover:text-gold-bright min-w-0">
@@ -73,6 +76,7 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
           </div>
         </div>
       </div>
+      )}
 
       {/* Lišta farnosti */}
       <header className={`sticky top-0 z-40 border-b transition-colors ${scrolled ? 'bg-white/95 backdrop-blur border-blue/10 shadow-md shadow-blue/5' : 'bg-white border-blue/10'}`}>
@@ -99,6 +103,11 @@ export default function ParishHeader({ name, subtitle, imageUrl, logoUrl, homeHr
             {items.map((it) => (
               <NavLink key={it.href} it={it} className={linkCls(it.active)} />
             ))}
+            {!krokStrip && manageUrl && (
+              <Link href={manageUrl} className={`${linkCls()} inline-flex items-center`} title="Spravovať farnosť" aria-label="Spravovať farnosť">
+                <Settings size={16} />
+              </Link>
+            )}
             {showMassTimes && (
               <a href={items.find((i) => i.href.endsWith('#bohosluzby'))?.href ?? `${homeHref}#bohosluzby`} className="ml-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gold text-blue-deep font-black text-sm hover:bg-gold-bright">
                 <Clock size={15} /> Časy omší

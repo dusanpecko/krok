@@ -5,11 +5,20 @@ import ParishHeader, { type ParishNavItem } from './ParishHeader'
 import ParishFooter from './ParishFooter'
 import MobileBar from './MobileBar'
 import ShareButton from '@/components/parishes/ShareButton'
+import DczaHeader from '@/components/dcza/DczaHeader'
+import DczaFooter from '@/components/dcza/DczaFooter'
+import { getSite, parishSupportHref } from '@/lib/site-server'
+import { getPageTree } from '@/lib/diocese/public'
+import { mainNav } from '@/lib/diocese/nav'
+import { listCuriaLinks } from '@/lib/diocese/schematizmus'
 
 type Section = 'home' | 'announcement' | 'news' | 'gallery'
 
-/** Rámec štandardného motívu: hlavička farnosti (návrh A), obsah, pätička farnosti, mobilná lišta. */
-export default function Shell({
+/**
+ * Rámec štandardného motívu: hlavička farnosti (návrh A), obsah, pätička farnosti, mobilná lišta.
+ * Na dcza.sk navyše hlavička diecézy nad lištou farnosti a pätička diecézy pod pätičkou farnosti (§ 20, D2).
+ */
+export default async function Shell({
   parish,
   active,
   children,
@@ -24,6 +33,9 @@ export default function Shell({
   hideBackdrop?: boolean
 }) {
   const base = `/farnosti/${parish.slug}`
+  const dcza = (await getSite()) === 'dcza'
+  const nav = dcza ? mainNav(await getPageTree(), await listCuriaLinks()) : null
+  const supportHref = await parishSupportHref(parish.slug)
   const hasOffice = officeHoursFor(parish).items.length > 0
   // základná stránka (nezverejnená): bez oznamov, aktualít a sviatostí, bohoslužby len ak sú vyplnené
   const hasSchedule = !parish.basic || hasParishSchedule(parish)
@@ -47,6 +59,7 @@ export default function Shell({
 
   return (
     <>
+      {nav && <DczaHeader nav={nav} sticky={false} />}
       <ParishHeader
         name={name}
         subtitle={subtitle}
@@ -54,9 +67,10 @@ export default function Shell({
         logoUrl={parish.logo_url}
         homeHref={base}
         items={items}
-        supportHref={`/registracia?farnost=${parish.slug}`}
+        supportHref={supportHref}
         manageUrl={parish.manageUrl}
         showMassTimes={hasSchedule}
+        krokStrip={!dcza}
       />
       <main className="relative flex-grow bg-paper-warm text-ink pb-16 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
@@ -94,8 +108,13 @@ export default function Shell({
           {children}
         </div>
       </main>
-      <ParishFooter parish={parish} />
-      <MobileBar base={base} phone={parish.phone} massTimes={hasSchedule} posts={!parish.basic} supportHref={`/registracia?farnost=${parish.slug}`} />
+      <ParishFooter parish={parish} operator={!dcza} />
+      {nav && (
+        <div className="bg-blue-deep pb-16 lg:pb-0">
+          <DczaFooter nav={nav} />
+        </div>
+      )}
+      <MobileBar base={base} phone={parish.phone} massTimes={hasSchedule} posts={!parish.basic} supportHref={supportHref} />
     </>
   )
 }

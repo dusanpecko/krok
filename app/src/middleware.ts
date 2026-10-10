@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { SITE_COOKIE, SITE_HEADER, isSharedPath, siteFromHost, type SiteKey } from '@/lib/site'
+import { PATH_HEADER, SITE_COOKIE, SITE_HEADER, isSharedPath, siteFromHost, type SiteKey } from '@/lib/site'
 
 /** Web podľa domény; mimo produkcie aj prepínač cookie (test.mojkrok.sk → web diecézy). */
 function resolveSite(request: NextRequest): SiteKey {
@@ -28,6 +28,7 @@ export async function middleware(request: NextRequest) {
   }
   // server komponenty vedia, na ktorom webe sú (lib/site-server getSite)
   request.headers.set(SITE_HEADER, site)
+  request.headers.set(PATH_HEADER, pathname)
 
   let supabaseResponse = NextResponse.next({
     request,

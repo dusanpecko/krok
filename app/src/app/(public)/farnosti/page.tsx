@@ -1,17 +1,25 @@
 import type { Metadata } from 'next'
 import { getPublicParishList } from '@/lib/parishes/public'
 import ParishDirectory from '@/components/public/parishes/ParishDirectory'
+import { getSite, parishCanonicalSite, siteBaseUrl } from '@/lib/site-server'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Farnosti Žilinskej diecézy – bohoslužby a oznamy | KROK',
-  description: 'Nájdite svoju farnosť podľa obce: rozpis svätých omší, spovedanie, farské oznamy a kontakt na farský úrad v Žilinskej diecéze.',
-  openGraph: {
-    title: 'Farnosti Žilinskej diecézy | KROK',
-    description: 'Sväté omše, oznamy a kontakty farností – vyhľadávanie podľa obce.',
-    type: 'website',
-  },
+/** Názov podľa webu (KROK / Žilinská diecéza), canonical podľa O72 – rovnako ako stránky farností. */
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = (await getSite()) === 'dcza' ? 'Žilinská diecéza' : 'KROK'
+  const url = `${siteBaseUrl(parishCanonicalSite())}/farnosti`
+  return {
+    title: `Farnosti Žilinskej diecézy – bohoslužby a oznamy | ${brand}`,
+    description: 'Nájdite svoju farnosť podľa obce: rozpis svätých omší, spovedanie, farské oznamy a kontakt na farský úrad v Žilinskej diecéze.',
+    alternates: { canonical: url },
+    openGraph: {
+      title: `Farnosti Žilinskej diecézy | ${brand}`,
+      description: 'Sväté omše, oznamy a kontakty farností – vyhľadávanie podľa obce.',
+      type: 'website',
+      url,
+    },
+  }
 }
 
 /** Zoznam všetkých aktívnych farností + vyhľadávanie podľa obce, patróna a polohy (návrh § 4.2). */

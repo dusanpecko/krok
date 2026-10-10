@@ -13,10 +13,12 @@ import SacramentsSection from './SacramentsSection'
 import OfficeHours from './OfficeHours'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
+import { parishSupportHref } from '@/lib/site-server'
 import { clergyName, dayMonth, formatDateTime, googleMapsUrl, hasParishSchedule, validRange } from '@/lib/parishes/format'
 
-export default function Home({ parish, announcements, news, events, sacraments, churchPhotos, albums, initialPhoto }: ParishHomeProps) {
+export default async function Home({ parish, announcements, news, events, sacraments, churchPhotos, albums, initialPhoto }: ParishHomeProps) {
   const base = `/farnosti/${parish.slug}`
+  const supportHref = await parishSupportHref(parish.slug)
   const latest = announcements[0]
   const feast = dayMonth(parish.feast_day)
   const adoration = dayMonth(parish.adoration_date)
@@ -266,7 +268,7 @@ export default function Home({ parish, announcements, news, events, sacraments, 
             <p className="text-mute max-w-md mb-6">
               Pastoračný fond KROK podporuje kňazov, farnosti a diecézne diela. Pri registrácii bude predvolená {parish.kind === 'chaplaincy' ? 'táto duchovná správa' : 'táto farnosť'}.
             </p>
-            <Link href={`/registracia?farnost=${parish.slug}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue text-white font-black hover:bg-blue-deep">
+            <Link href={supportHref} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue text-white font-black hover:bg-blue-deep">
               <Sparkles size={18} /> Chcem podporiť Pastoračný fond
             </Link>
           </div>
@@ -278,7 +280,7 @@ export default function Home({ parish, announcements, news, events, sacraments, 
           <p className="text-mute max-w-xl mx-auto mb-6">
             Pastoračný fond KROK podporuje kňazov, farnosti a diecézne diela. Pri registrácii bude predvolená {parish.kind === 'chaplaincy' ? 'táto duchovná správa' : 'táto farnosť'}.
           </p>
-          <Link href={`/registracia?farnost=${parish.slug}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold text-blue-deep font-black hover:bg-gold-bright">
+          <Link href={supportHref} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold text-blue-deep font-black hover:bg-gold-bright">
             <Sparkles size={18} /> Chcem podporiť Pastoračný fond
           </Link>
         </section>

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const parish = await getPublicParishBySlug(slug)
   if (!parish || parish.basic) return { title: 'Farnosť nenájdená | KROK' }
   // fotky ľudí z farského života sa neindexujú (§ 17)
-  return { ...parishMetadata(parish, { title: 'Zo života farnosti', path: '/galeria' }), robots: { index: false, follow: !parish.preview } }
+  return { ...(await parishMetadata(parish, { title: 'Zo života farnosti', path: '/galeria' })), robots: { index: false, follow: !parish.preview } }
 }
 
 export default async function ParishGalleryPage({ params, searchParams }: PageProps) {

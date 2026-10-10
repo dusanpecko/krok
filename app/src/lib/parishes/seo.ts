@@ -1,11 +1,14 @@
 import type { Metadata } from 'next'
 import type { PublicParish, PublicPost } from './public'
 import { hasParishSchedule, officeHoursFor, parishDisplayName } from './format'
-import { getBaseUrl } from '@/lib/mollie/client'
+import { getSite, parishCanonicalSite, siteBaseUrl } from '@/lib/site-server'
+
+/** Hlavná adresa stránok farností – mojkrok.sk, po spustení dcza.sk dcza.sk (O72). */
+const parishBase = () => siteBaseUrl(parishCanonicalSite())
 
 /** SEO stránok farností (návrh § 4.2): metadata, OG a schema.org CatholicChurch. */
 
-export function parishMetadata(parish: PublicParish, opts: { title?: string; description?: string; path?: string; image?: string | null; ogQuery?: string } = {}): Metadata {
+export async function parishMetadata(parish: PublicParish, opts: { title?: string; description?: string; path?: string; image?: string | null; ogQuery?: string } = {}): Promise<Metadata> {
   const name = parishDisplayName(parish)
   // bez opakovania („Martin – Martin“), ak je obec už v názve
   const place = parish.city && !name.toLowerCase().includes(parish.city.toLowerCase()) ? ` – ${parish.city}` : ''
@@ -20,10 +23,10 @@ export function parishMetadata(parish: PublicParish, opts: { title?: string; des
     `${parish.basic ? (hasSchedule ? 'Sväté omše, spovedanie a kontakt na farský úrad' : 'Kontakt na farský úrad a kňazov') : 'Sväté omše, spovedanie, farské oznamy a kontakt na farský úrad'} – ${name}${parish.deanery_name ? `, dekanát ${parish.deanery_name}` : ''}, Žilinská diecéza.`
   // úvodná stránka farnosti (bez path) nesie aj zoznam obcí, podstránky nie
   const description = opts.path ? summary : `${summary.trim()}${villagesText}`
-  const url = `${getBaseUrl()}/farnosti/${parish.slug}${opts.path ?? ''}`
+  const url = `${parishBase()}/farnosti/${parish.slug}${opts.path ?? ''}`
   const image = opts.image ?? parish.image_url
   return {
-    title: `${title} | KROK`,
+    title: `${title} | ${(await getSite()) === 'dcza' ? 'Žilinská diecéza' : 'KROK'}`,
     description,
     alternates: { canonical: url },
     robots: parish.preview ? { index: false, follow: false } : undefined,
@@ -36,7 +39,7 @@ const SCHEMA_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Fri
 
 /** JSON-LD: CatholicChurch s adresou, kontaktom, GPS a pravidelnými sv. omšami (Event so schedule). */
 export function parishJsonLd(parish: PublicParish) {
-  const base = getBaseUrl()
+  const base = parishBase()
   const url = `${base}/farnosti/${parish.slug}`
   const schedule = parish.schedules[parish.currentSeason]
   const masses = (schedule?.items ?? []).filter((i) => i.service_type === 'mass' && i.occasion === 'regular' && i.day_of_week != null && i.time_from)
@@ -96,7 +99,7 @@ export function parishJsonLd(parish: PublicParish) {
 }
 
 export function postJsonLd(parish: PublicParish, post: PublicPost) {
-  const url = `${getBaseUrl()}/farnosti/${parish.slug}/${post.type === 'announcement' ? 'oznamy' : 'aktuality'}/${post.slug}`
+  const url = `${parishBase()}/farnosti/${parish.slug}/${post.type === 'announcement' ? 'oznamy' : 'aktuality'}/${post.slug}`
   if (post.event_at) {
     return {
       '@context': 'https://schema.org',
@@ -105,7 +108,7 @@ export function postJsonLd(parish: PublicParish, post: PublicPost) {
       startDate: post.event_at,
       url,
       location: { '@type': 'Place', name: parishDisplayName(parish), address: [parish.street, parish.city].filter(Boolean).join(', ') || undefined },
-      organizer: { '@type': 'Organization', name: parishDisplayName(parish), url: `${getBaseUrl()}/farnosti/${parish.slug}` },
+      organizer: { '@type': 'Organization', name: parishDisplayName(parish), url: `${parishBase()}/farnosti/${parish.slug}` },
     }
   }
   return {

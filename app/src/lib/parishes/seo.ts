@@ -56,7 +56,7 @@ export function parishJsonLd(parish: PublicParish) {
     url,
     ...(parish.image_url ? { image: parish.image_url } : {}),
     ...(parish.phone ? { telephone: parish.phone } : {}),
-    ...(parish.email ? { email: parish.email } : {}),
+    // e-mail zámerne nie – JSON-LD čítajú aj zberači adries (O78); kontakt je na stránke chránený
     address: {
       '@type': 'PostalAddress',
       ...(parish.street ? { streetAddress: parish.street } : {}),

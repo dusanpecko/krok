@@ -2,6 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Volume2, ArrowLeft } from 'lucide-react'
+import { protectEmails } from '@/lib/email-code'
 
 export const dynamic = 'force-dynamic'
 
@@ -107,7 +108,7 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
           {/* Samotný text príspevku */}
           <div
             className="simple-rich-editor pt-4 border-t border-blue/10 leading-relaxed max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: protectEmails(post.content) }}
           />
         </article>
       </div>

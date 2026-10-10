@@ -5,6 +5,8 @@ import { hasParishSchedule, parishDisplayName } from '@/lib/parishes/format'
 import { socialLabel } from '@/lib/parishes/social'
 import SocialIcon from '@/components/parishes/SocialIcon'
 import KrokLogo from '@/components/KrokLogo'
+import ProtectedEmail from '@/components/ProtectedEmail'
+import { encodeEmail } from '@/lib/email-code'
 
 /** Pätička stránky farnosti – kontakt farnosti, jej siete a odkaz na prevádzkovateľa (KROK). */
 export default function ParishFooter({ parish, krokBase = '' }: { parish: PublicParish; /** na dcza.sk adresa mojkrok.sk */ krokBase?: string }) {
@@ -26,7 +28,7 @@ export default function ParishFooter({ parish, krokBase = '' }: { parish: Public
             <p className="flex gap-2"><Phone size={16} className="text-gold shrink-0 mt-0.5" /> <a href={`tel:${parish.phone.replace(/[^\d+]/g, '')}`} className="hover:text-gold-bright">{parish.phone}</a></p>
           )}
           {parish.email && (
-            <p className="flex gap-2"><Mail size={16} className="text-gold shrink-0 mt-0.5" /> <a href={`mailto:${parish.email}`} className="hover:text-gold-bright break-all">{parish.email}</a></p>
+            <p className="flex gap-2"><Mail size={16} className="text-gold shrink-0 mt-0.5" /> <ProtectedEmail code={encodeEmail(parish.email)} icon={false} className="hover:text-gold-bright break-all" /></p>
           )}
         </div>
         <div>

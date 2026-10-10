@@ -16,6 +16,9 @@ import {
   Loader2
 } from 'lucide-react'
 import { sendContactMessage } from './actions'
+import ProtectedEmail from '@/components/ProtectedEmail'
+import { decodeEmail } from '@/lib/email-code'
+import { KROK_EMAIL_CODE } from '@/lib/legal'
 
 // Sparkle časticový efekt pre prémiový sakrálny vzhľad
 // Deterministický pseudo-náhodný generátor (0–1) – render ostáva čistý (react-hooks/purity)
@@ -289,7 +292,7 @@ export default function ContactForm() {
               {/* Email */}
               <div className="flex items-center gap-4 group">
                 <button 
-                  onClick={() => copyToClipboard('mojkrok@dcza.sk', 'email')}
+                  onClick={() => copyToClipboard(decodeEmail(KROK_EMAIL_CODE) ?? '', 'email')}
                   className="w-12 h-12 bg-white text-gold-ink border border-blue/10 rounded-xl flex items-center justify-center shrink-0 hover:bg-blue-soft/50 hover:border-gold/30 group-hover:scale-105 transition-all cursor-pointer relative"
                   title="Kopírovať email"
                 >
@@ -297,9 +300,7 @@ export default function ContactForm() {
                 </button>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-extrabold text-mute text-xs tracking-wider uppercase">E-mail</h4>
-                  <a href="mailto:mojkrok@dcza.sk" className="font-bold text-ink hover:text-blue transition-colors block text-base truncate">
-                    mojkrok@dcza.sk
-                  </a>
+                  <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} className="font-bold text-ink hover:text-blue transition-colors block text-base truncate" />
                 </div>
                 <AnimatePresence>
                   {copiedField === 'email' && (

@@ -15,6 +15,8 @@ import SocialIcon from '@/components/parishes/SocialIcon'
 import { socialLabel } from '@/lib/parishes/social'
 import { parishSupportHref } from '@/lib/site-server'
 import { clergyName, dayMonth, formatDateTime, googleMapsUrl, hasParishSchedule, validRange } from '@/lib/parishes/format'
+import ProtectedEmail from '@/components/ProtectedEmail'
+import { encodeEmail, protectText } from '@/lib/email-code'
 
 export default async function Home({ parish, announcements, news, events, sacraments, churchPhotos, albums, initialPhoto }: ParishHomeProps) {
   const base = `/farnosti/${parish.slug}`
@@ -43,7 +45,7 @@ export default async function Home({ parish, announcements, news, events, sacram
         <div className="grid lg:grid-cols-5 gap-6 mb-16">
           <div className={`${latest ? 'lg:col-span-3' : 'lg:col-span-5'} space-y-4`}>
             {parish.intro ? (
-              <p className="text-lg text-ink/85 leading-relaxed whitespace-pre-line">{parish.intro}</p>
+              <p className="text-lg text-ink/85 leading-relaxed whitespace-pre-line" dangerouslySetInnerHTML={{ __html: protectText(parish.intro) }} />
             ) : parish.basic ? null : (
               <p className="text-lg text-ink/85 leading-relaxed">
                 Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
@@ -120,7 +122,7 @@ export default async function Home({ parish, announcements, news, events, sacram
             {parish.email && (
               <p className="flex gap-3">
                 <Mail size={18} className="text-gold-ink shrink-0 mt-0.5" />
-                <a href={`mailto:${parish.email}`} className="hover:text-gold-bright break-all">{parish.email}</a>
+                <ProtectedEmail code={encodeEmail(parish.email)} icon={false} className="hover:text-gold-bright break-all" />
               </p>
             )}
             {parish.website && (

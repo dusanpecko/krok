@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { hideEmails } from './email-code'
+import { hideEmails } from '@/lib/email-code'
 
 /** Web diecézy dcza.sk – čítanie obsahu (§ 20, D2). Serverový modul, service role, len zverejnené. */
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { BookOpen, Cross, Droplets, Flame, HandHeart, HeartHandshake, KeyRound, Wheat, type LucideIcon } from 'lucide-react'
 import type { PublicSacrament } from '@/lib/parishes/public'
 import { NON_SACRAMENT_TYPES } from '@/lib/parishes/format'
+import { protectEmails } from '@/lib/email-code'
 
 const ICONS: Record<string, LucideIcon> = {
   krst: Droplets,
@@ -58,7 +59,7 @@ export default function SacramentsSection({ sacraments }: { sacraments: PublicSa
       {current && (
         <div className="mt-4 bg-white/[0.04] border border-gold/30 rounded-2xl p-6">
           <h3 className="text-xl font-light text-gold-ink mb-3">{current.title}</h3>
-          <div className="simple-rich-editor leading-relaxed text-ink/85" dangerouslySetInnerHTML={{ __html: current.content }} />
+          <div className="simple-rich-editor leading-relaxed text-ink/85" dangerouslySetInnerHTML={{ __html: protectEmails(current.content) }} />
         </div>
       )}
     </div>

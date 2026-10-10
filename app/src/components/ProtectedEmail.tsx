@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 import { Mail } from 'lucide-react'
-import { decodeEmail } from '@/lib/diocese/email-code'
+import { decodeEmail } from '@/lib/email-code'
 
 const subscribeNoop = () => () => {}
 

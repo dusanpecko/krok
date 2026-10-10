@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
-import ProtectedEmail from './ProtectedEmail'
+import ProtectedEmail from '@/components/ProtectedEmail'
 import type { PublicClergySummary } from '@/lib/diocese/schematizmus'
 
 type Filter = 'all' | 'priests' | 'deacons' | 'retired'

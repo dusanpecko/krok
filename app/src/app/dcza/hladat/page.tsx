@@ -4,7 +4,7 @@ import { Search } from 'lucide-react'
 import { dioceseDb } from '@/lib/diocese/public'
 import { pageHref } from '@/lib/diocese/nav'
 import { longDate } from '@/lib/diocese/format'
-import { hideEmails } from '@/lib/diocese/email-code'
+import { hideEmails } from '@/lib/email-code'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Hľadať', robots: { index: false } }

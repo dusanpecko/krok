@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Church, MapPin } from 'lucide-react'
-import ProtectedEmail from '@/components/dcza/ProtectedEmail'
+import ProtectedEmail from '@/components/ProtectedEmail'
 import { getPublicClergy } from '@/lib/diocese/schematizmus'
 import { shortDate } from '@/lib/diocese/format'
 

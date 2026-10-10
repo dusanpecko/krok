@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import LegalPage, { OrgBlock } from '@/components/public/legal/LegalPage'
-import { KROK_ORG, LEGAL_EFFECTIVE } from '@/lib/legal'
+import { KROK_EMAIL_CODE, LEGAL_EFFECTIVE } from '@/lib/legal'
+import ProtectedEmail from '@/components/ProtectedEmail'
 
 export const metadata: Metadata = {
   title: 'Ochrana osobných údajov | KROK – Pastoračný fond Žilinskej diecézy',
@@ -20,7 +21,7 @@ export default function OchranaUdajovPage() {
       <h2>1. Správca osobných údajov</h2>
       <OrgBlock role="Správca" />
       <p>
-        Vo veciach ochrany osobných údajov nás môžete kontaktovať e-mailom na <a href={`mailto:${KROK_ORG.email}`}>{KROK_ORG.email}</a>{' '}
+        Vo veciach ochrany osobných údajov nás môžete kontaktovať e-mailom na <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />{' '}
         alebo poštou na adrese sídla.
       </p>
 
@@ -153,7 +154,7 @@ export default function OchranaUdajovPage() {
         </li>
       </ol>
       <p>
-        Svoje práva si môžete uplatniť e-mailom na <a href={`mailto:${KROK_ORG.email}`}>{KROK_ORG.email}</a>. Odpovieme
+        Svoje práva si môžete uplatniť e-mailom na <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />. Odpovieme
         najneskôr do jedného mesiaca.
       </p>
     </LegalPage>

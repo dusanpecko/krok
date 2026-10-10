@@ -14,6 +14,7 @@ import { getMyOnlineSubscriptions } from '@/app/(public)/platby/actions'
 import { KROK_IBAN } from '@/lib/bank/pay-by-square'
 import { getBaseUrl } from '@/lib/mollie/client'
 import ProjectDonationWidget from '@/components/public/ProjectDonationWidget'
+import { protectEmails } from '@/lib/email-code'
 
 export const dynamic = 'force-dynamic'
 
@@ -174,7 +175,7 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
             {completed && project.closing_summary && (
               <section className="bg-emerald-500/10 border border-emerald-200 rounded-3xl p-6 sm:p-8">
                 <SectionKicker>Ako to dopadlo</SectionKicker>
-                <div className="simple-rich-editor leading-relaxed" dangerouslySetInnerHTML={{ __html: project.closing_summary }} />
+                <div className="simple-rich-editor leading-relaxed" dangerouslySetInnerHTML={{ __html: protectEmails(project.closing_summary) }} />
               </section>
             )}
 
@@ -182,7 +183,7 @@ export default async function VyzvaDetailPage({ params }: PageProps) {
             {project.content && (
               <section>
                 <SectionKicker>O výzve</SectionKicker>
-                <div className="simple-rich-editor leading-relaxed max-w-none" dangerouslySetInnerHTML={{ __html: project.content }} />
+                <div className="simple-rich-editor leading-relaxed max-w-none" dangerouslySetInnerHTML={{ __html: protectEmails(project.content) }} />
               </section>
             )}
 

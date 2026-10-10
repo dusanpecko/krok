@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import LegalPage, { OrgBlock } from '@/components/public/legal/LegalPage'
-import { KROK_ORG, LEGAL_EFFECTIVE } from '@/lib/legal'
+import { KROK_EMAIL_CODE, KROK_ORG, LEGAL_EFFECTIVE } from '@/lib/legal'
+import ProtectedEmail from '@/components/ProtectedEmail'
 
 export const metadata: Metadata = {
   title: 'Všeobecné podmienky | KROK – Pastoračný fond Žilinskej diecézy',
@@ -50,7 +51,7 @@ export default function PodmienkyPage() {
       <h3>Čl. 3 – Pravidelný dar</h3>
       <ul>
         <li>Pri pravidelnom (mesačnom) dare darca súhlasí s opakovaným strhnutím zvolenej sumy prostredníctvom Mollie.</li>
-        <li>Pravidelný dar môže darca kedykoľvek zrušiť vo svojom <Link href="/profil">profile</Link> alebo e-mailom na <a href={`mailto:${KROK_ORG.email}`}>{KROK_ORG.email}</a>; zrušenie platí do budúcna.</li>
+        <li>Pravidelný dar môže darca kedykoľvek zrušiť vo svojom <Link href="/profil">profile</Link> alebo e-mailom na <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />; zrušenie platí do budúcna.</li>
         <li>Pri pravidelnom dare prevodom si darca trvalý príkaz nastavuje a ruší sám vo svojej banke.</li>
       </ul>
 
@@ -87,7 +88,7 @@ export default function PodmienkyPage() {
 
       <h3>1. Všeobecné ustanovenia</h3>
       <ul>
-        <li>Predávajúcim je {KROK_ORG.name}, {KROK_ORG.street}, {KROK_ORG.city}{KROK_ORG.ico ? `, IČO ${KROK_ORG.ico}` : ''}, e-mail {KROK_ORG.email}.</li>
+        <li>Predávajúcim je {KROK_ORG.name}, {KROK_ORG.street}, {KROK_ORG.city}{KROK_ORG.ico ? `, IČO ${KROK_ORG.ico}` : ''}, e-mail <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />.</li>
         <li>Orgánom dozoru je Slovenská obchodná inšpekcia, Inšpektorát SOI pre Žilinský kraj, Predmestská 71, 011 79 Žilina 1, tel.: 041/763 21 30.</li>
         <li>Tieto podmienky sú neoddeliteľnou súčasťou kúpnej zmluvy. Ceny sú konečné a neobsahujú dopravu, ktorá sa uvádza pri objednávke.</li>
         <li>Predávajúci si vyhradzuje právo meniť ceny; na potvrdenú objednávku sa vzťahuje cena platná v čase objednania.</li>
@@ -138,7 +139,7 @@ export default function PodmienkyPage() {
 
       <h3>8. Riešenie sporov</h3>
       <p>
-        Nespokojný spotrebiteľ sa môže obrátiť na predávajúceho e-mailom na <a href={`mailto:${KROK_ORG.email}`}>{KROK_ORG.email}</a>.
+        Nespokojný spotrebiteľ sa môže obrátiť na predávajúceho e-mailom na <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />.
         Ak predávajúci žiadosť zamietne alebo na ňu do 30 dní neodpovie, môže spotrebiteľ podať návrh na alternatívne riešenie
         sporu Slovenskej obchodnej inšpekcii.
       </p>
@@ -170,7 +171,7 @@ export default function PodmienkyPage() {
 
       <h3>Formulár na odstúpenie od zmluvy</h3>
       <p>
-        Adresát: {KROK_ORG.name}, {KROK_ORG.street}, {KROK_ORG.city}, e-mail: {KROK_ORG.email}
+        Adresát: {KROK_ORG.name}, {KROK_ORG.street}, {KROK_ORG.city}, e-mail: <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />
         <br />
         Oznamujem, že odstupujem od zmluvy uzavretej na diaľku:
       </p>
@@ -184,7 +185,7 @@ export default function PodmienkyPage() {
 
       <h3>Žiadosť o vrátenie daru</h3>
       <p>
-        Adresát: {KROK_ORG.name}, {KROK_ORG.street}, {KROK_ORG.city}, e-mail: {KROK_ORG.email}
+        Adresát: {KROK_ORG.name}, {KROK_ORG.street}, {KROK_ORG.city}, e-mail: <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />
         <br />
         Žiadam o vrátenie daru poskytnutého cez web mojkrok.sk:
       </p>

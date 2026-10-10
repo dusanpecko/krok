@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { dioceseDb } from './public'
 import { personName, roleRank, type BodyKind } from './bodies'
-import { encodeEmail } from './email-code'
+import { encodeEmail } from '@/lib/email-code'
 
 /**
  * Verejný schematizmus na dcza.sk (K5 / D4, O47): meno s titulmi, funkcia, pôvod, diakonát a kňazská

@@ -5,6 +5,7 @@ import { requireZonePage } from '@/lib/clergy-zone/access'
 import { getZoneDoc, listCategories } from '@/lib/clergy-zone/docs'
 import { FILE_KIND_LABEL, fileKind, fmtDate, formatBytes } from '@/lib/clergy-zone/types'
 import ZoneShell, { NoZoneAccess } from '@/components/clergy-zone/ZoneShell'
+import { protectEmails } from '@/lib/email-code'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,7 +70,7 @@ export default async function ZoneDocPage({ params }: { params: Promise<{ id: st
           </ul>
         )}
 
-        {doc.body && <div className="simple-rich-editor leading-relaxed mt-8 pt-6 border-t border-blue/10" dangerouslySetInnerHTML={{ __html: doc.body }} />}
+        {doc.body && <div className="simple-rich-editor leading-relaxed mt-8 pt-6 border-t border-blue/10" dangerouslySetInnerHTML={{ __html: protectEmails(doc.body) }} />}
         <p className="text-xs text-mute mt-8">Pridané {fmtDate(doc.published_at)} · {doc.category_name}</p>
       </article>
     </ZoneShell>

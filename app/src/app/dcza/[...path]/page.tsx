@@ -4,8 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
 import { findRedirect, getPage, getPageTree } from '@/lib/diocese/public'
 import { locate, pageHref } from '@/lib/diocese/nav'
-import EmailDecoder from '@/components/dcza/EmailDecoder'
-import { protectEmails } from '@/lib/diocese/email-code'
+import { protectEmails } from '@/lib/email-code'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,7 +91,6 @@ export default async function DczaPage({ params }: Props) {
           ) : (
             children.length === 0 && <p className="mt-8 text-mute">Obsah pripravujeme.</p>
           )}
-          <EmailDecoder />
           {children.length > 0 && (
             <div className="grid sm:grid-cols-2 gap-3 mt-10">
               {children.map((c) => (

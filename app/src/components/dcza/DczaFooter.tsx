@@ -3,8 +3,8 @@ import Image from 'next/image'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import type { NavItem } from '@/lib/diocese/nav'
 import NewsletterSignup from '@/components/public/NewsletterSignup'
-import ProtectedEmail from './ProtectedEmail'
-import { encodeEmail } from '@/lib/diocese/email-code'
+import ProtectedEmail from '@/components/ProtectedEmail'
+import { encodeEmail } from '@/lib/email-code'
 
 /** Pätička webu diecézy. */
 export default function DczaFooter({ nav }: { nav: NavItem[] }) {

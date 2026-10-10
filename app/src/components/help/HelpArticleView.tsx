@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import type { HelpArticle } from '@/lib/help'
 import { parseVideoUrl, videoEmbedUrl } from '@/lib/parishes/video'
+import { protectEmails } from '@/lib/email-code'
 
 /** Detail návodu + odkazy na ďalšie návody tej istej zóny. */
 export default function HelpArticleView({ article, base, others }: { article: HelpArticle; base: string; others: Pick<HelpArticle, 'slug' | 'title'>[] }) {
@@ -28,7 +29,7 @@ export default function HelpArticleView({ article, base, others }: { article: He
           </div>
         )}
         {!article.published && <p className="mt-3 inline-block px-3 py-1 rounded-lg bg-amber-50 text-amber-800 text-xs font-bold">Skrytý návod – vidia ho len správcovia</p>}
-        <div className="simple-rich-editor leading-relaxed mt-6 pt-6 border-t border-gray-100" dangerouslySetInnerHTML={{ __html: article.content }} />
+        <div className="simple-rich-editor leading-relaxed mt-6 pt-6 border-t border-gray-100" dangerouslySetInnerHTML={{ __html: protectEmails(article.content) }} />
         <p className="mt-8 text-xs text-gray-400">Aktualizované {updated}</p>
       </article>
       {others.length > 0 && (

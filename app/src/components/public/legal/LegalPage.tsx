@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { KROK_ORG } from '@/lib/legal'
+import { KROK_EMAIL_CODE, KROK_ORG } from '@/lib/legal'
+import ProtectedEmail from '@/components/ProtectedEmail'
 
 /** Rámec právnych stránok – tmavý dizajn KROK, čitateľná sadzba textu. */
 export default function LegalPage({ eyebrow, title, effective, children }: { eyebrow: string; title: string; effective: string; children: ReactNode }) {
@@ -29,7 +30,7 @@ export function OrgBlock({ role }: { role: string }) {
       <p>{KROK_ORG.street}, {KROK_ORG.city}</p>
       {KROK_ORG.ico && <p>IČO: {KROK_ORG.ico}{KROK_ORG.dic ? ` · DIČ: ${KROK_ORG.dic}` : ''}</p>}
       <p>
-        E-mail: <a href={`mailto:${KROK_ORG.email}`}>{KROK_ORG.email}</a> · Tel.: {KROK_ORG.phone}
+        E-mail: <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} /> · Tel.: {KROK_ORG.phone}
       </p>
     </div>
   )

@@ -1,3 +1,5 @@
+import { encodeEmail } from './email-code'
+
 /**
  * Údaje prevádzkovateľa Kroku pre právne stránky (/ochrana-udajov, /podmienky) a pätičku.
  * IČO / DIČ sa zobrazujú na právnych stránkach a v pätičke (null = skryť).
@@ -15,4 +17,7 @@ export const KROK_ORG = {
 }
 
 /** Dátum účinnosti právnych textov – aktualizovať pri zmene textu. */
+/** E-mail fondu na webe – len zakódovaný, čitateľne ho poskladá až prehliadač (ProtectedEmail, O78). */
+export const KROK_EMAIL_CODE = encodeEmail(KROK_ORG.email)
+
 export const LEGAL_EFFECTIVE = '5. októbra 2026'

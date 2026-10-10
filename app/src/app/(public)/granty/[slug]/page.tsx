@@ -6,6 +6,8 @@ import { getFormBySlug, getSubmissionById, submitFormResponse } from '@/app/admi
 import FormEngine from '@/components/admin/grants/FormEngine'
 import { Loader2, ArrowLeft, CheckCircle2, ChevronRight, Mail, Phone, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import ProtectedEmail from '@/components/ProtectedEmail'
+import { KROK_EMAIL_CODE } from '@/lib/legal'
 
 const KROK = {
   blue: '#003DA5',
@@ -206,7 +208,7 @@ export default function DynamickyFormularPage() {
                   </span>
                   <span className="flex items-center gap-1.5 text-gray-500">
                     <Mail size={12} />
-                    mojkrok@dcza.sk
+                    <ProtectedEmail code={KROK_EMAIL_CODE} icon={false} />
                   </span>
                   <a href="https://mojkrok.sk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
                     https://mojkrok.sk

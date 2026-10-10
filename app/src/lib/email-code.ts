@@ -35,3 +35,7 @@ export function protectEmails(html: string): string {
 /** Čistý text (perex, meta popis, výsledky hľadania) – adresy sa vynechajú, odkaz je v obsahu stránky. */
 export const hideEmails = <T extends string | null | undefined>(text: T): T =>
   (typeof text === 'string' ? text.replace(new RegExp(EMAIL, 'gi'), 'e-mail') : text) as T
+
+/** Čistý text s adresami (napr. úvodný text farnosti) → bezpečné HTML s chránenými adresami. */
+export const protectText = (text: string) =>
+  protectEmails(`>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}<`).slice(1, -1)

@@ -82,7 +82,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] K5b: **Kúria, rady a komisie** (migrácia 051, 2026-10-09) – admin `/admin/knazi/kuria` (orgány, členovia z registra aj mimo registra – laici, rehoľníci), web `/schematizmus/kuria` (jedna stránka, menu Kúria → Rady a komisie odkazuje na kotvy) – O79, § 16.10
 - [x] K1b: **oprava záznamu o pôsobení** (funkcia, miesto, orgán, obdobie rokom alebo dátumom, poznámka) priamo v tabuľke pôsobenia, zmena v histórii zmien – § 16.4
 - [x] **Ochrana e-mailov pred botmi** na dcza.sk (schematizmus, pätička, obsah stránok a aktualít, perexy) – O78, § 20.4
-- [ ] Ochrana e-mailov aj na mojkrok.sk a na stránkach farností (kontakt farnosti) – O78
+- [x] Ochrana e-mailov aj na mojkrok.sk a na stránkach farností – O78 *(2026-10-10: kontakt a pätička farnosti, úvodný text, obsah oznamov, aktualít, sviatostí, výziev a Pomoci, právne stránky a kontakt KROK; e-mail vynechaný z JSON-LD farností; dekodér raz v hlavnom layoute – `components/EmailDecoder`, `lib/email-code`)*
 - [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 – **závisí od webu dcza.sk** (overovacia adresa)
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
@@ -90,7 +90,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [ ] Fáza II: widgety pre farské weby mimo platformy (podpora Kroku + e-zvonček) – § 13 *(až keď bude všetko hotové)*
 - [ ] Web diecézy na platforme Krok (doména `dcza.sk`) – migrácia z **beta.dcza.dev** + články zo živého webu, presun domény; odblokuje K5, K6 a F6 – § 14, **§ 20 (O70–O73, fázy D0–D6)**
 - [x] **Kňazská zóna** (migrácia 048) – `/knazska-zona` (kategórie, nové, archív, roky, fulltext v PDF/DOCX bez diakritiky s úryvkami), admin `/admin/knazska-zona` (dokumenty, súbory priamo do B2, zverejnenie + e-mail kňazom, kategórie, pozvánky kňazov z registra) – § 15, O39–O42, O67–O69
-- [ ] Kňazská zóna: **súkromný bucket B2** (`B2_PRIVATE_BUCKET`) – nastaviť pred nahraním citlivých dokumentov
+- [x] Kňazská zóna: **súkromný bucket B2** (`B2_PRIVATE_BUCKET`) – nastavený na Verceli pre produkciu aj staging *(overené 2026-10-10)*
 - [ ] **Dashboard pre kúriu** vrátane riadku „Dary bez farnosti (na projekt)“ – § 5.2, § 2
 
 Cieľ modulu:

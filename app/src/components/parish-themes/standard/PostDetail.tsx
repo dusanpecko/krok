@@ -7,6 +7,7 @@ import PhotoGallery from './PhotoGallery'
 import VideoList from './VideoList'
 import ShareButton from '@/components/parishes/ShareButton'
 import { formatDate, formatDateTime, photoCount, validRange } from '@/lib/parishes/format'
+import { protectEmails } from '@/lib/email-code'
 
 export default function PostDetail({ parish, post, related }: ParishPostDetailProps) {
   const isAnn = post.type === 'announcement'
@@ -34,7 +35,7 @@ export default function PostDetail({ parish, post, related }: ParishPostDetailPr
           <img src={post.image_url} alt={post.title} className="w-full rounded-2xl border border-blue/10 mt-8 aspect-video object-cover" />
         )}
         {post.content && (
-          <div className="simple-rich-editor leading-relaxed mt-8 pt-6 border-t border-blue/10" dangerouslySetInnerHTML={{ __html: post.content }} />
+          <div className="simple-rich-editor leading-relaxed mt-8 pt-6 border-t border-blue/10" dangerouslySetInnerHTML={{ __html: protectEmails(post.content) }} />
         )}
         {post.videos.length > 0 && (
           <div className="mt-8">

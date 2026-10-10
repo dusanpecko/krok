@@ -15,14 +15,13 @@ const routePermissionsMap: Record<string, string> = {
   '/admin/import': 'import_bank',
   '/admin/granty': 'view_grants',
   '/admin/roly': 'manage_roles',
-  '/admin/projekty': 'manage_config',
+  '/admin/projekty': 'manage_projects',
   '/admin/farnosti': 'manage_parishes',
   '/admin/knazi': 'view_clergy',
   '/admin/knazska-zona': 'manage_clergy_docs',
   '/admin/web-dieceza': 'manage_diocese_web',
   '/admin/nastavenia/dekanaty': 'manage_config',
   '/admin/emaily': 'manage_config',
-  '/admin/exporty': 'view_donors',
   '/admin/pomoc/sprava': 'manage_help',
 }
 

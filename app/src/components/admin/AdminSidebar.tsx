@@ -99,7 +99,6 @@ const settingsLinks = [
   { href: '/admin/emaily', label: 'E-mailové šablóny', icon: Mail, permission: 'manage_config' },
   { href: '/admin/import', label: 'Import výpisu', icon: FileUp, permission: 'import_bank' },
   { href: '/admin/roly', label: 'Správa rolí', icon: Users, permission: 'manage_roles' },
-  { href: '/admin/exporty', label: 'Exporty', icon: FileText, permission: 'view_donors' },
 ]
 
 // Hydratačne bezpečná detekcia klienta bez setState v efekte (react-hooks/set-state-in-effect)

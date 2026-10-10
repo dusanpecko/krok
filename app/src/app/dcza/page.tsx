@@ -20,7 +20,7 @@ export default async function DczaHome() {
     getUpcomingEvents(4),
     getPastEvents(4),
     getMagazine(4),
-    db.from('parishes').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('kind', 'parish'),
+    db.from('parishes').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).eq('kind', 'parish'),
     db.from('deaneries').select('id', { count: 'exact', head: true }),
     db.from('clergy').select('id', { count: 'exact', head: true }).in('category', ['priest', 'bishop']).eq('status', 'active'),
   ])

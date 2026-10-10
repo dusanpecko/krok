@@ -18,6 +18,7 @@ import {
   type VillageWithStats,
 } from '@/lib/parishes/types'
 import { RESERVED_SUBDOMAINS } from '@/lib/site'
+import { accessEmailError, isWorkspaceEmail } from '@/lib/parishes/access-policy'
 
 /**
  * Admin modul farností (návrh farností § 6.1, fáza F2).
@@ -49,7 +50,7 @@ export async function getParishesForAdmin(): Promise<ParishListItem[]> {
   const [{ data: parishes }, { data: deaneries }, { data: population }, { data: villages }, { data: donors }, { data: summary }] = await Promise.all([
     admin
       .from('parishes')
-      .select('id, name, official_name, slug, kind, deanery_id, parish_code, city, is_active, visible_on_web, administrator_name, ico, iban, email, updated_at'),
+      .select('id, name, official_name, slug, kind, deanery_id, parish_code, city, is_active, is_demo, visible_on_web, administrator_name, ico, iban, email, updated_at'),
     admin.from('deaneries').select('id, name'),
     admin.from('v_parish_population').select('parish_id, catholics').eq('year', STATS_YEAR),
     admin.from('parish_villages').select('parish_id'),
@@ -88,6 +89,7 @@ export async function getParishesForAdmin(): Promise<ParishListItem[]> {
         parish_code: p.parish_code,
         city: p.city,
         is_active: p.is_active,
+        is_demo: p.is_demo ?? false,
         visible_on_web: p.visible_on_web,
         administrator_name: p.administrator_name,
         catholics: catholics.get(p.id) ?? null,
@@ -280,11 +282,18 @@ async function sendAccessEmail(
     has_box: !!box?.enabled,
   }
 
+  const loginUrl = `${getBaseUrl()}/prihlasenie?redirect=${encodeURIComponent('/moja-farnost')}`
+  // diecézna adresa (Google Workspace) – vždy len odkaz na prihlásenie cez Google, bez hesla
+  if (isWorkspaceEmail(input.email)) {
+    const res = await sendTemplateEmail({ templateKey: 'parish_access_google', to: input.email, variables: { ...common, login_url: loginUrl } })
+    return res.success ? { sent: true } : { sent: false, error: res.error }
+  }
+
   if (input.activated) {
     const res = await sendTemplateEmail({
       templateKey: 'parish_access_granted',
       to: input.email,
-      variables: { ...common, login_url: `${getBaseUrl()}/prihlasenie?redirect=${encodeURIComponent('/moja-farnost')}` },
+      variables: { ...common, login_url: loginUrl },
     })
     return res.success ? { sent: true } : { sent: false, error: res.error }
   }
@@ -309,13 +318,16 @@ export async function grantParishAccess(
   const admin = db()
   const email = input.email?.trim().toLowerCase()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Zadajte platný e-mail.' }
+  const emailError = accessEmailError(email)
+  if (emailError) return { success: false, error: emailError }
   const role = input.role === 'editor' ? 'editor' : 'admin'
 
   let authUser = await findAuthUserByEmail(admin, email)
   let invited = false
   if (!authUser) {
-    // založí účet bez e-mailu od Supabase – pozvánku pošleme sami nižšie
-    const { data, error } = await admin.auth.admin.createUser({ email, email_confirm: false })
+    // založí účet bez e-mailu od Supabase – pozvánku pošleme sami nižšie; adresa @dcza.sk je overená
+    // Google Workspace-om (prihlásenie cez Google sa k účtu pripojí), iné adresy si e-mail potvrdia pozvánkou
+    const { data, error } = await admin.auth.admin.createUser({ email, email_confirm: isWorkspaceEmail(email) })
     if (error || !data?.user) return { success: false, error: `Účet sa nepodarilo založiť: ${error?.message ?? 'neznáma chyba'}` }
     authUser = data.user
     invited = true

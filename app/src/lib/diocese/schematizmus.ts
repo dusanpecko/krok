@@ -196,7 +196,7 @@ export async function listPublicDeaneries() {
   const db = dioceseDb()
   const [{ data: dean }, { data: parishes }, clergy, { data: deans }] = await Promise.all([
     db.from('deaneries').select('id, name').order('name'),
-    db.from('parishes').select('name, slug, kind, deanery_id').eq('is_active', true).order('name'),
+    db.from('parishes').select('name, slug, kind, deanery_id').eq('is_active', true).eq('is_demo', false).order('name'),
     listPublicClergy(),
     db.from('clergy_assignments').select('deanery_id, clergy:clergy_id(slug, schematizmus_slug, first_name, last_name, title_before, title_after, ecclesiastical_titles, status)').eq('kind', 'deanery').ilike('role', 'dekan').is('date_to', null).is('year_to', null),
   ])

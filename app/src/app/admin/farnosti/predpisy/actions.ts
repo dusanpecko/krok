@@ -60,7 +60,7 @@ export async function getTargetsOverview(year: number): Promise<TargetsOverview>
   const [{ data: settings }, { data: allSettings }, { data: parishes }, { data: deaneries }] = await Promise.all([
     admin.from('parish_target_settings').select('*').eq('year', year).maybeSingle(),
     admin.from('parish_target_settings').select('year'),
-    admin.from('parishes').select('id, name, official_name, deanery_id').eq('kind', 'parish').eq('is_active', true),
+    admin.from('parishes').select('id, name, official_name, deanery_id').eq('kind', 'parish').eq('is_active', true).eq('is_demo', false),
     admin.from('deaneries').select('id, name'),
   ])
   const statsYear = (settings?.stats_year as number | undefined) ?? 2021
@@ -139,7 +139,7 @@ export async function generateTargets(year: number, mode: 'missing' | 'recalcula
 
   const rate = Number(settings.rate_per_catholic)
   const [{ data: parishes }, { data: population }, { data: existing }] = await Promise.all([
-    admin.from('parishes').select('id, name').eq('kind', 'parish').eq('is_active', true),
+    admin.from('parishes').select('id, name').eq('kind', 'parish').eq('is_active', true).eq('is_demo', false),
     admin.from('v_parish_population').select('parish_id, catholics').eq('year', settings.stats_year),
     admin.from('parish_year_targets').select('id, parish_id, override_reason').eq('year', year),
   ])

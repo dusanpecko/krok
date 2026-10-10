@@ -100,6 +100,7 @@ export default function ParishTable({ parishes, deaneries }: { parishes: ParishL
                     {p.parish_code && <span className="font-mono">kód {p.parish_code}</span>}
                     {p.administrator_name && <span>{p.administrator_name}</span>}
                     {!p.is_active && <span className="font-bold text-red-500">neaktívna</span>}
+                    {p.is_demo && <span className="font-black text-amber-600">TEST</span>}
                   </div>
                 </td>
                 <td className="px-5 py-3 text-gray-600">{p.deanery_name ?? '—'}</td>

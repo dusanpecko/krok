@@ -44,6 +44,8 @@ export interface ParishListItem {
   parish_code: string | null
   city: string | null
   is_active: boolean
+  /** testovacia farnosť (057) */
+  is_demo: boolean
   visible_on_web: boolean
   administrator_name: string | null
   catholics: number | null
@@ -90,6 +92,8 @@ export interface ParishRow {
   social_links: SocialLink[]
   notes: string | null
   is_active: boolean
+  /** testovacia farnosť (057) */
+  is_demo: boolean
   visible_on_web: boolean
   updated_at: string | null
 }

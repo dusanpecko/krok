@@ -75,7 +75,7 @@ export default function ParishAccessTab({ parishId, access, requests, defaultEma
           </tbody>
         </table>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end pt-2 border-t border-gray-50">
-          <Field label="E-mail" className="md:col-span-2"><input value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} type="email" /></Field>
+          <Field label="E-mail" className="md:col-span-2" hint="Len diecézna adresa @dcza.sk – prihlásenie cez Google."><input value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} type="email" placeholder="farnost.xyz@dcza.sk" /></Field>
           <Field label="Rola">
             <select value={role} onChange={(e) => setRole(e.target.value as 'admin' | 'editor')} className={inputCls}>
               <option value="admin">správca účtu</option>
@@ -93,7 +93,7 @@ export default function ParishAccessTab({ parishId, access, requests, defaultEma
           </div>
         </div>
         <p className="text-[11px] text-gray-400 flex items-center gap-1">
-          <Mail size={12} /> Nový účet dostane pozvánku s odkazom na nastavenie hesla (šablóna „Pozvánka do zóny farnosti“), existujúci účet oznámenie o prístupe.
+          <Mail size={12} /> Adresa @dcza.sk dostane e-mail s pokynom prihlásiť sa cez Google (šablóna „Prístup k farnosti (účet Google @dcza.sk)“) – bez hesla.
         </p>
       </div>
 

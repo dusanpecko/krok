@@ -84,6 +84,7 @@ export default function ParishDetailView({
             {parish.parish_code && <span className="font-mono">kód {parish.parish_code}</span>}
             {parish.administrator_name && <span>{parish.administrator_name}</span>}
             {!parish.is_active && <span className="font-bold text-red-500">neaktívna</span>}
+            {parish.is_demo && <span className="font-black text-amber-600">TESTOVACIA FARNOSŤ – nezobrazuje sa v zoznamoch ani darcom</span>}
             {parish.schematizmus_url && (
               <a href={parish.schematizmus_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
                 schematizmus <ExternalLink size={12} />

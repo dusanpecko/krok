@@ -29,7 +29,7 @@ export async function parishMetadata(parish: PublicParish, opts: { title?: strin
     title: `${title} | ${(await getSite()) === 'dcza' ? 'Žilinská diecéza' : 'KROK'}`,
     description,
     alternates: { canonical: url },
-    robots: parish.preview ? { index: false, follow: false } : undefined,
+    robots: parish.preview || parish.is_demo ? { index: false, follow: false } : undefined,
     // og:url so zdieľanou fotkou (?foto=N) – Facebook náhľad načíta práve z tejto adresy
     openGraph: { title, description, url: opts.ogQuery ? `${url}?${opts.ogQuery}` : url, type: 'website', ...(image ? { images: [{ url: image }] } : {}) },
   }

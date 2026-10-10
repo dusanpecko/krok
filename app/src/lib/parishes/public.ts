@@ -17,7 +17,7 @@ import { getChurchPhotos, getLifeAlbums, getPublicAlbum, type PublicAlbumSummary
 
 const PUBLIC_PARISH_COLUMNS =
   'id, slug, name, official_name, kind, deanery_id, patrocinium, street, postal_code, city, phone, email, website, ' +
-  'feast_day, feast_day_note, adoration_date, adoration_note, latitude, longitude, image_url, logo_url, intro, social_links, theme, visible_on_web, is_active, updated_at'
+  'feast_day, feast_day_note, adoration_date, adoration_note, latitude, longitude, image_url, logo_url, intro, social_links, theme, visible_on_web, is_active, is_demo, updated_at'
 
 export interface PublicScheduleItem {
   service_type: ParishServiceType
@@ -115,6 +115,8 @@ export interface PublicParish {
   updated_at: string | null
   /** stránku vidí diecéza / farnosť pred zverejnením */
   preview: boolean
+  /** testovacia farnosť (057) – noindex, nie je v zoznamoch */
+  is_demo: boolean
   /** verejná stránka nie je zapnutá – základná stránka bez oznamov a aktualít (bohoslužby len ak sú vyplnené) */
   basic: boolean
   /** prihlásený spravuje farnosť – odkaz do zóny farnosti */
@@ -312,6 +314,7 @@ export async function getPublicParishList(): Promise<PublicParishListItem[]> {
     .from('parishes')
     .select('id, slug, name, official_name, kind, city, deanery_id, patrocinium, latitude, longitude, visible_on_web, deaneries(name), parish_villages(name, sort_order)')
     .eq('is_active', true)
+    .eq('is_demo', false)
     .not('slug', 'is', null)
   type Row = Omit<PublicParishListItem, 'latitude' | 'longitude' | 'has_web' | 'villages' | 'deanery_name'> & {
     latitude: string | number | null
@@ -341,7 +344,7 @@ export async function getPublicParishList(): Promise<PublicParishListItem[]> {
 /** Slugy aktívnych farností (aj základné stránky) a príspevkov zverejnených farností – sitemap. */
 export async function getSitemapParishEntries() {
   const db = serviceDb()
-  const { data: parishes } = await db.from('parishes').select('id, slug, updated_at, visible_on_web').eq('is_active', true).not('slug', 'is', null)
+  const { data: parishes } = await db.from('parishes').select('id, slug, updated_at, visible_on_web').eq('is_active', true).eq('is_demo', false).not('slug', 'is', null)
   const ids = (parishes ?? []).filter((p) => p.visible_on_web).map((p) => p.id)
   const { data: posts } = ids.length
     ? await db.from('parish_posts').select('parish_id, type, slug, updated_at').in('parish_id', ids).eq('published', true).is('taken_down_at', null)

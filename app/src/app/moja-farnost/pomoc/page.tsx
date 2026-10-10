@@ -24,7 +24,7 @@ export default async function ParishHelpPage() {
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-2"><LifeBuoy className="text-blue-600" /> Pomoc</h1>
         <p className="text-gray-500 mt-2">Návody, ako spravovať stránku a údaje farnosti. Ak ste nenašli odpoveď, napíšte nám na <a href={`mailto:${KROK_ORG.email}`} className="text-blue-600 font-bold hover:underline">{KROK_ORG.email}</a>.</p>
       </header>
-      <HelpIndex base={HELP_BASE.parish} items={articles.map((a) => ({ slug: a.slug, title: a.title, summary: a.summary, text: helpPlainText(a.content) }))} />
+      <HelpIndex base={HELP_BASE.parish} items={articles.map((a) => ({ slug: a.slug, title: a.title, summary: a.summary, text: helpPlainText(a.content), hasVideo: !!a.video_url }))} />
     </div>
   )
 }

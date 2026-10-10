@@ -19,13 +19,15 @@ export interface HelpArticle {
   title: string
   summary: string | null
   content: string
+  /** YouTube / Vimeo – prehrávač navrchu návodu (migrácia 055) */
+  video_url: string | null
   sort_order: number
   published: boolean
   updated_at: string
 }
 
 const db = () => createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-const COLUMNS = 'id, zone, slug, title, summary, content, sort_order, published, updated_at'
+const COLUMNS = 'id, zone, slug, title, summary, content, video_url, sort_order, published, updated_at'
 
 /** Zónu farnosti vidí, kto má prístup aspoň k jednej farnosti; administráciu, kto má rolu. Admin vidí obe. */
 export async function canReadHelp(user: User, zone: HelpZone): Promise<boolean> {

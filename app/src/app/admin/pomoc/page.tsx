@@ -29,7 +29,7 @@ export default async function AdminHelpPage() {
           </Link>
         )}
       </header>
-      <HelpIndex base={HELP_BASE.admin} items={articles.map((a) => ({ slug: a.slug, title: a.title, summary: a.summary, text: helpPlainText(a.content) }))} />
+      <HelpIndex base={HELP_BASE.admin} items={articles.map((a) => ({ slug: a.slug, title: a.title, summary: a.summary, text: helpPlainText(a.content), hasVideo: !!a.video_url }))} />
     </div>
   )
 }

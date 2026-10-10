@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ChevronRight, Search } from 'lucide-react'
+import { ChevronRight, PlayCircle, Search } from 'lucide-react'
 
 export interface HelpIndexItem {
   slug: string
@@ -10,6 +10,7 @@ export interface HelpIndexItem {
   summary: string | null
   /** čistý text návodu – na vyhľadávanie */
   text: string
+  hasVideo?: boolean
 }
 
 const fold = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -47,7 +48,14 @@ export default function HelpIndex({ base, items }: { base: string; items: HelpIn
             <li key={a.slug}>
               <Link href={`${base}/${a.slug}`} className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-gray-50 group">
                 <span className="min-w-0">
-                  <span className="block font-bold text-gray-900 group-hover:text-blue-600">{a.title}</span>
+                  <span className="flex items-center gap-2 font-bold text-gray-900 group-hover:text-blue-600">
+                    {a.title}
+                    {a.hasVideo && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[11px] font-black">
+                        <PlayCircle size={12} /> video
+                      </span>
+                    )}
+                  </span>
                   {a.summary && <span className="block text-sm text-gray-500 mt-0.5">{a.summary}</span>}
                 </span>
                 <ChevronRight size={18} className="text-gray-300 shrink-0" />

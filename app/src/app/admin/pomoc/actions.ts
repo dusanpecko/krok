@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requirePermission } from '@/lib/auth'
 import { sanitizeRichHtml } from '@/lib/html/sanitize'
 import { HELP_BASE, helpDb, type HelpZone } from '@/lib/help'
+import { parseVideoUrl, videoWatchUrl } from '@/lib/parishes/video'
 
 export interface HelpArticleInput {
   zone: HelpZone
@@ -11,6 +12,7 @@ export interface HelpArticleInput {
   title: string
   summary: string
   content: string
+  video_url: string
   sort_order: number
   published: boolean
 }
@@ -30,12 +32,17 @@ export async function saveHelpArticle(id: string | null, input: HelpArticleInput
   if (!title) return { ok: false, error: 'Zadajte názov návodu.' }
   if (!SLUG_RE.test(slug) || RESERVED.has(slug)) return { ok: false, error: 'Adresa (slug) môže obsahovať len malé písmená bez diakritiky, číslice a pomlčky.' }
 
+  const videoRaw = input.video_url.trim()
+  const video = videoRaw ? parseVideoUrl(videoRaw) : null
+  if (videoRaw && !video) return { ok: false, error: 'Video musí byť odkaz na YouTube alebo Vimeo.' }
+
   const row = {
     zone: input.zone,
     slug,
     title,
     summary: input.summary.trim() || null,
     content: sanitizeRichHtml(input.content),
+    video_url: video ? videoWatchUrl(video) : null,
     sort_order: Number.isFinite(input.sort_order) ? Math.round(input.sort_order) : 0,
     published: input.published,
     updated_by: user.id,

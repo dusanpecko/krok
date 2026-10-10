@@ -24,6 +24,7 @@ export default function HelpArticleEditor({ article, defaultZone }: { article: H
     title: article?.title ?? '',
     summary: article?.summary ?? '',
     content: article?.content ?? '',
+    video_url: article?.video_url ?? '',
     sort_order: article?.sort_order ?? 0,
     published: article?.published ?? true,
   })
@@ -96,6 +97,11 @@ export default function HelpArticleEditor({ article, defaultZone }: { article: H
               <input type="checkbox" checked={form.published} onChange={(e) => set('published', e.target.checked)} className="w-4 h-4" /> Zverejnený
             </label>
           </div>
+        </div>
+        <div>
+          <label className={labelCls}>Video (nepovinné)</label>
+          <input className={inputCls} value={form.video_url} onChange={(e) => set('video_url', e.target.value)} placeholder="https://www.youtube.com/watch?v=… alebo https://vimeo.com/…" />
+          <p className="text-xs text-gray-400 mt-1">Odkaz na YouTube alebo Vimeo – zobrazí sa navrchu návodu. Na YouTube môže byť video aj „nezverejnené“ (unlisted).</p>
         </div>
         <SimpleRichTextEditor label="Text návodu" value={form.content} onChange={(v) => set('content', v)} minHeight="380px" />
       </div>

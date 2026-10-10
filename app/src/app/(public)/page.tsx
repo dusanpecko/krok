@@ -24,6 +24,7 @@ import SponsorsStrip from '@/components/public/SponsorsStrip';
 import DonationSection from '@/components/public/DonationSection';
 import LectioTodaySection from '@/components/public/LectioTodaySection';
 import ParishFinder from '@/components/public/parishes/ParishFinder';
+import ScrollProgress from '@/components/ScrollProgress';
 
 // ==========================================
 // 1. DYNAMICKÉ PLACEHOLDERY A NASTAVENIE DÁT
@@ -255,9 +256,6 @@ export default function KrokLandingPage() {
   // Animácie pre prefers-reduced-motion
   const prefersReducedMotion = useReducedMotion();
 
-  // Scroll tracking pre celú stránku (napr. na vrchný indikátor čítania)
-  const { scrollYProgress } = useScroll();
-
   // Prepojenie pre sekciu 3: Mechanizmus (spájanie bodov)
   const mechanismRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress: mechScroll } = useScroll({
@@ -295,10 +293,7 @@ export default function KrokLandingPage() {
       <div className="grain" />
       
       {/* Scroll indicator na vrchu stránky */}
-      <motion.div 
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue via-gold to-vermilion z-50 origin-left"
-        style={{ scaleX: scrollYProgress }}
-      />
+      <ScrollProgress />
 
       {/* =========================================================================
           SEKCIA 1: HOOK (Full-screen úvod)

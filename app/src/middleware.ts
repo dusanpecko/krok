@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { PATH_HEADER, SITE_COOKIE, SITE_HEADER, isSharedPath, siteFromHost, type SiteKey } from '@/lib/site'
+import { PATH_HEADER, SITE_COOKIE, SITE_HEADER, isSharedPath, parishSubdomainFromHost, siteFromHost, type SiteKey } from '@/lib/site'
 
 /** Web podľa domény; mimo produkcie aj prepínač cookie (test.mojkrok.sk → web diecézy). */
 function resolveSite(request: NextRequest): SiteKey {
@@ -10,7 +10,32 @@ function resolveSite(request: NextRequest): SiteKey {
   return 'mojkrok'
 }
 
+/**
+ * Subdoména farnosti (D5, O13, § 4.4): <subdomena>.mojkrok.sk / .dcza.sk je len vstupná adresa –
+ * presmeruje na stránku farnosti (zachová podstránku, napr. /oznamy). Na webe diecézy vedie na vlastný
+ * web farnosti, ak ho má (§ 20). Neznáma subdoména → zoznam farností s hľadaním.
+ * 302 (nie 301): prehliadač si presmerovanie nezapamätá navždy, ak farnosť neskôr zmení web alebo subdoménu.
+ */
+async function parishSubdomainRedirect(request: NextRequest, target: { sub: string; site: SiteKey; base: string }) {
+  const origin = `${request.nextUrl.protocol}//${target.base}`
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/parishes?select=slug,website&is_active=eq.true&subdomain=eq.${encodeURIComponent(target.sub)}&limit=1`,
+    { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` } },
+  ).catch(() => null)
+  const rows: { slug: string; website: string | null }[] = res?.ok ? await res.json() : []
+  const parish = rows[0]
+  if (!parish) return NextResponse.redirect(`${origin}/farnosti?q=${encodeURIComponent(target.sub)}`, 302)
+  const website = parish.website?.trim()
+  if (target.site === 'dcza' && website) return NextResponse.redirect(/^https?:\/\//i.test(website) ? website : `https://${website}`, 302)
+  const rest = request.nextUrl.pathname === '/' ? '' : request.nextUrl.pathname
+  return NextResponse.redirect(`${origin}/farnosti/${parish.slug}${rest}`, 302)
+}
+
 export async function middleware(request: NextRequest) {
+  // subdoména farnosti – pred všetkým ostatným (bez session a výberu webu)
+  const parishSub = parishSubdomainFromHost(request.headers.get('host'))
+  if (parishSub) return parishSubdomainRedirect(request, parishSub)
+
   const site = resolveSite(request)
   const { pathname } = request.nextUrl
 

@@ -17,6 +17,7 @@ import {
   type Schedule,
   type VillageWithStats,
 } from '@/lib/parishes/types'
+import { RESERVED_SUBDOMAINS } from '@/lib/site'
 
 /**
  * Admin modul farností (návrh farností § 6.1, fáza F2).
@@ -136,13 +137,15 @@ export async function updateParish(id: string, input: Partial<Record<(typeof PAR
     if (!(f in input)) continue
     let v = trimOrNull(input[f])
     if (f === 'iban' && typeof v === 'string') v = v.replace(/\s+/g, '').toUpperCase()
-    if (f === 'email' && typeof v === 'string') v = v.toLowerCase()
+    if ((f === 'email' || f === 'subdomain') && typeof v === 'string') v = v.toLowerCase()
     if ((f === 'latitude' || f === 'longitude') && v != null) v = Number(v)
     patch[f] = v
   }
   if (!patch.name) return { success: false, error: 'Názov je povinný.' }
   if (patch.iban && !/^SK\d{22}$/.test(String(patch.iban))) return { success: false, error: 'IBAN musí mať tvar SK + 22 číslic.' }
   if (patch.ico && !/^\d{6,8}$/.test(String(patch.ico))) return { success: false, error: 'IČO musí mať 6–8 číslic.' }
+  if (patch.subdomain && (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(String(patch.subdomain)) || String(patch.subdomain).length > 63 || RESERVED_SUBDOMAINS.has(String(patch.subdomain))))
+    return { success: false, error: 'Subdoména môže obsahovať len malé písmená bez diakritiky, číslice a pomlčky (napr. „zilina-mesto“).' }
 
   const changes: Record<string, [unknown, unknown]> = {}
   for (const [k, v] of Object.entries(patch)) {
@@ -155,7 +158,10 @@ export async function updateParish(id: string, input: Partial<Record<(typeof PAR
     .from('parishes')
     .update({ ...patch, profile_updated_at: new Date().toISOString(), profile_updated_by: user.id })
     .eq('id', id)
-  if (error) return { success: false, error: error.message.includes('parishes_slug_key') ? 'Farnosť s týmto názvom už existuje.' : 'Uloženie zlyhalo.' }
+  if (error) {
+    if (error.message.includes('idx_parishes_subdomain')) return { success: false, error: 'Túto subdoménu už má iná farnosť.' }
+    return { success: false, error: error.message.includes('parishes_slug_key') ? 'Farnosť s týmto názvom už existuje.' : 'Uloženie zlyhalo.' }
+  }
 
   await log(id, user.id, 'parish', 'admin_update', changes)
   revalidatePath('/admin/farnosti')
@@ -174,7 +180,8 @@ export async function createParish(input: { name: string; kind: string; deanery_
   if (clash) slug = `${slug}-${Date.now().toString(36).slice(-4)}`
   const { data, error } = await admin
     .from('parishes')
-    .insert({ name, official_name: name.replace(/^Farnosť\s+/i, ''), slug, kind, deanery_id: input.deanery_id || null })
+    // subdoména farnosti = slug (D5); duchovné správy a dlhé slugy bez subdomény
+    .insert({ name, official_name: name.replace(/^Farnosť\s+/i, ''), slug, kind, deanery_id: input.deanery_id || null, subdomain: kind === 'parish' && slug.length <= 40 && !RESERVED_SUBDOMAINS.has(slug) ? slug : null })
     .select('id')
     .single()
   if (error || !data) return { success: false, error: 'Založenie farnosti zlyhalo.' }

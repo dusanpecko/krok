@@ -28,3 +28,27 @@ export function isSharedPath(pathname: string): boolean {
 }
 
 export const SITE_LABEL: Record<SiteKey, string> = { mojkrok: 'mojkrok.sk', dcza: 'dcza.sk' }
+
+/** Subdomény, ktoré nie sú farnosti (test.mojkrok.sk, beta.dcza.dev, pošta…). */
+export const RESERVED_SUBDOMAINS = new Set(['www', 'test', 'beta', 'mail', 'mx', 'admin', 'api', 'app', 'dev', 'staging', 'ftp', 'smtp', 'webmail', 'autodiscover'])
+
+/** Hlavné domény oboch webov (bez www); dcza.sk dopĺňa DCZA_EXTRA_HOSTS (napr. dcza.dev na stagingu). */
+function siteBases(): { base: string; site: SiteKey }[] {
+  const extra = (process.env.DCZA_EXTRA_HOSTS ?? '').split(',').map((x) => x.trim().toLowerCase()).filter((h) => h && !h.startsWith('www.'))
+  return [{ base: 'mojkrok.sk', site: 'mojkrok' }, { base: 'dcza.sk', site: 'dcza' }, ...extra.map((base) => ({ base, site: 'dcza' as const }))]
+}
+
+/**
+ * Subdoména farnosti z hostu (D5, § 4.4): „bela.mojkrok.sk“ → { sub: 'bela', site: 'mojkrok', base: 'mojkrok.sk' }.
+ * Len jedna úroveň pod hlavnou doménou; rezervované názvy (www, test, beta…) nie sú farnosti.
+ */
+export function parishSubdomainFromHost(host: string | null | undefined): { sub: string; site: SiteKey; base: string } | null {
+  const h = (host ?? '').toLowerCase().split(':')[0]
+  for (const { base, site } of siteBases()) {
+    if (!h.endsWith(`.${base}`)) continue
+    const sub = h.slice(0, -base.length - 1)
+    if (!sub || sub.includes('.') || RESERVED_SUBDOMAINS.has(sub)) return null
+    return { sub, site, base }
+  }
+  return null
+}

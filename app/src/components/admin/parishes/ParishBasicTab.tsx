@@ -32,6 +32,7 @@ const toForm = (p: ParishRow): Form => ({
   adoration_date: p.adoration_date ?? '',
   adoration_note: p.adoration_note ?? '',
   schematizmus_url: p.schematizmus_url ?? '',
+  subdomain: p.subdomain ?? '',
   latitude: p.latitude != null ? String(p.latitude) : '',
   longitude: p.longitude != null ? String(p.longitude) : '',
   intro: p.intro ?? '',
@@ -102,6 +103,7 @@ export default function ParishBasicTab({ parish, deaneries }: { parish: ParishRo
           <Field label="Telefón">{text('phone')}</Field>
           <Field label="E-mail">{text('email', { type: 'email' })}</Field>
           <Field label="Web" className="md:col-span-2">{text('website', { placeholder: 'www.farnost.sk' })}</Field>
+          <Field label="Subdoména (.mojkrok.sk / .dcza.sk)">{text('subdomain', { placeholder: 'napr. bela' })}</Field>
           <Field label="Odkaz na schematizmus" className="md:col-span-3">{text('schematizmus_url')}</Field>
           <Field label="GPS šírka">{text('latitude', { inputMode: 'decimal', placeholder: '49.2231' })}</Field>
           <Field label="GPS dĺžka">{text('longitude', { inputMode: 'decimal', placeholder: '18.7394' })}</Field>

@@ -80,6 +80,8 @@ export interface ParishRow {
   adoration_date: string | null
   adoration_note: string | null
   schematizmus_url: string | null
+  /** <subdomena>.mojkrok.sk / .dcza.sk – presmerovanie (D5, migrácia 056) */
+  subdomain: string | null
   latitude: number | null
   longitude: number | null
   intro: string | null
@@ -96,7 +98,7 @@ export interface ParishRow {
 export const PARISH_EDITABLE_FIELDS = [
   'name', 'official_name', 'kind', 'deanery_id', 'patrocinium', 'parish_code', 'ico', 'dic', 'street', 'postal_code',
   'city', 'district', 'email', 'phone', 'website', 'iban', 'administrator_name', 'feast_day', 'feast_day_note',
-  'adoration_date', 'adoration_note', 'schematizmus_url', 'latitude', 'longitude', 'intro', 'notes', 'is_active', 'visible_on_web',
+  'adoration_date', 'adoration_note', 'schematizmus_url', 'subdomain', 'latitude', 'longitude', 'intro', 'notes', 'is_active', 'visible_on_web',
 ] as const
 export type ParishEditableField = (typeof PARISH_EDITABLE_FIELDS)[number]
 

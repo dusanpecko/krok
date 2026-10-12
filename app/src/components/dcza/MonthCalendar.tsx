@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import type { DioceseEvent } from '@/lib/diocese/public'
+import ShareButton from '@/components/parishes/ShareButton'
 import { eventWhen, longDate } from '@/lib/diocese/format'
 
 /** Mesačný kalendár akcií – klik na deň ukáže akcie v ten deň (pripomienky Julie). */
@@ -78,15 +79,21 @@ export default function MonthCalendar({ events, today }: { events: DioceseEvent[
         ) : (
           <div className="space-y-3">
             {dayEvents.map((e) => (
-              <Link key={e.id} href={`/kalendar/${e.slug}`} className="block rounded-2xl bg-white border border-blue/10 p-5 hover:border-gold/60 transition-colors">
-                <p className="font-extrabold">{e.title}</p>
-                <p className="text-sm text-mute mt-0.5">{eventWhen(e)}</p>
-                {e.place && (
-                  <p className="text-sm text-mute inline-flex items-center gap-1 mt-0.5">
-                    <MapPin size={13} /> {e.place}
-                  </p>
-                )}
-              </Link>
+              <div key={e.id} className="relative rounded-2xl bg-white border border-blue/10 hover:border-gold/60 transition-colors">
+                <Link href={`/kalendar/${e.slug}`} className="block p-5 pr-14">
+                  <p className="font-extrabold">{e.title}</p>
+                  <p className="text-sm text-mute mt-0.5">{eventWhen(e)}</p>
+                  {e.place && (
+                    <p className="text-sm text-mute inline-flex items-center gap-1 mt-0.5">
+                      <MapPin size={13} /> {e.place}
+                    </p>
+                  )}
+                </Link>
+                {/* zdieľanie mimo odkazu (vnorené tlačidlo v <a> nie je platné HTML) */}
+                <div className="absolute top-3 right-3">
+                  <ShareButton path={`/kalendar/${e.slug}`} title={e.title} text={`${e.title}\n${eventWhen(e)}${e.place ? ` · ${e.place}` : ''}`} iconOnly align="right" className="text-blue" />
+                </div>
+              </div>
             ))}
           </div>
         )}

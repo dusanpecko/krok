@@ -4,12 +4,17 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, CalendarDays, ExternalLink, MapPin } from 'lucide-react'
 import { getEvent } from '@/lib/diocese/public'
 import { eventWhen } from '@/lib/diocese/format'
+import ShareButton from '@/components/parishes/ShareButton'
+import { hideEmails, protectEmails } from '@/lib/email-code'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const e = await getEvent((await params).slug)
-  return { title: e?.title ?? 'Akcia nenájdená' }
+  if (!e) return { title: 'Akcia nenájdená' }
+  // náhľad pri zdieľaní (Facebook, WhatsApp): kedy, kde, obrázok akcie
+  const description = hideEmails([eventWhen(e), e.place].filter(Boolean).join(' · '))
+  return { title: e.title, description, openGraph: { title: e.title, description, type: 'article', ...(e.image_url ? { images: [{ url: e.image_url }] } : {}) } }
 }
 
 export default async function DczaEvent({ params }: { params: Promise<{ slug: string }> }) {
@@ -30,12 +35,13 @@ export default async function DczaEvent({ params }: { params: Promise<{ slug: st
             <MapPin size={16} className="text-gold-ink" /> {e.place}
           </span>
         )}
+        <ShareButton path={`/kalendar/${e.slug}`} title={e.title} text={`${e.title}\n${eventWhen(e)}${e.place ? ` · ${e.place}` : ''}`} className="text-blue font-bold text-sm" />
       </div>
       {e.image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={e.image_url} alt="" className="mt-8 w-full rounded-3xl" />
       )}
-      {e.content && <div className="dcza-prose mt-8" dangerouslySetInnerHTML={{ __html: e.content }} />}
+      {e.content && <div className="dcza-prose mt-8" dangerouslySetInnerHTML={{ __html: protectEmails(e.content) }} />}
       {e.link_url && (
         <a href={e.link_url} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue text-white font-extrabold">
           Viac informácií <ExternalLink size={15} />

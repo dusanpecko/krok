@@ -21,7 +21,7 @@ export function siteFromHost(host: string | null | undefined): SiteKey | null {
 }
 
 /** Cesty spoločné pre oba weby (admin, prihlásenie, farnosti, kňazská zóna, sitemap, robots…) – na dcza.sk sa neprepisujú. */
-const SHARED = /^\/(admin|api|auth|prihlasenie|nastavit-heslo|zabudnute-heslo|knazska-zona|moja-farnost|farnosti|web|_next|favicon\.ico|images|downloads|logo|lectio|sitemap\.xml|robots\.txt)(\/|$)/
+const SHARED = /^\/(admin|api|auth|prihlasenie|nastavit-heslo|zabudnute-heslo|knazska-zona|moja-farnost|farnosti|web|_next|favicon\.ico|images|downloads|logo|lectio|celebret|celebret-tlac|sitemap\.xml|robots\.txt)(\/|$)/
 
 export function isSharedPath(pathname: string): boolean {
   return SHARED.test(pathname)
@@ -30,7 +30,7 @@ export function isSharedPath(pathname: string): boolean {
 export const SITE_LABEL: Record<SiteKey, string> = { mojkrok: 'mojkrok.sk', dcza: 'dcza.sk' }
 
 /** Subdomény, ktoré nie sú farnosti (test.mojkrok.sk, beta.dcza.dev, pošta…). */
-export const RESERVED_SUBDOMAINS = new Set(['www', 'test', 'beta', 'mail', 'mx', 'admin', 'api', 'app', 'dev', 'staging', 'ftp', 'smtp', 'webmail', 'autodiscover'])
+export const RESERVED_SUBDOMAINS = new Set(['www', 'celebret', 'test', 'beta', 'mail', 'mx', 'admin', 'api', 'app', 'dev', 'staging', 'ftp', 'smtp', 'webmail', 'autodiscover'])
 
 /** Hlavné domény oboch webov (bez www); dcza.sk dopĺňa DCZA_EXTRA_HOSTS (napr. dcza.dev na stagingu). */
 function siteBases(): { base: string; site: SiteKey }[] {
@@ -51,4 +51,10 @@ export function parishSubdomainFromHost(host: string | null | undefined): { sub:
     return { sub, site, base }
   }
   return null
+}
+
+/** Overovacia doména celebretov: celebret.dcza.sk (na stagingu celebret.<DCZA_EXTRA_HOSTS>, napr. celebret.dcza.dev). */
+export function isCelebretHost(host: string | null | undefined): boolean {
+  const h = (host ?? '').toLowerCase().split(':')[0]
+  return siteBases().some(({ base, site }) => site === 'dcza' && h === `celebret.${base}`)
 }

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CalendarHeart, FileSpreadsheet, Loader2, Plus, Landmark, Search, Tags, Users, X } from 'lucide-react'
+import { CalendarHeart, FileSpreadsheet, Loader2, Plus, Landmark, Search, Tags, Users, X, IdCard } from 'lucide-react'
 import { btnPrimary, btnSecondary, cardCls, Field, inputCls, Notice } from '@/components/admin/projects/ui'
 import { createClergy, exportClergyXlsx } from '@/app/admin/knazi/actions'
 import {
@@ -88,6 +88,9 @@ export default function ClergyList({ clergy }: { clergy: ClergyListItem[] }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/knazi/celebrety" className={btnSecondary}>
+            <IdCard size={14} /> Celebrety
+          </Link>
           <Link href="/admin/knazi/vyrocia" className={btnSecondary}>
             <CalendarHeart size={14} /> Výročia a meniny
           </Link>

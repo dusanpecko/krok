@@ -83,7 +83,7 @@ Legenda: ✅ hotové · 🟡 čiastočne · ⬜ nezačaté · ~~prečiarknuté~~
 - [x] K1b: **oprava záznamu o pôsobení** (funkcia, miesto, orgán, obdobie rokom alebo dátumom, poznámka) priamo v tabuľke pôsobenia, zmena v histórii zmien – § 16.4
 - [x] **Ochrana e-mailov pred botmi** na dcza.sk (schematizmus, pätička, obsah stránok a aktualít, perexy) – O78, § 20.4
 - [x] Ochrana e-mailov aj na mojkrok.sk a na stránkach farností – O78 *(2026-10-10: kontakt a pätička farnosti, úvodný text, obsah oznamov, aktualít, sviatostí, výziev a Pomoci, právne stránky a kontakt KROK; e-mail vynechaný z JSON-LD farností; dekodér raz v hlavnom layoute – `components/EmailDecoder`, `lib/email-code`)*
-- [ ] K6: digitálne celebrety (QR overenie, karta na tlač, PDF) – § 16.9 – **závisí od webu dcza.sk** (overovacia adresa)
+- [~] K6: digitálne celebrety – § 16.9 – realizované (migrácia 059): overenie celebret.dcza.sk, karta 85 × 54 a A4, hromadné vydanie, fotky od kňazov; **čaká na nahranie loga, pečiatky, podpisu, fotiek a test**
 
 **Ďalšie moduly (zapísané, aby sme nezabudli)**
 - [x] **Pomoc – návody na použitie** (migrácie 052–054, 2026-10-10): `/moja-farnost/pomoc` (12 návodov, odkaz „Návod k záložke“ pod lištou záložiek) a `/admin/pomoc` (24 návodov, odkaz „Návod k tejto stránke“ podľa adresy – `lib/help-links.ts`); úprava v `/admin/pomoc/sprava` (oprávnenie `manage_help`) – **migrácie spustiť ručne**
@@ -1301,7 +1301,7 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 | **K3** ✅ | prepojenie so stránkami farností – kňazi z registra, `parish_clergy` zaniká; ~~foto a kontakt si kňaz spravuje sám~~ → verejne bez fotky a kontaktov (O47, O48) |
 | **K4** ✅ | kňazská zóna (§ 15) – účet kňaza = osoba z registra (`clergy.auth_user_id`), pozvánky z registra |
 | **K5** ✅ | verejný schematizmus pre web diecézy (§ 14) – údaje podľa O47 |
-| **K6** ⬜ | digitálne celebrety (§ 16.9) |
+| **K6** 🟡 | digitálne celebrety (§ 16.9) – realizované, čaká na test |
 
 ### 16.8 Otázky K1–K9 – ✅ rozhodnuté 2026-10-07 (O44–O52)
 
@@ -1318,7 +1318,11 @@ Rovnaký postup ako import farností (§ 7): suchý beh vypíše **správu na ko
 
 **Rozhodnutia:** K1 áno, povinne (O44) · K2 len aktuálny ročník, automaticky +1 k 1. 9., stav na výber s farbou (O45) · K3 zatiaľ len KROK a diecéza (O46) · K4 ako dcza.sk/schematizmus, bez fotky a kontaktov (O47) · K5 kňaz register nevidí ani nemení (O48) · K6 register = hlavný zdroj pravdy (O49) · K7 osobné číslo prideľuje diecéza (O50) · K8 Excel vypadne, exporty áno (O51) · K9 celebrety (O52, § 16.9).
 
-### 16.9 Digitálne celebrety (O52) – návrh, ⬜ neskôr (fáza K6)
+### 16.9 Digitálne celebrety (O52) – 🟡 K6 realizované (migrácia 059, 2026-10-12), čaká na test a nastavenia
+
+**Stav (2026-10-12):** migrácia **059** (`clergy_celebrets`, `celebret_settings` s verziami, `clergy_photo_requests`, číslo `RRRR/NNNN`, návod v Pomoci). Overenie **celebret.dcza.sk/<kód>** (middleware; na stagingu `celebret.dcza.dev`, env `CELEBRET_BASE_URL`), veľké VALET / NON VALET, `noindex`; staré `celebret.dcza.sk/<meno>` a `…/<meno>/qr` presmerujú na najnovší celebret. Admin: záložka **Celebret** pri kňazovi (fotka, vydanie, zrušenie, tlač karty / A4), **Schematizmus → Celebrety** (filtre bez celebretu / končí do 30 dní / bez fotky, hromadné vydanie, tlač kariet 10 na A4 obojstranne), **nastavenia** (logo, pečiatka, podpis, kontakt – každé uloženie = nová verzia). Kňaz: **Kňazská zóna → Môj celebret** (platnosť, odkaz, poslanie fotky na schválenie). Rozhodnutia 2026-10-12: adresa celebret.dcza.sk, fotku nahrá kúria aj kňaz (schvaľuje kúria), výstupy overenie + karta 85 × 54 + A4, všetkým sa vydajú nové hromadne (bez prenosu z mypro.one). Latinský text s opraveným „pervenerit … admittatur“.
+
+
 
 **Celebret** (*litterae commendatitiae*) potvrdzuje, že kňaz je v riadnom postavení a môže sláviť sviatosti. Dnes sa vyrába v aplikácii na digitálne vizitky (mypro.one, doména `celebret.dcza.sk/<meno>`) – obsah nižšie. Návrh zjednotenia v Kroku:
 

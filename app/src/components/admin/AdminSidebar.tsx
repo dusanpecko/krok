@@ -20,7 +20,7 @@ import {
   Megaphone,
   Mail,
   BookUser,
-  Handshake, FolderLock, Building2, BookOpen, HandHeart, Images, LifeBuoy } from 'lucide-react'
+  Handshake, FolderLock, Building2, BookOpen, HandHeart, Images, LifeBuoy, IdCard } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
@@ -77,6 +77,7 @@ const mainLinks: NavLink[] = [
     children: [
       { href: '/admin/knazi', label: 'Register kňazov', icon: Users },
       { href: '/admin/knazi/kuria', label: 'Kúria, rady a komisie', icon: Landmark },
+      { href: '/admin/knazi/celebrety', label: 'Celebrety', icon: IdCard },
     ],
   },
   { href: '/admin/knazska-zona', label: 'Kňazská zóna', icon: FolderLock, permission: 'manage_clergy_docs' },

@@ -23,6 +23,7 @@ const ADMIN_HELP_ROUTES: [string, string][] = [
   ['/admin/knazi/vyrocia', 'vyrocia-a-stitky'],
   ['/admin/knazi/stitky', 'vyrocia-a-stitky'],
   ['/admin/knazi/kuria', 'kuria-rady-a-komisie'],
+  ['/admin/knazi/celebrety', 'celebrety'],
   ['/admin/knazi', 'register-knazov'],
   ['/admin/knazska-zona', 'knazska-zona'],
   ['/admin/web-dieceza/casopis', 'web-dieceza-casopis-a-dokumenty'],

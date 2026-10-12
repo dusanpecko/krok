@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Check, ExternalLink, Loader2, Pencil, Plus, Save, Star, Trash2, UserCog, X } from 'lucide-react'
+import CelebretTab from './CelebretTab'
+import type { ClergyCelebretData } from '@/app/admin/knazi/celebrety/actions'
 import { btnIcon, btnIconDanger, btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 import {
   addAssignment,
@@ -157,19 +159,20 @@ const SECTIONS: Record<string, { title: string; description?: string; fields: Fi
   ],
 }
 
-type TabKey = 'basic' | 'contacts' | 'assignments' | 'personal' | 'ordination' | 'log'
+type TabKey = 'basic' | 'contacts' | 'assignments' | 'personal' | 'ordination' | 'celebret' | 'log'
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'basic', label: 'Základné' },
   { key: 'assignments', label: 'Pôsobenie' },
   { key: 'contacts', label: 'Kontakty' },
   { key: 'personal', label: 'Osobné a vzdelanie' },
   { key: 'ordination', label: 'Svätenia a ŽD' },
+  { key: 'celebret', label: 'Celebret' },
   { key: 'log', label: 'História zmien' },
 ]
 
 const valueToInput = (v: unknown) => (Array.isArray(v) ? v.join(', ') : v == null ? '' : String(v))
 
-export default function ClergyDetailView({ detail }: { detail: ClergyDetail }) {
+export default function ClergyDetailView({ detail, celebret, celebretBase }: { detail: ClergyDetail; celebret?: ClergyCelebretData | null; celebretBase?: string }) {
   const { person, assignments, lookups } = detail
   const [tab, setTab] = useState<TabKey>('basic')
   const [promoting, setPromoting] = useState(false)
@@ -211,7 +214,7 @@ export default function ClergyDetailView({ detail }: { detail: ClergyDetail }) {
       </div>
 
       <div className="flex gap-1 overflow-x-auto bg-white border border-gray-100 rounded-2xl p-1.5">
-        {TABS.map((t) => (
+        {TABS.filter((t) => t.key !== 'celebret' || celebret).map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
@@ -228,6 +231,8 @@ export default function ClergyDetailView({ detail }: { detail: ClergyDetail }) {
           .map((s) => <FieldSection key={`${person.id}-${s.title}`} personId={person.id} section={s} person={person} lookups={lookups} />)}
 
       {tab === 'assignments' && <AssignmentsTab detail={detail} />}
+
+      {tab === 'celebret' && celebret && <CelebretTab clergyId={person.id} data={celebret} celebretBase={celebretBase ?? 'https://celebret.dcza.sk'} />}
 
       {tab === 'log' && (
         <div className={cardCls}>

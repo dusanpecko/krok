@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { PATH_HEADER, SITE_COOKIE, SITE_HEADER, isSharedPath, parishSubdomainFromHost, siteFromHost, type SiteKey } from '@/lib/site'
+import { PATH_HEADER, SITE_COOKIE, SITE_HEADER, isCelebretHost, isSharedPath, parishSubdomainFromHost, siteFromHost, type SiteKey } from '@/lib/site'
 
 /** Web podľa domény; mimo produkcie aj prepínač cookie (test.mojkrok.sk → web diecézy). */
 function resolveSite(request: NextRequest): SiteKey {
@@ -32,6 +32,15 @@ async function parishSubdomainRedirect(request: NextRequest, target: { sub: stri
 }
 
 export async function middleware(request: NextRequest) {
+  // celebret.dcza.sk/<kód> → overenie celebretu (K6); staré …/<meno>/qr z mypro.one bez „/qr“
+  if (isCelebretHost(request.headers.get('host'))) {
+    const path = request.nextUrl.pathname.replace(/\/qr\/?$/, '').replace(/\/+$/, '')
+    if (path.startsWith('/celebret') || path.startsWith('/_next')) return NextResponse.next()
+    const url = request.nextUrl.clone()
+    url.pathname = path && path !== '/' ? `/celebret${path}` : '/celebret'
+    return NextResponse.rewrite(url)
+  }
+
   // subdoména farnosti – pred všetkým ostatným (bez session a výberu webu)
   const parishSub = parishSubdomainFromHost(request.headers.get('host'))
   if (parishSub) return parishSubdomainRedirect(request, parishSub)

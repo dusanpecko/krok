@@ -7,6 +7,7 @@ import ShareButton from '@/components/parishes/ShareButton'
 import VideoLinksField from './VideoLinksField'
 import { videoCount } from '@/lib/parishes/format'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
+import { shrinkForUpload } from '@/lib/shrink-image'
 
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
 type R<T = object> = ({ success: true } & T) | { success: false; error: string }
@@ -25,31 +26,6 @@ export interface GalleryActions {
 
 const fmtBytes = (n: number) => (n < 1024 * 1024 ? `${Math.round(n / 1024)} kB` : n < 1024 ** 3 ? `${(n / 1024 / 1024).toFixed(1).replace('.', ',')} MB` : `${(n / 1024 ** 3).toFixed(2).replace('.', ',')} GB`)
 const fmtDate = (d: string | null) => (d ? new Date(`${d}T12:00:00`).toLocaleDateString('sk-SK', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
-
-/** Vercel prijme najviac 4,5 MB na požiadavku – fotku preto pred odoslaním zmenšíme už v prehliadači (server ju aj tak prevedie do WebP). */
-const CLIENT_MAX_SIDE = 2400
-const CLIENT_MAX_BYTES = 4 * 1024 * 1024
-
-async function shrinkForUpload(file: File): Promise<File> {
-  try {
-    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
-    const scale = Math.min(1, CLIENT_MAX_SIDE / Math.max(bmp.width, bmp.height))
-    if (scale === 1 && file.size <= CLIENT_MAX_BYTES && file.type !== 'image/heic') {
-      bmp.close()
-      return file
-    }
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.round(bmp.width * scale)
-    canvas.height = Math.round(bmp.height * scale)
-    canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height)
-    bmp.close()
-    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9))
-    if (!blob) return file
-    return new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' })
-  } catch {
-    return file // prehliadač formát nevie dekódovať (napr. HEIC v Chrome) – skúsime poslať originál
-  }
-}
 
 /** Texty podľa toho, či ide o galériu farnosti (zóna, admin farnosti) alebo galériu webu diecézy (O75). */
 const TEXTS = {

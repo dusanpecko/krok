@@ -223,6 +223,7 @@ export async function saveCelebretSettings(form: FormData): Promise<Result> {
       curia_address: text('curia_address', prev?.curia_address) ?? 'Jána Kalinčiaka 1, 010 01 Žilina',
       curia_phone: text('curia_phone', prev?.curia_phone) ?? '+421 41 500 22 15',
       curia_email: text('curia_email', prev?.curia_email) ?? 'sekretariat@dcza.sk',
+      curia_web: text('curia_web', prev?.curia_web) ?? 'www.dcza.sk',
       created_by: user.id,
     }
     const { error } = await db.from('celebret_settings').insert(row)
@@ -237,6 +238,6 @@ export async function saveCelebretSettings(form: FormData): Promise<Result> {
 
 export async function getCelebretSettingsHistory(): Promise<CelebretSettings[]> {
   await requirePermission(VIEW)
-  const { data } = await celebretDb().from('celebret_settings').select('id, logo_url, stamp_url, signature_url, signer_name, signer_function, curia_address, curia_phone, curia_email, created_at').order('created_at', { ascending: false }).limit(20)
+  const { data } = await celebretDb().from('celebret_settings').select('id, logo_url, stamp_url, signature_url, signer_name, signer_function, curia_address, curia_phone, curia_email, curia_web, created_at').order('created_at', { ascending: false }).limit(20)
   return (data ?? []) as CelebretSettings[]
 }

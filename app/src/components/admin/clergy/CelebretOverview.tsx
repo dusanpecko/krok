@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CheckCircle2, Loader2, Plus, Printer, Search, Settings, XCircle } from 'lucide-react'
+import { ArrowLeft, IdCard, CheckCircle2, Loader2, Plus, Printer, Search, Settings, XCircle } from 'lucide-react'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 import { issueCelebretsBulk, reviewPhotoRequest, type CelebretOverviewRow } from '@/app/admin/knazi/celebrety/actions'
 import type { CelebretSettings } from '@/lib/clergy/celebret'
@@ -136,12 +136,20 @@ export default function CelebretOverview({ rows, pendingPhotos, settings }: { ro
             {pending ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Vydať vybraným ({selected.size})
           </button>
           <a
+            href={printable.length ? `/celebret-tlac?ids=${printable.join(',')}&format=plast` : undefined}
+            target="_blank"
+            aria-disabled={!printable.length}
+            className={`${btnSecondary} ${printable.length ? '' : 'pointer-events-none opacity-40'}`}
+          >
+            <IdCard size={15} /> Plastové karty ({printable.length})
+          </a>
+          <a
             href={printable.length ? `/celebret-tlac?ids=${printable.join(',')}` : undefined}
             target="_blank"
             aria-disabled={!printable.length}
             className={`${btnSecondary} ${printable.length ? '' : 'pointer-events-none opacity-40'}`}
           >
-            <Printer size={15} /> Tlačiť karty ({printable.length})
+            <Printer size={15} /> Na papier A4 ({printable.length})
           </a>
         </div>
 

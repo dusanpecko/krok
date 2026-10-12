@@ -84,6 +84,9 @@ export default function CelebretSettingsForm({ history }: { history: CelebretSet
           <Field label="E-mail">
             <input name="curia_email" defaultValue={current?.curia_email ?? 'sekretariat@dcza.sk'} className={inputCls} />
           </Field>
+          <Field label="Web (rub karty)">
+            <input name="curia_web" defaultValue={current?.curia_web ?? 'www.dcza.sk'} className={inputCls} />
+          </Field>
         </div>
         <button type="submit" disabled={pending} className={btnPrimary}>
           {pending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Uložiť novú verziu

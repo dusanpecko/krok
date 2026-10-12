@@ -27,6 +27,8 @@ export interface CelebretSettings {
   curia_address: string
   curia_phone: string
   curia_email: string
+  /** web na rube karty (060) */
+  curia_web: string
   created_at: string
 }
 
@@ -58,7 +60,7 @@ export interface CelebretView extends Celebret {
 }
 
 const COLUMNS = 'id, clergy_id, number, token, issued_on, valid_until, confession_jurisdiction, photo_url, settings_id, revoked_at, revoked_reason, note, created_at'
-const SETTINGS_COLUMNS = 'id, logo_url, stamp_url, signature_url, signer_name, signer_function, curia_address, curia_phone, curia_email, created_at'
+const SETTINGS_COLUMNS = 'id, logo_url, stamp_url, signature_url, signer_name, signer_function, curia_address, curia_phone, curia_email, curia_web, created_at'
 const CLERGY_COLUMNS = 'id, first_name, last_name, title_before, title_after, ecclesiastical_titles, category, status, birth_date, ordination_date, slug, schematizmus_slug, photo_url, religious_orders(code)'
 
 const today = () => new Date().toISOString().slice(0, 10)

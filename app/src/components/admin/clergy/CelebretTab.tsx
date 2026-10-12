@@ -140,8 +140,11 @@ export default function CelebretTab({ clergyId, data, celebretBase }: { clergyId
                   <a href={`${celebretBase}/${c.token}`} target="_blank" rel="noopener noreferrer" className={btnSecondary}>
                     <ExternalLink size={14} /> Overenie
                   </a>
+                  <a href={`/celebret-tlac?ids=${c.id}&format=plast`} target="_blank" className={btnSecondary}>
+                    <IdCard size={14} /> Plastová karta
+                  </a>
                   <a href={`/celebret-tlac?ids=${c.id}`} target="_blank" className={btnSecondary}>
-                    <Printer size={14} /> Karta
+                    <Printer size={14} /> Na papier
                   </a>
                   <a href={`/celebret-tlac?ids=${c.id}&format=a4`} target="_blank" className={btnSecondary}>
                     <FileText size={14} /> A4

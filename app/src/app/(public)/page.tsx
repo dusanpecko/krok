@@ -434,7 +434,7 @@ export default function KrokLandingPage() {
               {/* Pilier 1: Spájanie */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
-                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
+                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between min-h-72"
               >
                 <div>
                   <div className="w-12 h-12 bg-blue/15 text-blue rounded-xl flex items-center justify-center border border-blue/20 mb-6"><HeartHandshake size={24} /></div>
@@ -449,7 +449,7 @@ export default function KrokLandingPage() {
               {/* Pilier 2: Stabilita */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
-                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
+                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between min-h-72"
               >
                 <div>
                   <div className="w-12 h-12 bg-gold/15 text-gold-ink rounded-xl flex items-center justify-center border border-gold/20 mb-6"><ShieldCheck size={24} /></div>
@@ -464,7 +464,7 @@ export default function KrokLandingPage() {
               {/* Pilier 3: Nezávislosť */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
-                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72 md:col-span-2"
+                className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between min-h-72 md:col-span-2"
               >
                 <div>
                   <div className="w-12 h-12 bg-blue/15 text-blue rounded-xl flex items-center justify-center border border-blue/20 mb-6"><Users size={24} /></div>

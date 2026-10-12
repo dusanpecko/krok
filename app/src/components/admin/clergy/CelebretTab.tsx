@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Ban, CheckCircle2, ExternalLink, FileText, IdCard, Loader2, Plus, Printer, Upload, XCircle } from 'lucide-react'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 import { shrinkForUpload } from '@/lib/shrink-image'
+import CopyLinkButton from '@/components/celebret/CopyLinkButton'
 import { issueCelebretAction, reviewPhotoRequest, revokeCelebret, uploadClergyPhoto, type ClergyCelebretData } from '@/app/admin/knazi/celebrety/actions'
 
 const fmt = (iso: string) => {
@@ -134,12 +135,14 @@ export default function CelebretTab({ clergyId, data, celebretBase }: { clergyId
                       {c.revoked_reason ? ` · zrušený: ${c.revoked_reason}` : ''}
                       {c.valid_until < today && !c.revoked_at ? ' · vypršal' : ''}
                     </p>
+                    <p className="text-xs font-mono text-gray-400 mt-0.5 select-all break-all">{`${celebretBase}/${c.token}`}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <a href={`${celebretBase}/${c.token}`} target="_blank" rel="noopener noreferrer" className={btnSecondary}>
                     <ExternalLink size={14} /> Overenie
                   </a>
+                  <CopyLinkButton url={`${celebretBase}/${c.token}`} className={btnSecondary} />
                   <a href={`/celebret-tlac?ids=${c.id}&format=plast`} target="_blank" className={btnSecondary}>
                     <IdCard size={14} /> Plastová karta
                   </a>

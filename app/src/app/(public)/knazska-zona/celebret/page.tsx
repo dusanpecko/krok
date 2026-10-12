@@ -6,6 +6,7 @@ import { celebretBaseUrl, celebretDb, listCelebretsForClergy } from '@/lib/clerg
 import { celebretDate } from '@/lib/clergy/celebret-text'
 import ZoneShell, { NoZoneAccess } from '@/components/clergy-zone/ZoneShell'
 import CelebretPhotoUpload from '@/components/clergy-zone/CelebretPhotoUpload'
+import CopyLinkButton from '@/components/celebret/CopyLinkButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,6 +53,7 @@ export default async function MyCelebretPage() {
                 <a href={`${base}/${current.token}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue text-white text-sm font-extrabold hover:bg-blue/90">
                   Otvoriť celebret <ExternalLink size={14} />
                 </a>
+                <div className="mt-3"><CopyLinkButton url={`${base}/${current.token}`} className="inline-flex items-center gap-2 text-sm font-bold text-blue hover:underline cursor-pointer" /></div>
                 <p className="mt-3 text-xs text-mute">Odkaz si môžete uložiť do telefónu – pri slávení mimo diecézy ho ukážete alebo dáte naskenovať QR kód z karty.</p>
               </>
             ) : (

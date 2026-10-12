@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, type ComponentType } from 'react'
 import ParishBoxZoneTab from './ParishBoxZoneTab'
 import { helpHref } from '@/lib/help-links'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CircleHelp, Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft, Globe, Upload, X } from 'lucide-react'
+import { BarChart3, BookOpen, CalendarClock, CircleHelp, FileText, Images, LayoutDashboard, LifeBuoy, MapPinned, Newspaper, Palette, UserRound, Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft, Globe, Upload, X } from 'lucide-react'
 import {
   saveMySchedule,
   submitParishChange,
@@ -49,21 +49,54 @@ const TAB_HELP: Record<TabKey, string> = {
   clergy: 'knazi',
 }
 
+type TabDef = { key: TabKey; label: string; icon: ComponentType<{ size?: number; className?: string }> }
+
+/** Bočné menu zóny farnosti v skupinách (na mobile vodorovná lišta). */
+function tabGroups(isAdmin: boolean): { title: string; tabs: TabDef[] }[] {
+  return [
+    {
+      title: 'Prehľad',
+      tabs: [
+        ...(isAdmin ? [{ key: 'overview' as const, label: 'Prehľad a e-zvonček', icon: LayoutDashboard }] : []),
+        { key: 'traffic', label: 'Návštevnosť', icon: BarChart3 },
+      ],
+    },
+    {
+      title: 'Stránka farnosti',
+      tabs: [
+        { key: 'posts', label: 'Oznamy a aktuality', icon: Newspaper },
+        { key: 'schedule', label: 'Bohoslužby a úradné hodiny', icon: CalendarClock },
+        { key: 'gallery', label: 'Galéria', icon: Images },
+        { key: 'presentation', label: 'Prezentácia', icon: Palette },
+        { key: 'sacraments', label: 'Sviatosti', icon: BookOpen },
+      ],
+    },
+    {
+      title: 'Údaje farnosti',
+      tabs: [
+        { key: 'official', label: 'Úradné údaje', icon: FileText },
+        { key: 'population', label: 'Obce a štatistika', icon: MapPinned },
+        { key: 'clergy', label: 'Kňazi', icon: UserRound },
+      ],
+    },
+  ]
+}
+
 export default function ParishZoneView({ view }: { view: MyParishView }) {
   const isAdmin = view.role === 'admin'
-  const tabs: { key: TabKey; label: string }[] = [
-    ...(isAdmin ? [{ key: 'overview' as const, label: 'Prehľad a e-zvonček' }] : []),
-    { key: 'traffic', label: 'Návštevnosť' },
-    { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
-    { key: 'posts', label: 'Oznamy a aktuality' },
-    { key: 'gallery', label: 'Galéria' },
-    { key: 'presentation', label: 'Prezentácia' },
-    { key: 'sacraments', label: 'Sviatosti' },
-    { key: 'official', label: 'Úradné údaje' },
-    { key: 'population', label: 'Obce a štatistika' },
-    { key: 'clergy', label: 'Kňazi' },
-  ]
-  const [tab, setTab] = useState<TabKey>(tabs[0].key)
+  const groups = tabGroups(isAdmin)
+  const tabs = groups.flatMap((g) => g.tabs)
+  // záložka v adrese (?zalozka=…) – dá sa na ňu odkázať (napr. z Pomoci) a prežije obnovenie stránky
+  const searchParams = useSearchParams()
+  const fromUrl = searchParams.get('zalozka')
+  const [tab, setTabState] = useState<TabKey>(tabs.find((t) => t.key === fromUrl)?.key ?? tabs[0].key)
+  const setTab = (key: TabKey) => {
+    setTabState(key)
+    const url = new URL(window.location.href)
+    url.searchParams.set('zalozka', key)
+    window.history.replaceState(null, '', url)
+  }
+  const current = tabs.find((t) => t.key === tab)
   const p = view.parish
   const pending = view.requests.filter((r) => r.status === 'pending').length
 
@@ -96,23 +129,65 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
         )}
       </div>
 
-      <div className="flex gap-1 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+      {/* mobil: vodorovná lišta */}
+      <div className="lg:hidden flex gap-1 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap cursor-pointer ${tab === t.key ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap cursor-pointer ${tab === t.key ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
           >
-            {t.label}
+            <t.icon size={15} /> {t.label}
           </button>
         ))}
       </div>
-      <div className="-mt-3 flex justify-end">
-        <Link href={helpHref('parish', TAB_HELP[tab])} className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-blue-600">
-          <CircleHelp size={14} /> Návod k záložke „{tabs.find((t) => t.key === tab)?.label}“
-        </Link>
-      </div>
+
+      <div className="grid lg:grid-cols-[250px_minmax(0,1fr)] gap-6 items-start">
+        {/* desktop: bočné menu */}
+        <aside className="hidden lg:block sticky top-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
+          <nav className="space-y-4">
+            {groups.map((g) => (
+              <div key={g.title}>
+                <p className="px-3 pt-1 pb-1.5 text-[11px] font-black uppercase tracking-widest text-gray-400">{g.title}</p>
+                <ul className="space-y-0.5">
+                  {g.tabs.map((t) => (
+                    <li key={t.key}>
+                      <button
+                        type="button"
+                        onClick={() => setTab(t.key)}
+                        aria-current={tab === t.key ? 'page' : undefined}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold text-left cursor-pointer transition-colors ${tab === t.key ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                      >
+                        <t.icon size={17} className={tab === t.key ? 'text-white' : 'text-gray-400'} />
+                        <span className="flex-1">{t.label}</span>
+                        {t.key === 'overview' && pending > 0 && (
+                          <span className={`text-[11px] font-black px-1.5 rounded-full ${tab === t.key ? 'bg-white/25' : 'bg-amber-100 text-amber-700'}`}>{pending}</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <Link href="/moja-farnost/pomoc" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-blue-600">
+              <LifeBuoy size={17} className="text-gray-400" /> Pomoc – všetky návody
+            </Link>
+          </div>
+        </aside>
+
+        <div className="min-w-0 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+              {groups.find((g) => g.tabs.some((t) => t.key === tab))?.title} <span className="text-gray-300">›</span>{' '}
+              <span className="text-gray-600">{current?.label}</span>
+            </p>
+            <Link href={helpHref('parish', TAB_HELP[tab])} className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-blue-600">
+              <CircleHelp size={14} /> Návod k tejto časti
+            </Link>
+          </div>
 
       {tab === 'overview' && (
         <div className="space-y-10">
@@ -135,6 +210,8 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
       {tab === 'official' && <OfficialTab view={view} />}
       {tab === 'population' && <PopulationTab view={view} />}
       {tab === 'clergy' && <ClergyTab clergy={view.clergy} />}
+        </div>
+      </div>
     </div>
   )
 }

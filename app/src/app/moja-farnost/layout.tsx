@@ -14,7 +14,7 @@ export default function ParishZoneLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#002D72] text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <Link href="/moja-farnost" className="flex items-center gap-3">
             <Image src="/logo/logo_w.webp" alt="KROK" width={69} height={40} priority />
             <span className="text-sm font-bold tracking-wide border-l border-white/20 pl-3">Moja farnosť</span>
@@ -28,7 +28,7 @@ export default function ParishZoneLayout({ children }: { children: React.ReactNo
           </div>
         </div>
       </header>
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">{children}</main>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">{children}</main>
     </div>
   )
 }

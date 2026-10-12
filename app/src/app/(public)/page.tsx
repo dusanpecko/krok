@@ -9,6 +9,8 @@ import {
   Compass, 
   ArrowRight, 
   Gift, 
+  HeartHandshake,
+  ShieldCheck,
 } from 'lucide-react';
 import { 
   motion, 
@@ -391,11 +393,11 @@ export default function KrokLandingPage() {
       </section>
 
       {/* =========================================================================
-          SEKCIA 2: PROBLÉM (Pomenovanie existenčného napätia)
+          SEKCIA 2: RIEŠENIE (Prečo fond – spájanie, stabilita, nezávislosť; pripomienky Julie 2026-10-12)
           ========================================================================= */}
       <section id="problem" className="relative py-28 md:py-36 bg-white border-t border-blue/10 overflow-hidden">
         {/* Pozadie */}
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red/5 blur-[120px] pointer-events-none rounded-full" />
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gold/5 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue/10 blur-[100px] pointer-events-none rounded-full" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -405,7 +407,7 @@ export default function KrokLandingPage() {
             <div className="lg:col-span-5 space-y-6">
               <div className="flex items-center gap-3 text-blue uppercase tracking-widest text-xs font-extrabold mb-2">
                 <span className="w-8 h-[2px] bg-gold rounded-full" />
-                <span>Existenčná výzva</span>
+                <span>Naše riešenie</span>
               </div>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-ink leading-tight">
                 Prečo Žilinská diecéza <br className="hidden md:inline" />
@@ -414,7 +416,7 @@ export default function KrokLandingPage() {
               <div className="w-16 h-1 bg-gradient-to-r from-blue to-gold rounded-full" />
               
               <p className="text-ink/80 text-lg leading-relaxed pt-2">
-                Mnohé z našich pastoračných aktivít čelia vážnej neistote. Fond KROK bol zriadený ako forma získavania <strong className="text-blue">existenčne potrebných finančných prostriedkov</strong> pre dlhodobú a udržateľnú budúcnosť diecézy.
+                Pastoračné diela potrebujú pevnú pôdu pod nohami. Fond KROK vznikol, aby z darov ľudí vytváral <strong className="text-blue">stabilné zázemie</strong> pre dlhodobú a udržateľnú budúcnosť diecézy.
               </p>
               
               {/* Citát zo zriaďovacej listiny */}
@@ -426,52 +428,52 @@ export default function KrokLandingPage() {
               </div>
             </div>
 
-            {/* Pravý stĺpec: 3 piliere napätia / zraniteľnosti */}
+            {/* Pravý stĺpec: 3 piliere riešenia */}
             <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 lg:pt-0">
               
-              {/* Pilier 1: Izolovanosť */}
+              {/* Pilier 1: Spájanie */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
                 className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
               >
                 <div>
-                  <div className="w-12 h-12 bg-red/15 text-red rounded-xl flex items-center justify-center border border-red/20 mb-6 text-xl font-extrabold">I</div>
-                  <h3 className="text-xl font-extrabold text-ink mb-2">Izolovanosť</h3>
+                  <div className="w-12 h-12 bg-blue/15 text-blue rounded-xl flex items-center justify-center border border-blue/20 mb-6"><HeartHandshake size={24} /></div>
+                  <h3 className="text-xl font-extrabold text-ink mb-2">Spájanie, spoločná opora</h3>
                   <p className="text-mute text-sm leading-relaxed">
-                    Mnoho miestnych spoločenstiev, škôl či charitatívnych diel bojuje s materiálnym nedostatkom osamote. Chýba koordinované, spoločné krytie chrbta.
+                    Farnosti, spoločenstvá, školy aj charitatívne diela nestoja osamote. KROK ich spája a kryje im chrbát – čo by jeden neuniesol, unesieme spolu.
                   </p>
                 </div>
-                <div className="text-xs text-red font-mono tracking-widest uppercase mt-4">Vážne riziko</div>
+                <div className="text-xs text-blue font-mono tracking-widest uppercase mt-4">Spolu sme silnejší</div>
               </motion.div>
 
-              {/* Pilier 2: Neistá budúcnosť */}
+              {/* Pilier 2: Stabilita */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
                 className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72"
               >
                 <div>
-                  <div className="w-12 h-12 bg-gold/15 text-gold-ink rounded-xl flex items-center justify-center border border-gold/20 mb-6 text-xl font-extrabold">N</div>
-                  <h3 className="text-xl font-extrabold text-ink mb-2">Neistá budúcnosť</h3>
+                  <div className="w-12 h-12 bg-gold/15 text-gold-ink rounded-xl flex items-center justify-center border border-gold/20 mb-6"><ShieldCheck size={24} /></div>
+                  <h3 className="text-xl font-extrabold text-ink mb-2">Stabilita a istota pre deti a rodiny</h3>
                   <p className="text-mute text-sm leading-relaxed">
-                    Pastoračné a evanjelizačné projekty nemôžu existovať zo dňa na deň. Bez stabilnej rezervy je ohrozená kontinuita formácie detí, mladých aj rodín.
+                    Formácia detí, mladých a rodín potrebuje roky, nie jednorazové akcie. Stabilná rezerva fondu dáva pastoračným dielam istotu, že môžu plánovať dopredu.
                   </p>
                 </div>
-                <div className="text-xs text-blue font-mono tracking-widest uppercase mt-4">Kľúčový nedostatok</div>
+                <div className="text-xs text-gold-ink font-mono tracking-widest uppercase mt-4">Dlhodobá istota</div>
               </motion.div>
 
-              {/* Pilier 3: Závislosť */}
+              {/* Pilier 3: Nezávislosť */}
               <motion.div 
                 whileHover={prefersReducedMotion ? {} : { y: -6 }}
                 className="bg-white hover:bg-blue-soft/50 border border-blue/10 hover:border-blue/30 rounded-2xl p-8 transition-all flex flex-col justify-between h-72 md:col-span-2"
               >
                 <div>
-                  <div className="w-12 h-12 bg-blue/15 text-blue rounded-xl flex items-center justify-center border border-blue/20 mb-6 text-xl font-extrabold">Z</div>
-                  <h3 className="text-xl font-extrabold text-ink mb-2">Závislosť na nestabilných zdrojoch</h3>
+                  <div className="w-12 h-12 bg-blue/15 text-blue rounded-xl flex items-center justify-center border border-blue/20 mb-6"><Users size={24} /></div>
+                  <h3 className="text-xl font-extrabold text-ink mb-2">Nezávislosť postavená na komunite podporovateľov</h3>
                   <p className="text-mute text-sm leading-relaxed">
-                    Spoliehanie sa výhradne na štátne príspevky alebo náhodné milodary robí strategické pastoračné diela zraniteľnými. Potrebujeme spoločne vybudovať nezávislú oporu postavenú priamo na ľuďoch.
+                    Namiesto spoliehania sa na štátne príspevky či náhodné milodary stojí KROK na pravidelnej podpore ľudí z farností. Tisíce malých krokov tvoria pevnú a nezávislú oporu pre pastoračné diela.
                   </p>
                 </div>
-                <div className="text-xs text-blue font-mono tracking-widest uppercase mt-4">Hlavná zraniteľnosť</div>
+                <div className="text-xs text-blue font-mono tracking-widest uppercase mt-4">Sila komunity</div>
               </motion.div>
 
             </div>

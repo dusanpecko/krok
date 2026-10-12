@@ -199,7 +199,7 @@ export async function issueCelebret(
   const issuedOn = input.issued_on && /^\d{4}-\d{2}-\d{2}$/.test(input.issued_on) ? input.issued_on : today()
   const settings = await getCurrentSettings(db)
   const { data: number, error: numError } = await db.rpc('next_celebret_number', { p_year: Number(issuedOn.slice(0, 4)) })
-  if (numError || !number) return { success: false, error: 'Nepodarilo sa prideliť číslo celebretu.' }
+  if (numError || !number) return { success: false, error: `Nepodarilo sa prideliť číslo celebretu${numError?.message ? ` (${numError.message})` : ''}.` }
   const token = newCelebretToken()
   const { data, error } = await db
     .from('clergy_celebrets')
@@ -218,7 +218,8 @@ export async function issueCelebret(
     })
     .select('id')
     .single()
-  if (error || !data) return { success: false, error: 'Celebret sa nepodarilo vydať.' }
+  // technický dôvod pre admina (napr. chýbajúca migrácia) – hláška ide len do administrácie
+  if (error || !data) return { success: false, error: `Celebret sa nepodarilo vydať${error?.message ? ` (${error.message})` : ''}.` }
   return { success: true, id: data.id as string, token }
 }
 

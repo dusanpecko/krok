@@ -49,12 +49,13 @@ export default async function MyCelebretPage() {
                   <div className="flex justify-between"><dt className="text-mute">Číslo</dt><dd className="font-bold">{current.number}</dd></div>
                   <div className="flex justify-between"><dt className="text-mute">Vydaný</dt><dd className="font-bold">{celebretDate(current.issued_on)}</dd></div>
                   <div className="flex justify-between"><dt className="text-mute">Platí do</dt><dd className="font-bold">{celebretDate(current.valid_until)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-mute">Heslo (na karte)</dt><dd className="font-black tracking-widest">{current.access_code}</dd></div>
                 </dl>
                 <a href={`${base}/${current.token}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue text-white text-sm font-extrabold hover:bg-blue/90">
                   Otvoriť celebret <ExternalLink size={14} />
                 </a>
                 <div className="mt-3"><CopyLinkButton url={`${base}/${current.token}`} className="inline-flex items-center gap-2 text-sm font-bold text-blue hover:underline cursor-pointer" /></div>
-                <p className="mt-3 text-xs text-mute">Odkaz si môžete uložiť do telefónu – pri slávení mimo diecézy ho ukážete alebo dáte naskenovať QR kód z karty.</p>
+                <p className="mt-3 text-xs text-mute">Odkaz si môžete uložiť do telefónu – pri slávení mimo diecézy ho ukážete alebo dáte naskenovať QR kód z karty. Bez hesla sa ukáže len platnosť; vaše údaje sa zobrazia po zadaní hesla.</p>
               </>
             ) : (
               <p className="text-mute">Celebret vám zatiaľ nebol vydaný. Vydáva ho biskupský úrad.</p>

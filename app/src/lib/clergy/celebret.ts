@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto'
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto'
 import sharp from 'sharp'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { uploadBuffer } from '@/lib/storage'
@@ -45,6 +45,8 @@ export interface Celebret {
   revoked_at: string | null
   revoked_reason: string | null
   note: string | null
+  /** heslo z karty (061) – len na serveri, do prehliadača sa neposiela */
+  access_code: string
   created_at: string
 }
 
@@ -59,7 +61,7 @@ export interface CelebretView extends Celebret {
   settings: CelebretSettings | null
 }
 
-const COLUMNS = 'id, clergy_id, number, token, issued_on, valid_until, confession_jurisdiction, photo_url, settings_id, revoked_at, revoked_reason, note, created_at'
+const COLUMNS = 'id, clergy_id, number, token, issued_on, valid_until, confession_jurisdiction, photo_url, settings_id, revoked_at, revoked_reason, note, access_code, created_at'
 const SETTINGS_COLUMNS = 'id, logo_url, stamp_url, signature_url, signer_name, signer_function, curia_address, curia_phone, curia_email, curia_web, created_at'
 const CLERGY_COLUMNS = 'id, first_name, last_name, title_before, title_after, ecclesiastical_titles, category, status, birth_date, ordination_date, slug, schematizmus_slug, photo_url, religious_orders(code)'
 
@@ -81,6 +83,21 @@ export function validUntilFor(issuedOn: string): string {
 /** Náhodný kód overovacej adresy – nedá sa uhádnuť z mena (§ 16.9). */
 export const newCelebretToken = () =>
   Array.from(randomBytes(20), (b) => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('')
+
+/** Heslo z karty – 4 náhodné číslice (061). */
+export const newAccessCode = () => String(randomInt(0, 10000)).padStart(4, '0')
+
+/** Podpis odomknutia (cookie) – viaže sa na kód aj heslo; po vydaní nového celebretu neplatí. */
+const unlockSecret = () => process.env.CELEBRET_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'celebret'
+export const celebretUnlockValue = (token: string, code: string) => createHmac('sha256', unlockSecret()).update(`${token}:${code}`).digest('base64url')
+export const celebretCookieName = (token: string) => `cb_${token.slice(0, 12)}`
+
+export function isUnlocked(token: string, code: string, cookieValue: string | undefined): boolean {
+  if (!cookieValue) return false
+  const expected = Buffer.from(celebretUnlockValue(token, code))
+  const got = Buffer.from(cookieValue)
+  return expected.length === got.length && timingSafeEqual(expected, got)
+}
 
 /** Verejná adresa overenia (QR). Na stagingu cez CELEBRET_BASE_URL (napr. https://celebret.dcza.dev). */
 export const celebretBaseUrl = () => (process.env.CELEBRET_BASE_URL?.trim() || 'https://celebret.dcza.sk').replace(/\/+$/, '')
@@ -196,6 +213,7 @@ export async function issueCelebret(
       photo_url: input.photo_url ?? c.photo_url ?? null,
       settings_id: settings?.id ?? null,
       note: input.note?.trim() || null,
+      access_code: newAccessCode(),
       issued_by: userId,
     })
     .select('id')

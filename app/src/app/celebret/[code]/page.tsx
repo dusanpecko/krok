@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
-import { getCelebretByToken, latestTokenForSlug } from '@/lib/clergy/celebret'
+import { celebretCookieName, getCelebretByToken, isUnlocked, latestTokenForSlug } from '@/lib/clergy/celebret'
+import CelebretUnlockForm from '@/components/celebret/CelebretUnlockForm'
 import { siteBaseUrl } from '@/lib/site-server'
 import CelebretDocument from '@/components/celebret/CelebretDocument'
 
@@ -24,9 +25,11 @@ export default async function CelebretPage({ params }: { params: Promise<{ code:
     redirect(host.startsWith('celebret.') ? `/${token}` : `/celebret/${token}`)
   }
   const profileUrl = celebret.profile_slug ? `${siteBaseUrl('dcza')}/schematizmus/knazi/${celebret.profile_slug}` : null
+  // údaje až po hesle z karty; stav platnosti je verejný (061)
+  const unlocked = isUnlocked(celebret.token, celebret.access_code, (await cookies()).get(celebretCookieName(celebret.token))?.value)
   return (
     <main className="min-h-screen bg-paper-warm px-4 py-8 sm:py-12">
-      <CelebretDocument c={celebret} profileUrl={profileUrl} />
+      <CelebretDocument c={celebret} profileUrl={profileUrl} locked={!unlocked} unlockForm={<CelebretUnlockForm token={celebret.token} />} />
     </main>
   )
 }

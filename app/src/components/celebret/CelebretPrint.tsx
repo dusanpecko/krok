@@ -74,7 +74,10 @@ export function CardBack({ c }: { c: PrintableCelebret }) {
     <div className="cb-card flex flex-col px-[3mm] pt-[2.6mm] pb-[2.2mm] text-black">
       <div className="flex gap-[2.5mm]">
         <p className="flex-1 text-[6.7pt] font-bold leading-[1.27] text-justify">{commendationText(c.confession_jurisdiction, c.category)}</p>
-        <div className="w-[23mm] h-[23mm] shrink-0 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: c.qrSvg }} />
+        <div className="w-[23mm] shrink-0 text-center">
+          <div className="w-[23mm] h-[23mm] [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: c.qrSvg }} />
+          <p className="mt-[1mm] text-[6.6pt] font-extrabold whitespace-nowrap">password:&nbsp; {c.access_code}</p>
+        </div>
       </div>
       <div className="mt-auto flex items-end gap-[2mm]">
         {/* miesto na ochrannú nálepku (hologram) – pečiatka sa na kartu netlačí */}
@@ -129,7 +132,10 @@ export function A4Page({ c }: { c: PrintableCelebret }) {
       <p className="mt-[10mm] text-[13pt] leading-relaxed italic text-justify">{commendationText(c.confession_jurisdiction, c.category)}</p>
       <p className="mt-[10mm] text-[10pt] font-bold uppercase tracking-widest text-gray-600">{T.edidit}</p>
       <div className="mt-[4mm] w-full flex items-end justify-between">
-        <div className="w-[30mm] h-[30mm] [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: c.qrSvg }} />
+        <div className="text-center">
+          <div className="w-[30mm] h-[30mm] [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: c.qrSvg }} />
+          <p className="mt-[1mm] text-[10pt] font-bold">password: {c.access_code}</p>
+        </div>
         <div className="flex items-end gap-[4mm]">
           {img(s?.stamp_url, 'h-[32mm] w-[32mm] object-contain')}
           {s?.signature_url && (

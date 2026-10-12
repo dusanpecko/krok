@@ -136,6 +136,7 @@ export default function CelebretTab({ clergyId, data, celebretBase }: { clergyId
                       {c.valid_until < today && !c.revoked_at ? ' · vypršal' : ''}
                     </p>
                     <p className="text-xs font-mono text-gray-400 mt-0.5 select-all break-all">{`${celebretBase}/${c.token}`}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">heslo na karte: <b className="font-mono text-gray-900 tracking-widest">{c.access_code}</b></p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">

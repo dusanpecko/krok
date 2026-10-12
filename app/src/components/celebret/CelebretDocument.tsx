@@ -8,7 +8,7 @@ import { CELEBRET_TEXT as T, celebretDate, celebretRole, commendationText } from
  * Celebret na overovacej stránke (QR) – stav platnosti veľkým písmom, údaje kňaza, latinský text,
  * pečiatka a podpis z verzie nastavení, ktorá platila pri vydaní (O57). Bez klientskeho JS.
  */
-export default function CelebretDocument({ c, profileUrl }: { c: CelebretView; profileUrl: string | null }) {
+export default function CelebretDocument({ c, profileUrl, locked = false, unlockForm }: { c: CelebretView; profileUrl: string | null; locked?: boolean; unlockForm?: React.ReactNode }) {
   const s = c.settings
   const valid = c.state === 'valid'
   const rows: [string, string][] = [
@@ -39,6 +39,26 @@ export default function CelebretDocument({ c, profileUrl }: { c: CelebretView; p
         <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-mute">{T.diocese}</p>
         <p className="mt-1 text-sm font-black uppercase tracking-[0.25em] text-ink">{T.title}</p>
         <h1 className="text-4xl font-light tracking-[0.2em] uppercase text-blue mt-1">{T.celebret}</h1>
+
+        {/* bez hesla len stav platnosti, číslo a platnosť (061) */}
+        {locked ? (
+          <>
+            <p className="mt-4 text-sm text-mute">
+              {T.number} <b className="text-ink">{c.number}</b> · {T.validUntil} <b className="text-ink">{celebretDate(c.valid_until)}</b>
+            </p>
+            {unlockForm}
+            {s && (
+              <div className="mt-6 rounded-2xl bg-paper-warm px-4 py-3 text-xs text-mute leading-relaxed">
+                <p className="font-black uppercase tracking-widest text-ink/70 mb-1">{T.curia}</p>
+                <p>{s.curia_address}</p>
+                <p>
+                  {s.curia_phone} · <ProtectedEmail code={encodeEmail(s.curia_email)} icon={false} className="hover:text-blue" />
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
 
         <div className="mt-6 flex flex-col items-center">
           {c.photo_url ? (
@@ -92,6 +112,8 @@ export default function CelebretDocument({ c, profileUrl }: { c: CelebretView; p
               {s.curia_phone} · <ProtectedEmail code={encodeEmail(s.curia_email)} icon={false} className="hover:text-blue" />
             </p>
           </div>
+        )}
+          </>
         )}
       </div>
     </article>

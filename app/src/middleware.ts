@@ -33,12 +33,22 @@ async function parishSubdomainRedirect(request: NextRequest, target: { sub: stri
 
 export async function middleware(request: NextRequest) {
   // celebret.dcza.sk/<kód> → overenie celebretu (K6); staré …/<meno>/qr z mypro.one bez „/qr“
+  // celebrety sa nikdy neindexujú: robots.txt zakáže všetko a každá odpoveď nesie X-Robots-Tag (aj v produkcii)
   if (isCelebretHost(request.headers.get('host'))) {
+    if (request.nextUrl.pathname === '/robots.txt') {
+      return new NextResponse('User-agent: *\nDisallow: /\n', { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'X-Robots-Tag': 'noindex, nofollow' } })
+    }
     const path = request.nextUrl.pathname.replace(/\/qr\/?$/, '').replace(/\/+$/, '')
-    if (path.startsWith('/celebret') || path.startsWith('/_next')) return NextResponse.next()
-    const url = request.nextUrl.clone()
-    url.pathname = path && path !== '/' ? `/celebret${path}` : '/celebret'
-    return NextResponse.rewrite(url)
+    const res = path.startsWith('/celebret') || path.startsWith('/_next')
+      ? NextResponse.next()
+      : NextResponse.rewrite(Object.assign(request.nextUrl.clone(), { pathname: path && path !== '/' ? `/celebret${path}` : '/celebret' }))
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+    return res
+  }
+  if (/^\/celebret(\/|$)/.test(request.nextUrl.pathname)) {
+    const res = NextResponse.next()
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+    return res
   }
 
   // subdoména farnosti – pred všetkým ostatným (bez session a výberu webu)

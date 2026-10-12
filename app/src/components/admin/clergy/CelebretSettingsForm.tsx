@@ -10,7 +10,7 @@ import type { CelebretSettings } from '@/lib/clergy/celebret'
 
 const IMAGES = [
   { key: 'logo', label: 'Logo / erb diecézy', hint: 'Hore na celebrete.' },
-  { key: 'stamp', label: 'Pečiatka', hint: 'PNG s priehľadným pozadím.' },
+  { key: 'stamp', label: 'Pečiatka', hint: 'PNG s priehľadným pozadím. Len na overovacej stránke a A4 – na karte je miesto na ochrannú nálepku.' },
   { key: 'signature', label: 'Podpis', hint: 'Naskenovaný podpis, PNG s priehľadným pozadím.' },
 ] as const
 

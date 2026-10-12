@@ -59,7 +59,7 @@ export function CardFront({ c }: { c: PrintableCelebret }) {
   )
 }
 
-/** Rub karty – text odporúčania, QR, pečiatka, podpis, kontakt kúrie (čierna ako na vzore). */
+/** Rub karty – text odporúčania, QR, miesto na ochrannú nálepku, podpis, kontakt kúrie (čierna ako na vzore). */
 export function CardBack({ c }: { c: PrintableCelebret }) {
   const s = c.settings
   const contact: [React.ReactNode, string][] = s
@@ -77,9 +77,8 @@ export function CardBack({ c }: { c: PrintableCelebret }) {
         <div className="w-[23mm] h-[23mm] shrink-0 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: c.qrSvg }} />
       </div>
       <div className="mt-auto flex items-end gap-[2mm]">
-        <div className="w-[17mm] h-[17mm] shrink-0 rounded-full flex items-center justify-center" style={s?.stamp_url ? undefined : { border: '0.35mm solid #000' }}>
-          {img(s?.stamp_url, 'w-full h-full object-contain')}
-        </div>
+        {/* miesto na ochrannú nálepku (hologram) – pečiatka sa na kartu netlačí */}
+        <div className="w-[17mm] h-[17mm] shrink-0 rounded-full" style={{ border: '0.35mm solid #000' }} />
         <div className="flex-1 text-center">
           {s?.signature_url ? img(s.signature_url, 'h-[10mm] max-w-[28mm] object-contain mx-auto') : <div className="h-[10mm]" />}
           <p className="border-t-[0.3mm] border-black pt-[0.6mm] text-[5.8pt] font-bold">{s?.signer_name || T.subscriptio}</p>

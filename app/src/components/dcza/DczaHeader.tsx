@@ -41,7 +41,8 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
 
   return (
     <>
-      <div className="hidden md:block bg-blue-deep text-white/80 text-xs">
+      {/* relative + z-50: lišta ostane nad stránkami, ktoré sa vysúvajú pod hlavičku (profil, kňazská zóna…) */}
+      <div className="hidden md:block relative z-50 bg-blue-deep text-white/80 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-end gap-5">
           <a href="https://www.facebook.com/zilinskadieceza" target="_blank" rel="noopener noreferrer" className="hover:text-white">Facebook</a>
           <Link href="/kuria/urady/nahlasovanie-zneuzivania" className="hover:text-white">Nahlásenie zneužívania</Link>

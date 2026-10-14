@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { ChevronDown, Menu, Search, X } from 'lucide-react'
+import { ChevronDown, LogIn, LogOut, Menu, Search, X } from 'lucide-react'
 import type { NavItem } from '@/lib/diocese/nav'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
+import AccountMenu, { accountItems, useSignOut } from '@/components/public/AccountMenu'
+import { getAccountMenu, type AccountMenu as AccountMenuData } from '@/app/(public)/account-actions'
 
 /** Hlavička webu diecézy: horná lišta (pri skrolovaní odíde hore), lepkavá lišta s erbom a hlavným menu, mobilné menu. */
 export default function DczaHeader({ nav }: { nav: NavItem[] }) {
@@ -18,6 +21,21 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
     setMobile(false)
     setOpen(null)
   }, [pathname])
+
+  // menu účtu ako na mojkrok.sk (profil, správa farnosti, kňazská zóna, admin)
+  const { session } = useSupabase()
+  const signOut = useSignOut()
+  const [account, setAccount] = useState<{ userId: string; menu: AccountMenuData | null } | null>(null)
+  const accountMenu = session?.user && account?.userId === session.user.id ? account.menu : null
+  useEffect(() => {
+    const userId = session?.user?.id
+    if (!userId) return
+    let cancelled = false
+    getAccountMenu()
+      .then((menu) => { if (!cancelled) setAccount({ userId, menu }) })
+      .catch(() => { if (!cancelled) setAccount({ userId, menu: null }) })
+    return () => { cancelled = true }
+  }, [session?.user?.id])
 
   const isActive = (href: string) => href !== '/' && !href.startsWith('http') && pathname.startsWith(href.split('?')[0])
 
@@ -78,6 +96,15 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
           <Link href="/hladat" aria-label="Hľadať" className="ml-1 p-2 rounded-xl text-ink/70 hover:text-blue hover:bg-blue-soft/40">
             <Search size={18} />
           </Link>
+          <div className="ml-2">
+            {session ? (
+              <AccountMenu menu={accountMenu} />
+            ) : (
+              <Link href="/prihlasenie" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-ink/80 hover:text-blue hover:bg-blue-soft/40">
+                <LogIn size={16} /> Prihlásiť
+              </Link>
+            )}
+          </div>
         </nav>
 
         <button type="button" onClick={() => setMobile((m) => !m)} aria-label="Menu" className="lg:hidden p-2 rounded-xl text-ink cursor-pointer">
@@ -108,6 +135,25 @@ export default function DczaHeader({ nav }: { nav: NavItem[] }) {
                 )}
               </details>
             ))}
+            <div className="pt-3 mt-3 border-t border-blue/10 space-y-1">
+              {session ? (
+                <>
+                  <p className="px-3 pb-1 text-xs font-black uppercase tracking-widest text-mute">{accountMenu?.displayName ?? 'Môj účet'}</p>
+                  {accountItems(accountMenu).map(({ href, label, icon: Icon }) => (
+                    <Link key={href} href={href} className="flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-ink/85">
+                      <Icon size={16} className="text-mute" /> {label}
+                    </Link>
+                  ))}
+                  <button type="button" onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-ink/70 cursor-pointer">
+                    <LogOut size={16} className="text-mute" /> Odhlásiť sa
+                  </button>
+                </>
+              ) : (
+                <Link href="/prihlasenie" className="flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-ink/85">
+                  <LogIn size={16} /> Prihlásiť sa
+                </Link>
+              )}
+            </div>
             <div className="pt-3 mt-3 border-t border-blue/10 text-sm space-y-1">
               <Link href="/knazska-zona" className="block px-3 py-2 text-mute">Kňazská zóna</Link>
               <a href="https://mojkrok.sk" className="block px-3 py-2 text-mute">KROK – Pastoračný fond</a>

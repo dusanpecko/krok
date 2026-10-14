@@ -70,7 +70,7 @@ export default function ParishScheduleTab({
     <div className={`${cardCls} space-y-5`}>
       <SectionTitle
         title="Bohoslužby, spovedanie a úradné hodiny"
-        description="Dva režimy: cez rok a letný (prázdninový). Prvopiatkové spovedanie sa zadáva ako samostatné položky s príležitosťou „prvý piatok“. Úradné hodiny kancelárie zadajte s časom od–do (alebo „po dohode“ do poznámky) – na stránke sa zobrazia pri farskom úrade."
+        description="Dva režimy: cez rok a letný (prázdninový). Prvopiatkové spovedanie pridáte tlačidlom „Spovedanie – prvý piatok“ (príležitosť „prvý piatok“; deň sa dá zmeniť, napr. štvrtok pred prvým piatkom). Úradné hodiny kancelárie zadajte s časom od–do (alebo „po dohode“ do poznámky) – na stránke sa zobrazia pri farskom úrade."
       />
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
 
@@ -177,6 +177,8 @@ export default function ParishScheduleTab({
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setCurrent({ items: [...current.items, emptyItem('mass')] })} className={btnSecondary}><Plus size={14} /> Sv. omša</button>
           <button type="button" onClick={() => setCurrent({ items: [...current.items, emptyItem('confession')] })} className={btnSecondary}><Plus size={14} /> Spovedanie</button>
+          {/* prvopiatkové spovedanie – rovno s príležitosťou „prvý piatok“ a dňom piatok (deň sa dá zmeniť, napr. štvrtok pred prvým piatkom) */}
+          <button type="button" onClick={() => setCurrent({ items: [...current.items, { ...emptyItem('confession'), occasion: 'first_friday', day_of_week: 5 }] })} className={btnSecondary}><Plus size={14} /> Spovedanie – prvý piatok</button>
           <button type="button" onClick={() => setCurrent({ items: [...current.items, emptyItem('office')] })} className={btnSecondary}><Plus size={14} /> Úradné hodiny</button>
           <button type="button" onClick={sortItems} className={btnSecondary}>Zoradiť</button>
           {season === 'summer' && data.regular.items.length > 0 && (

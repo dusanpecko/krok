@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
+import nodemailer, { type Transporter } from 'nodemailer'
 import { getBaseUrl } from '@/lib/mollie/client'
 import { renderTemplate, wrapEmailLayout, type EmailTemplate, type EmailTemplateKey, type EmailVariables } from './render'
 
 /**
- * Odoslanie automatického e-mailu podľa šablóny z DB (email_templates) cez Brevo transakčné API.
- * Env: BREVO_API_KEY. Odosielateľ (from_email) musí byť v Brevo overený (Senders & IP).
+ * Odoslanie automatického e-mailu podľa šablóny z DB (email_templates).
+ * Transport: SMTP (Google Workspace), ak je nastavené SMTP_HOST/SMTP_USER/SMTP_PASS – odosielateľ je
+ * vtedy vždy SMTP_FROM alebo SMTP_USER (Gmail iný From prepíše; @dcza.sk má prísny DMARC).
+ * Inak Brevo transakčné API (BREVO_API_KEY, odosielateľ musí byť v Brevo overený).
  * Serverový modul – kľúč nikdy nesmie ísť na klienta.
  *
  * Odoslanie nikdy nevyhodí výnimku – zlyhanie e-mailu nesmie pokaziť dar ani registráciu.
@@ -32,7 +35,7 @@ export interface SendTemplateEmailInput {
   templateOverride?: Pick<EmailTemplate, 'subject' | 'body' | 'from_email' | 'from_name' | 'reply_to'>
 }
 
-async function sendViaBrevo(msg: {
+type OutgoingEmail = {
   fromEmail: string
   fromName: string
   replyTo?: string | null
@@ -41,7 +44,50 @@ async function sendViaBrevo(msg: {
   subject: string
   html: string
   tag: string
-}): Promise<SendEmailResult> {
+}
+
+let smtpTransport: Transporter | null = null
+
+function getSmtpTransport(): Transporter | null {
+  const { SMTP_HOST: host, SMTP_USER: user, SMTP_PASS: pass } = process.env
+  if (!host || !user || !pass) return null
+  if (!smtpTransport) {
+    const port = Number(process.env.SMTP_PORT || 465)
+    smtpTransport = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass: pass.replace(/\s+/g, '') },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
+    })
+  }
+  return smtpTransport
+}
+
+async function sendViaSmtp(transport: Transporter, msg: OutgoingEmail): Promise<SendEmailResult> {
+  try {
+    const info = await transport.sendMail({
+      from: { address: process.env.SMTP_FROM || process.env.SMTP_USER!, name: process.env.SMTP_FROM_NAME || msg.fromName },
+      to: msg.toName ? { address: msg.to, name: msg.toName } : msg.to,
+      ...(msg.replyTo ? { replyTo: msg.replyTo } : {}),
+      subject: msg.subject,
+      html: msg.html,
+      headers: { 'X-Krok-Tag': msg.tag },
+    })
+    return { success: true, messageId: info.messageId }
+  } catch (err) {
+    return { success: false, error: `SMTP: ${err instanceof Error ? err.message : 'neznáma chyba'}` }
+  }
+}
+
+function deliver(msg: OutgoingEmail): Promise<SendEmailResult> {
+  const smtp = getSmtpTransport()
+  return smtp ? sendViaSmtp(smtp, msg) : sendViaBrevo(msg)
+}
+
+async function sendViaBrevo(msg: OutgoingEmail): Promise<SendEmailResult> {
   const apiKey = process.env.BREVO_API_KEY
   if (!apiKey) return { success: false, error: 'Brevo nie je nakonfigurované (BREVO_API_KEY).' }
 
@@ -90,7 +136,7 @@ export async function sendTemplateEmail(input: SendTemplateEmailInput): Promise<
     const body = renderTemplate(tpl.body, variables, { html: true })
     const html = wrapEmailLayout(body, { siteUrl })
 
-    const result = await sendViaBrevo({
+    const result = await deliver({
       fromEmail: tpl.from_email,
       fromName: tpl.from_name,
       replyTo: tpl.reply_to,
@@ -130,10 +176,10 @@ export async function sendTemplateEmail(input: SendTemplateEmailInput): Promise<
 
 /**
  * Interná správa (napr. oprava údajov kňaza pre sekretariát) – bez šablóny. Odosielateľ sa preberie
- * zo šablóny `fromTemplate`, aby bol overený v Brevo; odpovedať sa dá priamo autorovi (replyTo).
+ * zo šablóny `fromTemplate` (pri Brevo musí byť overený); odpovedať sa dá priamo autorovi (replyTo).
  */
 export async function sendInternalEmail(input: { to: string; subject: string; html: string; replyTo?: string | null; tag: string; fromTemplate?: string }): Promise<SendEmailResult> {
   const { data: tpl } = await serviceClient().from('email_templates').select('from_email, from_name').eq('template_key', input.fromTemplate ?? 'clergy_zone_invite').maybeSingle()
   if (!tpl?.from_email) return { success: false, error: 'Chýba odosielateľ (šablóna e-mailu).' }
-  return sendViaBrevo({ fromEmail: tpl.from_email, fromName: tpl.from_name ?? 'KROK', replyTo: input.replyTo, to: input.to, subject: input.subject, html: input.html, tag: input.tag })
+  return deliver({ fromEmail: tpl.from_email, fromName: tpl.from_name ?? 'KROK', replyTo: input.replyTo, to: input.to, subject: input.subject, html: input.html, tag: input.tag })
 }

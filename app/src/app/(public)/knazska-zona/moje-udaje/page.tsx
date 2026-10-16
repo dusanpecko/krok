@@ -31,7 +31,7 @@ type Assignment = {
 
 /**
  * Moje údaje (kňazská zóna) – kňaz si skontroluje, čo o ňom vedie register (len na čítanie, O48).
- * Opravu pošle formulárom na sekretariát (e-mail cez Brevo); verejne je z toho len meno, tituly, funkcia, pôvod a diecézny e-mail (O47).
+ * Opravu pošle formulárom na sekretariát (e-mail cez SMTP/Brevo); verejne je z toho len meno, tituly, funkcia, pôvod a diecézny e-mail (O47).
  */
 export default async function MyClergyDataPage() {
   const access = await requireZonePage('/knazska-zona/moje-udaje')

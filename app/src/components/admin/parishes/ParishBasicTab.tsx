@@ -103,7 +103,7 @@ export default function ParishBasicTab({ parish, deaneries }: { parish: ParishRo
           <Field label="Telefón">{text('phone')}</Field>
           <Field label="E-mail">{text('email', { type: 'email' })}</Field>
           <Field label="Web" className="md:col-span-2">{text('website', { placeholder: 'www.farnost.sk' })}</Field>
-          <Field label="Subdoména (.mojkrok.sk / .dcza.sk)">{text('subdomain', { placeholder: 'napr. bela' })}</Field>
+          <Field label="Subdoména (.dcza.sk)" hint="Podľa e-mailu farnosti @dcza.sk – zmení sa sama so zmenou e-mailu">{text('subdomain', { placeholder: 'napr. bela', readOnly: /@dcza\.sk$/i.test(String(form.email ?? '')), title: 'Subdoménu určuje e-mail farnosti' })}</Field>
           <Field label="Odkaz na schematizmus" className="md:col-span-3">{text('schematizmus_url')}</Field>
           <Field label="GPS šírka">{text('latitude', { inputMode: 'decimal', placeholder: '49.2231' })}</Field>
           <Field label="GPS dĺžka">{text('longitude', { inputMode: 'decimal', placeholder: '18.7394' })}</Field>

@@ -1,10 +1,11 @@
 import Link from 'next/link'
-import { ArrowLeft, Mail } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { requireZonePage } from '@/lib/clergy-zone/access'
 import { listCategories } from '@/lib/clergy-zone/docs'
 import { celebretDb } from '@/lib/clergy/celebret'
 import { CATEGORY_LABEL, STATUS_LABEL, type ClergyCategory, type ClergyStatus } from '@/lib/clergy/types'
 import ZoneShell, { NoZoneAccess } from '@/components/clergy-zone/ZoneShell'
+import CorrectionForm from '@/components/clergy-zone/CorrectionForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ type Assignment = {
 
 /**
  * Moje údaje (kňazská zóna) – kňaz si skontroluje, čo o ňom vedie register (len na čítanie, O48).
- * Opravu pošle e-mailom na sekretariát; verejne je z toho len meno, tituly, funkcia, pôvod a diecézny e-mail (O47).
+ * Opravu pošle formulárom na sekretariát (e-mail cez Brevo); verejne je z toho len meno, tituly, funkcia, pôvod a diecézny e-mail (O47).
  */
 export default async function MyClergyDataPage() {
   const access = await requireZonePage('/knazska-zona/moje-udaje')
@@ -94,7 +95,6 @@ export default async function MyClergyDataPage() {
       since: a.date_from ? date(a.date_from) : a.year_from ? String(a.year_from) : null,
       primary: a.is_primary,
     }))
-  const mailto = `mailto:${CORRECTIONS_EMAIL}?subject=${encodeURIComponent(`Oprava údajov v registri – ${name}`)}&body=${encodeURIComponent('Prosím o opravu týchto údajov:\n\n- \n\nĎakujem.')}`
 
   return (
     <ZoneShell access={{ name: access.name, canManage: access.canManage }} categories={categories}>
@@ -109,9 +109,7 @@ export default async function MyClergyDataPage() {
           <p className="mt-2 text-mute max-w-2xl leading-relaxed">
             Takto Vás vedie register kňazov biskupského úradu. Verejne (v schematizme a na stránke farnosti) sa zobrazí len meno, tituly, funkcia, odkiaľ pochádzate a diecézny e-mail.
           </p>
-          <a href={mailto} className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue text-white text-sm font-extrabold hover:bg-blue/90">
-            <Mail size={16} /> Nahlásiť opravu ({CORRECTIONS_EMAIL})
-          </a>
+          <CorrectionForm />
           <div className="mt-8 space-y-6">
             <section className="rounded-2xl bg-white border border-blue/10 p-6">
               <h3 className="text-xs font-black uppercase tracking-widest text-mute mb-3">Aktuálne pôsobenie</h3>

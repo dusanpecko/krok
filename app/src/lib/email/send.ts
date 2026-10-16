@@ -127,3 +127,13 @@ export async function sendTemplateEmail(input: SendTemplateEmailInput): Promise<
     return { success: false, error }
   }
 }
+
+/**
+ * Interná správa (napr. oprava údajov kňaza pre sekretariát) – bez šablóny. Odosielateľ sa preberie
+ * zo šablóny `fromTemplate`, aby bol overený v Brevo; odpovedať sa dá priamo autorovi (replyTo).
+ */
+export async function sendInternalEmail(input: { to: string; subject: string; html: string; replyTo?: string | null; tag: string; fromTemplate?: string }): Promise<SendEmailResult> {
+  const { data: tpl } = await serviceClient().from('email_templates').select('from_email, from_name').eq('template_key', input.fromTemplate ?? 'clergy_zone_invite').maybeSingle()
+  if (!tpl?.from_email) return { success: false, error: 'Chýba odosielateľ (šablóna e-mailu).' }
+  return sendViaBrevo({ fromEmail: tpl.from_email, fromName: tpl.from_name ?? 'KROK', replyTo: input.replyTo, to: input.to, subject: input.subject, html: input.html, tag: input.tag })
+}

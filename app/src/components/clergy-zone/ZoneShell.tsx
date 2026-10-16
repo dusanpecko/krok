@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Archive, FolderOpen, IdCard, Lock, Search, Settings } from 'lucide-react'
+import { Archive, FolderOpen, IdCard, Lock, Search, Settings, UserRound } from 'lucide-react'
 import type { ZoneAccess } from '@/lib/clergy-zone/access'
 import type { ZoneCategory } from '@/lib/clergy-zone/types'
 import ZoneLogout from './ZoneLogout'
@@ -31,6 +31,9 @@ export default function ZoneShell({
               Vitajte, <b className="text-ink">{access.name}</b>
             </p>
             <div className="flex items-center gap-4">
+              <Link href="/knazska-zona/moje-udaje" className="inline-flex items-center gap-1.5 font-bold text-blue hover:underline">
+                <UserRound size={14} /> Moje údaje
+              </Link>
               <Link href="/knazska-zona/celebret" className="inline-flex items-center gap-1.5 font-bold text-blue hover:underline">
                 <IdCard size={14} /> Môj celebret
               </Link>

@@ -82,9 +82,15 @@ async function sendViaSmtp(transport: Transporter, msg: OutgoingEmail): Promise<
   }
 }
 
-function deliver(msg: OutgoingEmail): Promise<SendEmailResult> {
+/** SMTP, ak je nastavené; pri zlyhaní (napr. zlé heslo aplikácie) záloha cez Brevo, aby e-mail nepadol úplne. */
+async function deliver(msg: OutgoingEmail): Promise<SendEmailResult> {
   const smtp = getSmtpTransport()
-  return smtp ? sendViaSmtp(smtp, msg) : sendViaBrevo(msg)
+  if (!smtp) return sendViaBrevo(msg)
+  const result = await sendViaSmtp(smtp, msg)
+  if (result.success) return result
+  console.error('[email] SMTP zlyhalo, skúšam Brevo:', result.error)
+  const fallback = await sendViaBrevo(msg)
+  return fallback.success ? fallback : { success: false, error: `${result.error} | ${fallback.error}` }
 }
 
 async function sendViaBrevo(msg: OutgoingEmail): Promise<SendEmailResult> {

@@ -14,17 +14,19 @@ function resolveSite(request: NextRequest): SiteKey {
  * Subdoména farnosti (D5, O13, § 4.4): <subdomena>.mojkrok.sk / .dcza.sk je len vstupná adresa –
  * presmeruje na stránku farnosti (zachová podstránku, napr. /oznamy). Subdoména = meno e-mailovej
  * schránky farnosti (062); vždy naša stránka farnosti – vlastný web farnosti je na nej ako odkaz
- * (rozhodnutie 2026-10-16). Neznáma subdoména → zoznam farností s hľadaním.
+ * (rozhodnutie 2026-10-16). Záložne aj slug farnosti (moja-farnost.dcza.sk). Neznáma → zoznam farností s hľadaním.
  * 302 (nie 301): prehliadač si presmerovanie nezapamätá navždy, ak farnosť neskôr zmení web alebo subdoménu.
  */
 async function parishSubdomainRedirect(request: NextRequest, target: { sub: string; site: SiteKey; base: string }) {
   const origin = `${request.nextUrl.protocol}//${target.base}`
+  // subdoména (schránka) alebo slug farnosti – ľudia skúšajú aj <názov-farnosti>.dcza.sk; zhoda subdomény má prednosť
+  const sub = encodeURIComponent(target.sub)
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/parishes?select=slug&is_active=eq.true&subdomain=eq.${encodeURIComponent(target.sub)}&limit=1`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/parishes?select=slug,subdomain&is_active=eq.true&or=(subdomain.eq.${sub},slug.eq.${sub})&limit=2`,
     { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` } },
   ).catch(() => null)
-  const rows: { slug: string }[] = res?.ok ? await res.json() : []
-  const parish = rows[0]
+  const rows: { slug: string; subdomain: string | null }[] = res?.ok ? await res.json() : []
+  const parish = rows.find((r) => r.subdomain === target.sub) ?? rows[0]
   if (!parish) return NextResponse.redirect(`${origin}/farnosti?q=${encodeURIComponent(target.sub)}`, 302)
   const rest = request.nextUrl.pathname === '/' ? '' : request.nextUrl.pathname
   return NextResponse.redirect(`${origin}/farnosti/${parish.slug}${rest}`, 302)

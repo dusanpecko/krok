@@ -13,6 +13,7 @@ import { listDocuments, syncKbsDocuments, type DioceseDocument } from '@/lib/dio
 import { uploadBuffer } from '@/lib/storage'
 import { addDiocesePhoto, deleteDioceseAlbum, deleteDiocesePhoto, loadDioceseGallery, updateDiocesePhotos, writeDioceseAlbum } from '@/lib/diocese/gallery'
 import type { AlbumInput, GalleryOverview, GalleryPhoto } from '@/lib/parishes/gallery'
+import { loadAwardsAdmin, moveAward, writeAward, type AwardInput, type AwardsAdminData } from '@/lib/diocese/awards'
 
 /** Web diecézy dcza.sk – správa kúriou (§ 20, D3). Zatiaľ časopis. */
 
@@ -371,6 +372,52 @@ export async function adminDioceseGalleryDeleteAlbum(_scope: string, albumId: st
     const res = await deleteDioceseAlbum(dioceseDb(), albumId)
     if (res.success) revalidateGallery()
     return res
+  } catch (err) {
+    return fail(err)
+  }
+}
+
+// ------------------------------------------------------------ ocenenia (063)
+
+function revalidateAwards() {
+  revalidatePath('/admin/web-dieceza/ocenenia')
+  revalidatePath('/dcza', 'layout')
+}
+
+export async function adminLoadAwards(): Promise<AwardsAdminData> {
+  await requirePermission(PERM)
+  return loadAwardsAdmin(dioceseDb())
+}
+
+export async function adminSaveAward(id: string | null, input: AwardInput): Promise<Result<{ id: string }>> {
+  try {
+    await requirePermission(PERM)
+    const res = await writeAward(dioceseDb(), id, input)
+    if (res.success) revalidateAwards()
+    return res
+  } catch (err) {
+    return fail(err)
+  }
+}
+
+export async function adminMoveAward(id: string, dir: -1 | 1): Promise<Result> {
+  try {
+    await requirePermission(PERM)
+    const res = await moveAward(dioceseDb(), id, dir)
+    if (res.success) revalidateAwards()
+    return res
+  } catch (err) {
+    return fail(err)
+  }
+}
+
+export async function adminDeleteAward(id: string): Promise<Result> {
+  try {
+    await requirePermission(PERM)
+    const { error } = await dioceseDb().from('diocese_awards').delete().eq('id', id)
+    if (error) return { success: false, error: 'Zmazanie zlyhalo.' }
+    revalidateAwards()
+    return { success: true }
   } catch (err) {
     return fail(err)
   }

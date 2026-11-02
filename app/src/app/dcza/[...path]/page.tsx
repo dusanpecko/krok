@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
-import { findRedirect, getPage, getPageTree } from '@/lib/diocese/public'
+import { dioceseDb, findRedirect, getPage, getPageTree } from '@/lib/diocese/public'
 import { locate, pageHref } from '@/lib/diocese/nav'
 import { protectEmails } from '@/lib/email-code'
+import { AWARDS_PAGE_PATH, getPublicAwards } from '@/lib/diocese/awards'
+import AwardsList from '@/components/dcza/AwardsList'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,7 +43,7 @@ export default async function DczaPage({ params }: Props) {
     // stará adresa bez presného páru – na zoznam aktualít (O73)
     if (parts[0] === 'sk') permanentRedirect('/aktuality')
   }
-  const [page, tree] = await Promise.all([getPage(path), getPageTree()])
+  const [page, tree, awards] = await Promise.all([getPage(path), getPageTree(), path === AWARDS_PAGE_PATH ? getPublicAwards(dioceseDb()) : null])
   if (!page) {
     // zlúčené alebo presunuté stránky (napr. /o-nas/biskup/zivotopis → /o-nas/biskup)
     const to = await findRedirect(`/${path}`)
@@ -89,8 +91,9 @@ export default async function DczaPage({ params }: Props) {
           {page.content ? (
             <div className="dcza-prose dcza-page mt-8" dangerouslySetInnerHTML={{ __html: protectEmails(page.content) }} />
           ) : (
-            children.length === 0 && <p className="mt-8 text-mute">Obsah pripravujeme.</p>
+            children.length === 0 && !awards?.length && <p className="mt-8 text-mute">Obsah pripravujeme.</p>
           )}
+          {awards && <AwardsList awards={awards} />}
           {children.length > 0 && (
             <div className="grid sm:grid-cols-2 gap-3 mt-10">
               {children.map((c) => (

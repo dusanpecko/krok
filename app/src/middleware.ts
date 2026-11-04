@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { dczaComingSoonResponse, isDczaComingSoon } from '@/lib/dcza-coming-soon'
+import { DCZA_COMING_SOON_SIGNUP_PATH, dczaComingSoonResponse, isDczaComingSoon } from '@/lib/dcza-coming-soon'
 import { PATH_HEADER, SITE_COOKIE, SITE_HEADER, isCelebretHost, isSharedPath, parishSubdomainFromHost, siteFromHost, type SiteKey } from '@/lib/site'
 
 /** Web podľa domény; mimo produkcie aj prepínač cookie (test.mojkrok.sk → web diecézy). */
@@ -35,7 +35,8 @@ async function parishSubdomainRedirect(request: NextRequest, target: { sub: stri
 
 export async function middleware(request: NextRequest) {
   // dcza.sk pred spustením nového webu – len stránka „Pripravujeme nový web“ (DCZA_COMING_SOON=1)
-  if (isDczaComingSoon(request.headers.get('host'))) return dczaComingSoonResponse()
+  // (okrem prihlásenia na newsletter z tej stránky)
+  if (isDczaComingSoon(request.headers.get('host')) && request.nextUrl.pathname !== DCZA_COMING_SOON_SIGNUP_PATH) return dczaComingSoonResponse()
 
   // celebret.dcza.sk/<kód> → overenie celebretu (K6); staré …/<meno>/qr z mypro.one bez „/qr“
   // celebrety sa nikdy neindexujú: robots.txt zakáže všetko a každá odpoveď nesie X-Robots-Tag (aj v produkcii)

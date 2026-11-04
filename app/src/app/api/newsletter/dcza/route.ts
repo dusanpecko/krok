@@ -5,7 +5,7 @@ import type { NewsletterList } from '@/lib/newsletter/consent'
 /**
  * Prihlásenie zo stránky „Pripravujeme nový web“ na dcza.sk (lib/dcza-coming-soon) – statické HTML bez React,
  * preto formulár posiela sem (fetch → JSON; bez JavaScriptu bežný POST → späť na stránku s #kotvou).
- * Polia: email, first_name, launch / dcza / krok (zaškrtnuté = "1"), website (honeypot).
+ * Polia: email, first_name, launch / krok (zaškrtnuté = "1"), website (honeypot).
  */
 export async function POST(request: Request) {
   const isForm = !(request.headers.get('content-type') ?? '').includes('application/json')
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     ? Object.fromEntries(await request.formData().catch(() => new FormData()))
     : await request.json().catch(() => ({}))
   const on = (k: string) => data[k] === '1' || data[k] === 'on' || data[k] === true
-  const lists: NewsletterList[] = [on('launch') && 'dcza_launch', on('dcza') && 'dcza', on('krok') && 'krok'].filter(Boolean) as NewsletterList[]
+  const lists: NewsletterList[] = [on('launch') && 'dcza_launch', on('krok') && 'krok'].filter(Boolean) as NewsletterList[]
 
   const res = await subscribeToNewsletter({
     email: String(data.email ?? ''),

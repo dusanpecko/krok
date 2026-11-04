@@ -4,7 +4,7 @@
  * (okrem celebret) – mojkrok.sk, test.mojkrok.sk ani dcza.dev sa nemenia. Starý web je archivovaný.
  * Samostatné HTML bez databázy a layoutu, odpoveď 503 + Retry-After (vyhľadávače stránky dočasne nevyradia).
  * Formulár „Dáme vám vedieť“ posiela na DCZA_COMING_SOON_SIGNUP_PATH (jediná cesta, ktorú middleware pustí ďalej):
- * upozornenie na spustenie webu + voliteľne newsletter diecézy a KROK (každý samostatný súhlas, 064).
+ * upozornenie na spustenie webu + voliteľne newsletter KROK (posiela aj v mene diecézy; samostatný súhlas, 064).
  * Bez serverových závislostí – používa ju middleware (edge).
  */
 
@@ -80,17 +80,16 @@ const HTML = `<!doctype html>
     <p class="lead">Čoskoro tu nájdete aktuality, kalendár podujatí, schematizmus, farnosti a všetko o živote Žilinskej diecézy na jednom mieste.</p>
     <form class="notify" id="notify" method="post" action="${DCZA_COMING_SOON_SIGNUP_PATH}">
       <h2>Dáme vám vedieť</h2>
-      <p>Nechajte nám e-mail – napíšeme vám, keď nový web spustíme. Ak chcete, môžete dostávať aj novinky z diecézy a z KROK – Pastoračného fondu.</p>
+      <p>Nechajte nám e-mail – napíšeme vám, keď nový web spustíme. Ak chcete, môžete dostávať aj newsletter KROK – Pastoračného fondu Žilinskej diecézy.</p>
       <input type="hidden" name="launch" value="1">
       <div class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
       <div class="row">
         <input class="name" type="text" name="first_name" placeholder="Meno (nepovinné)" autocomplete="given-name" aria-label="Meno (nepovinné)" maxlength="80">
         <input type="email" name="email" placeholder="vas@email.sk" autocomplete="email" aria-label="E-mail" required>
       </div>
-      <label class="opt"><input type="checkbox" name="dcza" value="1"><span>Newsletter Žilinskej diecézy<small>Správy a pozvánky z diecézy</small></span></label>
       <label class="opt"><input type="checkbox" name="krok" value="1"><span>Newsletter KROK – Pastoračného fondu<small>Výzvy, podporené projekty a život fondu</small></span></label>
       <button class="send" type="submit">Dajte mi vedieť</button>
-      <p class="legal">Odoslaním súhlasíte s jednorazovým e-mailom o spustení nového webu; newslettre len ak ich zaškrtnete. Odhlásiť sa môžete kedykoľvek odkazom v e-maile. <a href="https://mojkrok.sk/ochrana-udajov" target="_blank" rel="noopener">Ochrana osobných údajov</a></p>
+      <p class="legal">Odoslaním súhlasíte s jednorazovým e-mailom o spustení nového webu; newsletter len ak ho zaškrtnete. Odhlásiť sa môžete kedykoľvek odkazom v e-maile. <a href="https://mojkrok.sk/ochrana-udajov" target="_blank" rel="noopener">Ochrana osobných údajov</a></p>
       <div class="msg" id="prihlasenie-ok" role="status">Ďakujeme! Keď nový web spustíme, dáme vám vedieť.</div>
       <div class="msg" id="prihlasenie-chyba" role="alert">Prihlásenie sa nepodarilo. Skúste to prosím znova.</div>
     </form>

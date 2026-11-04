@@ -6,7 +6,7 @@ import { NEWSLETTER_LIST_CONSENT, NEWSLETTER_LISTS, type NewsletterList } from '
 
 /**
  * Prihlásenie na newsletter (pätička mojkrok.sk / dcza.sk, stránka „Pripravujeme nový web“):
- * uloží súhlas u nás (záloha) a pošle kontakt do Brevo do zvolených zoznamov.
+ * uloží súhlas u nás (záloha); pri newsletteri KROK pošle kontakt aj do Brevo.
  * Ak Brevo zlyhá, prihlásenie sa aj tak uloží (brevo_error) – dá sa doposlať neskôr. Serverový modul.
  */
 
@@ -38,12 +38,13 @@ export async function subscribeToNewsletter(input: {
 
   const { data: existing } = await supabaseAdmin
     .from('newsletter_subscribers')
-    .select('id, status, lists, consent_text, brevo_synced_at')
+    .select('id, status, lists, consent_text, brevo_synced_at, brevo_error')
     .ilike('email', email)
     .maybeSingle()
   const before: NewsletterList[] = existing?.status === 'subscribed' ? existing.lists ?? [] : []
   const added = lists.filter((l) => !before.includes(l))
-  const alreadySubscribed = !added.length && !!existing?.brevo_synced_at
+  const toBrevo = lists.includes('krok')
+  const alreadySubscribed = !added.length && (!toBrevo || !!existing?.brevo_synced_at)
 
   // Darca s rovnakým e-mailom → prepojiť a pri newsletteri KROK zaškrtnúť newsletter aj v jeho profile
   const { data: donor } = await supabaseAdmin
@@ -53,9 +54,10 @@ export async function subscribeToNewsletter(input: {
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle()
-  if (donor && lists.includes('krok')) await supabaseAdmin.from('donors').update({ newsletter_opt_in: true }).eq('id', donor.id)
+  if (donor && toBrevo) await supabaseAdmin.from('donors').update({ newsletter_opt_in: true }).eq('id', donor.id)
 
-  const brevo = await addBrevoContact({ email, firstName, lists })
+  // upozornenie na spustenie webu ostáva len u nás – do Brevo ide iba newsletter KROK
+  const brevo = toBrevo ? await addBrevoContact({ email, firstName }) : null
   // súhlasy k skôr odoberaným zoznamom ostávajú v evidencii, nové sa pripíšu
   const consents = added.map((l) => NEWSLETTER_LIST_CONSENT[l])
   const row = {
@@ -69,8 +71,8 @@ export async function subscribeToNewsletter(input: {
       : lists.map((l) => NEWSLETTER_LIST_CONSENT[l]).join('\n'),
     consent_at: new Date().toISOString(),
     donor_id: donor?.id ?? null,
-    brevo_synced_at: brevo.ok ? new Date().toISOString() : existing?.brevo_synced_at ?? null,
-    brevo_error: brevo.ok ? null : brevo.error,
+    brevo_synced_at: brevo?.ok ? new Date().toISOString() : existing?.brevo_synced_at ?? null,
+    brevo_error: !brevo || brevo.ok ? existing?.brevo_error ?? null : brevo.error,
     updated_at: new Date().toISOString(),
   }
 
@@ -81,7 +83,7 @@ export async function subscribeToNewsletter(input: {
     console.error('[newsletter] Uloženie prihlásenia zlyhalo:', error.message)
     return { success: false, error: 'Prihlásenie sa nepodarilo. Skúste to prosím neskôr.' }
   }
-  if (!brevo.ok) console.error('[newsletter] Brevo:', brevo.error)
+  if (brevo && !brevo.ok) console.error('[newsletter] Brevo:', brevo.error)
   // Potvrdenie (šablóna KROK) len pri novom prihlásení na newsletter KROK – opakované odoslanie e-mail nepošle
   if (added.includes('krok')) await sendNewsletterWelcomeEmail({ email, firstName })
 

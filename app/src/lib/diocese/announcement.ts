@@ -19,7 +19,7 @@ export const DCZA_ANNOUNCEMENT: DczaAnnouncementData | null = {
   id: 'menovanie-biskupa-2026-11',
   kicker: 'Žilinská diecéza',
   title: 'Svätý Otec menoval nového žilinského biskupa',
-  greeting: 'Drahí bratia kňazi, bratia a sestry,',
+  greeting: 'Drahí bratia v kňazskej službe, bratia a sestry,',
   text: 's vďakou voči Pánu Bohu a pápežovi Levovi XIV. oznamujeme, že Žilinská diecéza má nového biskupa. Slávnostné oznámenie jeho mena sa uskutoční 10. novembra.',
   href: '/aktuality/oznamenie-menovania-noveho-zilinskeho-biskupa',
   cta: 'Prečítať oznámenie',

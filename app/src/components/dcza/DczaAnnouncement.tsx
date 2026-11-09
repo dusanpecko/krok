@@ -56,7 +56,8 @@ export default function DczaAnnouncement({ announcement }: { announcement: DczaA
         <img src="/dcza/erb-240.png" alt="Erb Žilinskej diecézy" width={96} height={112} className="mx-auto w-24 h-auto" />
         <p className="mt-6 text-[11px] font-black uppercase tracking-[0.25em] text-wine">{announcement.kicker}</p>
         <h2 id="dcza-announcement-title" className="mt-3 text-2xl font-light leading-tight">{announcement.title}</h2>
-        <p className="mt-3 text-sm text-mute leading-relaxed">{announcement.text}</p>
+        {announcement.greeting && <p className="mt-4 text-sm font-bold text-ink">{announcement.greeting}</p>}
+        <p className={`${announcement.greeting ? 'mt-1' : 'mt-3'} text-sm text-mute leading-relaxed`}>{announcement.text}</p>
         <Link
           href={announcement.href}
           onClick={close}

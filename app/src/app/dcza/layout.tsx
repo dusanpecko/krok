@@ -5,6 +5,8 @@ import { listCuriaLinks } from '@/lib/diocese/schematizmus'
 import DczaHeader from '@/components/dcza/DczaHeader'
 import DczaFooter from '@/components/dcza/DczaFooter'
 import ScrollProgress from '@/components/ScrollProgress'
+import DczaAnnouncement from '@/components/dcza/DczaAnnouncement'
+import { DCZA_ANNOUNCEMENT } from '@/lib/diocese/announcement'
 import { getPublicPath, siteBaseUrl } from '@/lib/site-server'
 
 /**
@@ -31,6 +33,7 @@ export default async function DczaLayout({ children }: { children: React.ReactNo
       <DczaHeader nav={nav} />
       <main className="grow">{children}</main>
       <DczaFooter nav={nav} />
+      {DCZA_ANNOUNCEMENT && <DczaAnnouncement announcement={DCZA_ANNOUNCEMENT} />}
     </div>
   )
 }

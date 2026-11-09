@@ -26,6 +26,8 @@ interface Donor {
   donations_count?: number
   last_donation_date?: string | null
   last_donation_amount?: number | null
+  registered_at?: string | null
+  has_account?: boolean
   parishes?: {
     name: string
   } | null
@@ -223,6 +225,15 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
                 </div>
               </th>
               <th 
+                onClick={() => handleSort('registered')}
+                className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group whitespace-nowrap"
+              >
+                <div className="flex items-center gap-1.5">
+                  Registrácia
+                  {renderSortIcon('registered')}
+                </div>
+              </th>
+              <th 
                 onClick={() => handleSort('status')}
                 className="px-6 py-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100/50 transition-colors select-none group"
               >
@@ -305,6 +316,20 @@ export default function DonorTable({ donors, loading }: DonorTableProps) {
                     </div>
                   ) : (
                     <span className="text-xs text-gray-300 italic">bez daru</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {donor.registered_at ? (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-gray-900">
+                        {new Date(donor.registered_at).toLocaleDateString('sk-SK')}
+                      </span>
+                      {donor.has_account && <span className="text-xs font-bold text-blue-600">účet na webe</span>}
+                    </div>
+                  ) : donor.has_account ? (
+                    <span className="text-xs font-bold text-blue-600">účet na webe</span>
+                  ) : (
+                    <span className="text-xs text-gray-300 italic">—</span>
                   )}
                 </td>
                 <td className="px-6 py-4">

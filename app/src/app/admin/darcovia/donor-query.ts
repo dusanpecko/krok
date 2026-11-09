@@ -10,7 +10,7 @@ import { DEFAULT_SORT_BY, DEFAULT_SORT_ORDER } from './donor-sort'
 export const PAGE_SIZES = [20, 100, 500, 1000] as const
 export const DEFAULT_PAGE_SIZE = 20
 
-export type DonorSortBy = 'last_name' | 'variable_symbol' | 'status' | 'email' | 'total_donated' | 'last_donation'
+export type DonorSortBy = 'last_name' | 'variable_symbol' | 'status' | 'email' | 'total_donated' | 'last_donation' | 'registered'
 
 export interface DonorListParams {
   q: string
@@ -42,9 +42,13 @@ export interface DonorListRow {
   donations_count: number
   last_donation_date: string | null
   last_donation_amount: number | null
+  /** dátum registrácie (pri starých darcoch z pôvodného systému) */
+  registered_at: string | null
+  /** má účet na webe (prihlásenie) */
+  has_account: boolean
 }
 
-const SORT_FIELDS: DonorSortBy[] = ['last_name', 'variable_symbol', 'status', 'email', 'total_donated', 'last_donation']
+const SORT_FIELDS: DonorSortBy[] = ['last_name', 'variable_symbol', 'status', 'email', 'total_donated', 'last_donation', 'registered']
 
 export function parseDonorListParams(raw: Record<string, string | undefined>): DonorListParams {
   const hasSort = SORT_FIELDS.includes(raw.sortBy as DonorSortBy)
@@ -98,6 +102,8 @@ function mapRow(d: RawDonor): DonorListRow {
     donations_count: donations.length,
     last_donation_date: last?.donation_date ?? null,
     last_donation_amount: last ? Number(last.amount) || 0 : null,
+    registered_at: (d.registered_at as string | null) ?? null,
+    has_account: !!d.auth_user_id,
   }
 }
 
@@ -118,6 +124,11 @@ function compareRows(a: DonorListRow, b: DonorListRow, sortBy: DonorSortBy, asc:
       return (Number(a.variable_symbol) || 0) - (Number(b.variable_symbol) || 0) === 0
         ? str(a.variable_symbol).localeCompare(str(b.variable_symbol), 'sk') * dir
         : ((Number(a.variable_symbol) || 0) - (Number(b.variable_symbol) || 0)) * dir
+    case 'registered': {
+      // Darcovia bez dátumu registrácie vždy na konci, bez ohľadu na smer
+      if (!a.registered_at || !b.registered_at) return a.registered_at ? -1 : b.registered_at ? 1 : 0
+      return a.registered_at.localeCompare(b.registered_at) * dir
+    }
     case 'status':
       return str(a.status).localeCompare(str(b.status), 'sk') * dir
     case 'email':
@@ -171,6 +182,7 @@ export async function fetchDonorList(params: DonorListParams, opts: { all?: bool
     if (params.sortBy === 'variable_symbol') query = query.order('variable_symbol', { ascending: asc, nullsFirst: false })
     else if (params.sortBy === 'status') query = query.order('status', { ascending: asc })
     else if (params.sortBy === 'email') query = query.order('email', { ascending: asc, nullsFirst: false })
+    else if (params.sortBy === 'registered') query = query.order('registered_at', { ascending: asc, nullsFirst: false }).order('last_name', { ascending: true })
     else query = query.order('last_name', { ascending: asc }).order('first_name', { ascending: asc })
   }
 

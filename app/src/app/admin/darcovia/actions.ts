@@ -187,6 +187,7 @@ const EXPORT_COLUMNS: { header: string; key: keyof ExportRow; width: number; typ
   { header: 'Počet darov', key: 'count', width: 12, type: 'int' },
   { header: 'Posledný dar – dátum', key: 'last_date', width: 20, type: 'date' },
   { header: 'Posledný dar – suma (€)', key: 'last_amount', width: 22, type: 'money' },
+  { header: 'Registrácia', key: 'registered', width: 14, type: 'date' },
   { header: 'Pôvodné ID', key: 'legacy_id', width: 12 },
 ]
 
@@ -203,6 +204,7 @@ interface ExportRow {
   count: number
   last_date: Date | null
   last_amount: number | null
+  registered: Date | null
   legacy_id: string
 }
 
@@ -220,6 +222,7 @@ function toExportRow(d: DonorListRow): ExportRow {
     count: d.donations_count,
     last_date: d.last_donation_date ? new Date(d.last_donation_date) : null,
     last_amount: d.last_donation_amount,
+    registered: d.registered_at ? new Date(d.registered_at) : null,
     legacy_id: d.legacy_id ?? '',
   }
 }

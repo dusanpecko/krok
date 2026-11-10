@@ -22,11 +22,15 @@ export default function DczaAnnouncement({ announcement }: { announcement: DczaA
   }, [key])
 
   useEffect(() => {
-    if (new Date().toISOString().slice(0, 10) > announcement.until) return
-    if (pathname?.endsWith(announcement.href)) return // na samotnom článku nie
-    try {
-      if (localStorage.getItem(key)) return
-    } catch {}
+    // ?oznamenie – zobrazí okno vždy (kontrola textu, aj po zatvorení)
+    const force = new URLSearchParams(window.location.search).has('oznamenie')
+    if (!force) {
+      if (new Date().toISOString().slice(0, 10) > announcement.until) return
+      if (pathname?.endsWith(announcement.href)) return // na samotnom článku nie
+      try {
+        if (localStorage.getItem(key)) return
+      } catch {}
+    }
     // krátke oneskorenie – stránka sa najprv vykreslí, potom sa okno zobrazí
     const t = setTimeout(() => setOpen(true), 600)
     return () => clearTimeout(t)

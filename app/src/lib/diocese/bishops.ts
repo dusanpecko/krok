@@ -37,6 +37,7 @@ export const BISHOP_BENO: Bishop = {
   shortName: 'Mons. Peter Beňo',
   kicker: 'Menovaný 10. novembra 2026',
   role: 'žilinský diecézny biskup',
+  photo: '/dcza/beno.jpg',
   motto: { latin: 'In hoc cognovimus caritatem Dei!', slovak: 'Spoznali sme Božiu lásku!' },
   facts: [
     { label: 'Narodený', value: '2. septembra 1972, Bánovce nad Bebravou' },

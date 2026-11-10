@@ -16,12 +16,12 @@ export interface DczaAnnouncementData {
 }
 
 export const DCZA_ANNOUNCEMENT: DczaAnnouncementData | null = {
-  id: 'menovanie-biskupa-2026-11',
+  id: 'menovanie-biskupa-beno-2026-11-10',
   kicker: 'Žilinská diecéza',
-  title: 'Svätý Otec menoval nového žilinského biskupa',
+  title: 'Novým žilinským biskupom je Mons. Peter Beňo',
   greeting: 'Drahí bratia v kňazskej službe, bratia a sestry,',
-  text: 's vďakou voči Pánu Bohu a pápežovi Levovi XIV. oznamujeme, že Žilinská diecéza má nového biskupa. Slávnostné oznámenie jeho mena sa uskutoční 10. novembra.',
-  href: '/aktuality/oznamenie-menovania-noveho-zilinskeho-biskupa',
-  cta: 'Prečítať oznámenie',
-  until: '2026-11-17',
+  text: 's vďakou voči Pánu Bohu oznamujeme, že Svätý Otec Lev XIV. vymenoval za žilinského diecézneho biskupa Mons. Petra Beňa, doterajšieho pomocného biskupa Nitrianskej diecézy. Mons. Tomáš Galis bude diecézu spravovať ako apoštolský administrátor až do uvedenia nového biskupa do úradu.',
+  href: '/o-nas/biskup',
+  cta: 'Predstavujeme nového biskupa',
+  until: '2026-11-24',
 }

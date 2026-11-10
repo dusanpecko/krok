@@ -79,7 +79,7 @@ export default async function DczaHome() {
           </div>
           <div className="grid sm:grid-cols-2 gap-5">
             {[
-              { href: '/o-nas/biskup', label: 'Biskup', text: 'Mons. Tomáš Galis', icon: BookOpen },
+              { href: '/o-nas/biskup', label: 'Biskup', text: 'Mons. Peter Beňo', icon: BookOpen },
               { href: '/kuria/urady/nahlasovanie-zneuzivania', label: 'Nahlásenie zneužívania', text: 'Úrad pre ochranu maloletých', icon: ShieldAlert },
               { href: '/knazska-zona', label: 'Kňazská zóna', text: 'Dokumenty pre kňazov', icon: Lock },
               { href: 'https://mojkrok.sk', label: 'KROK', text: 'Pastoračný fond Žilinskej diecézy', icon: HandHeart },

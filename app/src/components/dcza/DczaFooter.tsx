@@ -30,9 +30,22 @@ export default function DczaFooter({ nav }: { nav: NavItem[] }) {
               <Mail size={16} className="text-gold shrink-0 mt-0.5" /> <ProtectedEmail code={encodeEmail('sekretariat@dcza.sk')} icon={false} className="hover:text-white" />
             </li>
           </ul>
-          <a href="https://www.facebook.com/zilinskadieceza" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold">
-            <span className="w-5 h-5 rounded-full bg-[#1877F2] text-white text-xs font-black flex items-center justify-center">f</span> Sledujte nás na Facebooku
-          </a>
+          <p className="mt-5 mb-2 text-[11px] uppercase tracking-[0.18em] text-white/60">Sledujte nás</p>
+          <div className="flex flex-wrap gap-2">
+            <a href="https://www.facebook.com/zilinskadieceza" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold">
+              <span className="w-5 h-5 rounded-full bg-[#1877F2] text-white text-xs font-black flex items-center justify-center">f</span> Facebook
+            </a>
+            <a href="https://www.instagram.com/zilinskadieceza/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold">
+              <span className="w-5 h-5 rounded-md bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] flex items-center justify-center" aria-hidden>
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="#fff" strokeWidth="2.2">
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none" />
+                </svg>
+              </span>{' '}
+              Instagram
+            </a>
+          </div>
           <div className="mt-8">
             <NewsletterSignup source="dcza" />
           </div>

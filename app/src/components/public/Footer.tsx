@@ -54,9 +54,16 @@ export default function Footer() {
           <p className="text-gray-500 text-sm">
             © {new Date().getFullYear()} KROK – Pastoračný fond Žilinskej diecézy. Všetky práva vyhradené.
           </p>
-          <p className="text-gray-500 text-xs">
-            Created with ❤️ for <a href="https://www.dcza.sk" target="_blank" rel="noopener" className="hover:text-white transition-colors underline-offset-2 hover:underline">Žilinská diecéza</a>
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-gray-500 text-xs">
+            <p>
+              Created with ❤️ for <a href="https://www.dcza.sk" target="_blank" rel="noopener" className="hover:text-white transition-colors underline-offset-2 hover:underline">Žilinská diecéza</a>
+            </p>
+            <span className="hidden sm:block w-px h-4 bg-gray-700" aria-hidden />
+            <a href="https://www.lectio.one" target="_blank" rel="noopener" className="group inline-flex items-center gap-2 hover:text-white transition-colors">
+              Beží na platforme
+              <Image src="/lectio/lectio_logo_white.webp" alt="lectio.one" width={800} height={142} className="h-4 w-auto opacity-70 group-hover:opacity-100 transition-opacity" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>

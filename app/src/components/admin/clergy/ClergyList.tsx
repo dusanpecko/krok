@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CalendarHeart, FileSpreadsheet, Loader2, Plus, Landmark, Search, Tags, Users, X, IdCard } from 'lucide-react'
+import { CalendarHeart, ClipboardList, FileSpreadsheet, Loader2, Plus, Landmark, Search, Tags, Users, X, IdCard } from 'lucide-react'
 import { btnPrimary, btnSecondary, cardCls, Field, inputCls, Notice } from '@/components/admin/projects/ui'
 import { createClergy, exportClergyXlsx } from '@/app/admin/knazi/actions'
 import {
@@ -99,6 +99,9 @@ export default function ClergyList({ clergy }: { clergy: ClergyListItem[] }) {
           </Link>
           <Link href="/admin/knazi/stitky" className={btnSecondary}>
             <Tags size={14} /> Adresné štítky
+          </Link>
+          <Link href="/admin/knazi/zostavy" className={btnSecondary}>
+            <ClipboardList size={14} /> Zostavy
           </Link>
           <button type="button" onClick={() => onExport('active')} disabled={pending} className={btnSecondary}>
             {pending ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} Export – v službe

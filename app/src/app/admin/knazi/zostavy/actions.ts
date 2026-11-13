@@ -3,7 +3,7 @@
 import * as ExcelJS from 'exceljs'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requirePermission } from '@/lib/auth'
-import { isCurrent } from '@/lib/clergy/types'
+import { clergyDisplayName, isCurrent } from '@/lib/clergy/types'
 
 /** Tlačové zostavy schematizmu kňazov (prezenčné listiny…) – čítanie `view_clergy`. */
 
@@ -153,6 +153,142 @@ export async function exportAttendanceXlsx(opts: AttendanceOptions): Promise<Res
     const date = new Date().toISOString().slice(0, 10)
     const suffix = groups.length === 1 ? `-${groups[0].deanery.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : ''
     return { success: true, fileName: `prezencna-listina${suffix}-${date}.xlsx`, base64: Buffer.from(buf).toString('base64') }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Neznáma chyba' }
+  }
+}
+
+// ------------------------------------------------------------ dekanáty a farnosti (prehľad pre biskupa)
+
+export interface OverviewPerson {
+  id: string
+  salutation: string
+  name: string
+  role: string
+  /** rok začiatku aktuálneho pôsobenia */
+  since: number | null
+  photo_url: string | null
+}
+
+export interface OverviewParish {
+  id: string
+  name: string
+  kind: string
+  people: OverviewPerson[]
+}
+
+export interface OverviewDeanery {
+  id: string
+  name: string
+  deans: OverviewPerson[]
+  parishes: OverviewParish[]
+}
+
+/** poradie funkcií vo farnosti */
+const ROLE_ORDER = ['farár', 'farský administrátor', 'duchovný správca', 'rektor kostola', 'farský vikár', 'výpomocný duchovný', 'trvalý diakon', 'duchovný rehoľnej spoločnosti', 'na odpočinku']
+const roleRank = (r: string) => {
+  const i = ROLE_ORDER.indexOf(r.toLowerCase())
+  return i < 0 ? ROLE_ORDER.length - 1 : i
+}
+
+interface OverviewAsgRow {
+  kind: string
+  role: string
+  parish_id: string | null
+  deanery_id: string | null
+  date_from: string | null
+  year_from: number | null
+  date_to: string | null
+  year_to: number | null
+  clergy: { id: string; first_name: string; last_name: string; title_before: string | null; title_after: string | null; salutation: string | null; photo_url: string | null; status: string } | null
+}
+
+/** Dekanáty s dekanom a farnosťami; vo farnosti kňazi s funkciou, rokom nástupu a fotkou. */
+export async function getDeaneryOverview(deaneryId: string | null): Promise<OverviewDeanery[]> {
+  await requirePermission(VIEW)
+  const client = db()
+  const [{ data: deaneries }, { data: parishes }, { data: asg, error }] = await Promise.all([
+    client.from('deaneries').select('id, name').order('name'),
+    client.from('parishes').select('id, name, kind, deanery_id').eq('is_active', true),
+    client
+      .from('clergy_assignments')
+      .select('kind, role, parish_id, deanery_id, date_from, year_from, date_to, year_to, clergy(id, first_name, last_name, title_before, title_after, salutation, photo_url, status)')
+      .in('kind', ['parish', 'deanery'])
+      .is('date_to', null)
+      .is('year_to', null),
+  ])
+  if (error) throw new Error(error.message)
+
+  const person = (a: OverviewAsgRow): OverviewPerson | null => {
+    const c = a.clergy
+    if (!c || c.status === 'deceased' || c.status === 'left') return null
+    return {
+      id: c.id,
+      salutation: c.salutation ?? '',
+      name: clergyDisplayName(c),
+      role: a.role,
+      since: a.date_from ? Number(a.date_from.slice(0, 4)) : a.year_from,
+      photo_url: c.photo_url,
+    }
+  }
+
+  const byDeanery = new Map<string, OverviewDeanery>((deaneries ?? []).map((d) => [d.id, { id: d.id, name: d.name, deans: [], parishes: [] }]))
+  const byParish = new Map<string, OverviewParish>()
+  for (const p of parishes ?? []) {
+    const d = p.deanery_id ? byDeanery.get(p.deanery_id) : null
+    if (!d) continue
+    const parish: OverviewParish = { id: p.id, name: p.name, kind: p.kind, people: [] }
+    byParish.set(p.id, parish)
+    d.parishes.push(parish)
+  }
+  for (const a of (asg ?? []) as unknown as OverviewAsgRow[]) {
+    const p = person(a)
+    if (!p) continue
+    if (a.kind === 'deanery' && a.role.trim().toLowerCase() === 'dekan' && a.deanery_id) byDeanery.get(a.deanery_id)?.deans.push(p)
+    else if (a.kind === 'parish' && a.parish_id) byParish.get(a.parish_id)?.people.push(p)
+  }
+  const list = [...byDeanery.values()].sort((a, b) => a.name.localeCompare(b.name, 'sk'))
+  for (const d of list) {
+    d.parishes.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'parish' ? -1 : 1) || a.name.localeCompare(b.name, 'sk'))
+    for (const p of d.parishes) p.people.sort((a, b) => roleRank(a.role) - roleRank(b.role) || a.name.localeCompare(b.name, 'sk'))
+  }
+  return deaneryId ? list.filter((d) => d.id === deaneryId) : list
+}
+
+/** Prehľad dekanátov do Excelu – hárok na dekanát (bez fotiek). */
+export async function exportDeaneryOverviewXlsx(deaneryId: string | null): Promise<Result<{ fileName: string; base64: string }>> {
+  try {
+    const list = await getDeaneryOverview(deaneryId)
+    if (!list.length) return { success: false, error: 'Žiadny dekanát na export.' }
+    const wb = new ExcelJS.Workbook()
+    wb.creator = 'KROK – schematizmus kňazov'
+    const thin = { style: 'thin' as const, color: { argb: 'FFBBBBBB' } }
+    for (const d of list) {
+      const ws = wb.addWorksheet(d.name.replace(/[\\/*?:[\]]/g, '').slice(0, 31) || 'Dekanát', {
+        pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+      })
+      ws.columns = [{ width: 30 }, { width: 22 }, { width: 10 }, { width: 38 }, { width: 12 }]
+      const t = ws.addRow([`Dekanát ${d.name}`])
+      t.font = { bold: true, size: 14 }
+      ws.addRow([`Dekan: ${d.deans.map((p) => [p.salutation, p.name].filter(Boolean).join(' ')).join(', ') || '—'}`]).font = { bold: true }
+      ws.addRow([])
+      const head = ws.addRow(['Farnosť', 'Funkcia', 'Oslovenie', 'Meno', 'Vo farnosti od'])
+      head.font = { bold: true }
+      head.eachCell((c) => (c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFEFEF' } }))
+      ws.views = [{ state: 'frozen', ySplit: head.number }]
+      for (const p of d.parishes) {
+        const rows = p.people.length ? p.people : [null]
+        rows.forEach((x, i) => {
+          const r = ws.addRow([i === 0 ? p.name : '', x?.role ?? 'bez kňaza', x?.salutation ?? '', x?.name ?? '', x?.since ?? ''])
+          if (i === 0) r.getCell(1).font = { bold: true }
+          r.eachCell({ includeEmpty: true }, (c) => (c.border = i === 0 ? { top: thin } : {}))
+        })
+      }
+    }
+    const buf = await wb.xlsx.writeBuffer()
+    const date = new Date().toISOString().slice(0, 10)
+    const suffix = list.length === 1 ? `-${list[0].name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : ''
+    return { success: true, fileName: `dekanaty-a-farnosti${suffix}-${date}.xlsx`, base64: Buffer.from(buf).toString('base64') }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Neznáma chyba' }
   }

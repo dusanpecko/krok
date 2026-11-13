@@ -57,12 +57,19 @@ export default function DczaFooter({ nav }: { nav: NavItem[] }) {
         </div>
       </div>
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap justify-between gap-3 text-xs text-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs text-white/50">
           <span>© {new Date().getFullYear()} Rímskokatolícka cirkev, Žilinská diecéza</span>
-          <span className="flex gap-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Link href="/dokumenty/ochrana-osobnych-udajov" className="hover:text-white">Ochrana osobných údajov</Link>
             <a href="https://mojkrok.sk" className="hover:text-white">mojkrok.sk</a>
-          </span>
+            <span className="hidden sm:block w-px h-4 bg-white/15" aria-hidden />
+            <span>Created with ❤️ for Žilinská diecéza</span>
+            <span className="hidden sm:block w-px h-4 bg-white/15" aria-hidden />
+            <a href="https://www.lectio.one" target="_blank" rel="noopener" className="group inline-flex items-center gap-2 hover:text-white transition-colors">
+              Beží na platforme
+              <Image src="/lectio/lectio_logo_white.webp" alt="lectio.one" width={800} height={142} className="h-4 w-auto opacity-70 group-hover:opacity-100 transition-opacity" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>

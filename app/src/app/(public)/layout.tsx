@@ -1,5 +1,6 @@
 import NavBar from '@/components/public/NavBar'
 import Footer from '@/components/public/Footer'
+import DczaFloatingLink from '@/components/public/DczaFloatingLink'
 import DczaHeader from '@/components/dcza/DczaHeader'
 import DczaFooter from '@/components/dcza/DczaFooter'
 import { getSite } from '@/lib/site-server'
@@ -27,6 +28,7 @@ export default async function PublicLayout({ children }: { children: React.React
         {children}
       </main>
       <Footer />
+      <DczaFloatingLink />
     </div>
   )
 }

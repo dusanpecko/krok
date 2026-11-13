@@ -426,22 +426,6 @@ export default function KrokLandingPage() {
                 </p>
                 <div className="mt-3 text-sm text-mute uppercase tracking-widest font-extrabold">— Zo zriaďovacej listiny</div>
               </div>
-
-              {/* Odkaz na web diecézy */}
-              <a
-                href="https://www.dcza.sk"
-                target="_blank"
-                rel="noopener"
-                className="group flex items-center gap-4 p-5 rounded-2xl bg-blue-soft/40 border border-blue/10 hover:border-gold/60 hover:bg-blue-soft/70 transition-all"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/dcza/erb-240.png" alt="" className="w-11 h-auto shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-extrabold text-ink group-hover:text-blue">Žilinská diecéza – www.dcza.sk</p>
-                  <p className="text-sm text-mute">Aktuality, biskup, kúria, farnosti a kňazi diecézy</p>
-                </div>
-                <ArrowRight size={18} className="text-mute group-hover:text-blue group-hover:translate-x-1 transition-transform shrink-0" />
-              </a>
             </div>
 
             {/* Pravý stĺpec: 3 piliere riešenia */}

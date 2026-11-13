@@ -35,6 +35,7 @@ export default function Footer() {
               <li><Link href="/podporene-projekty" className="hover:text-white transition-colors">Podporené projekty</Link></li>
               <li><Link href="/registracia" className="hover:text-white transition-colors">Chcem podporiť</Link></li>
               <li><Link href="/kontakt" className="hover:text-white transition-colors">Kontakt</Link></li>
+              <li><a href="https://www.dcza.sk" target="_blank" rel="noopener" className="hover:text-white transition-colors">Žilinská diecéza – dcza.sk ↗</a></li>
             </ul>
           </div>
 
@@ -54,7 +55,7 @@ export default function Footer() {
             © {new Date().getFullYear()} KROK – Pastoračný fond Žilinskej diecézy. Všetky práva vyhradené.
           </p>
           <p className="text-gray-500 text-xs">
-            Created with ❤️ for Žilinská diecéza
+            Created with ❤️ for <a href="https://www.dcza.sk" target="_blank" rel="noopener" className="hover:text-white transition-colors underline-offset-2 hover:underline">Žilinská diecéza</a>
           </p>
         </div>
       </div>

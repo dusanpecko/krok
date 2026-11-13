@@ -14,6 +14,7 @@ import { uploadBuffer } from '@/lib/storage'
 import { addDiocesePhoto, deleteDioceseAlbum, deleteDiocesePhoto, loadDioceseGallery, updateDiocesePhotos, writeDioceseAlbum } from '@/lib/diocese/gallery'
 import type { AlbumInput, GalleryOverview, GalleryPhoto } from '@/lib/parishes/gallery'
 import { loadAwardsAdmin, moveAward, writeAward, type AwardInput, type AwardsAdminData } from '@/lib/diocese/awards'
+import { deleteContactSection, loadContactsAdmin, moveContactSection, writeContactSection, type ContactSectionInput, type ContactsAdminData } from '@/lib/diocese/contacts'
 
 /** Web diecézy dcza.sk – správa kúriou (§ 20, D3). Zatiaľ časopis. */
 
@@ -418,6 +419,51 @@ export async function adminDeleteAward(id: string): Promise<Result> {
     if (error) return { success: false, error: 'Zmazanie zlyhalo.' }
     revalidateAwards()
     return { success: true }
+  } catch (err) {
+    return fail(err)
+  }
+}
+
+// ------------------------------------------------------------ kontakty (065)
+
+function revalidateContacts() {
+  revalidatePath('/admin/web-dieceza/kontakty')
+  revalidatePath('/dcza', 'layout')
+}
+
+export async function adminLoadContacts(): Promise<ContactsAdminData> {
+  await requirePermission(PERM)
+  return loadContactsAdmin(dioceseDb())
+}
+
+export async function adminSaveContactSection(id: string | null, input: ContactSectionInput): Promise<Result<{ id: string }>> {
+  try {
+    const { user } = await requirePermission(PERM)
+    const res = await writeContactSection(dioceseDb(), id, input, user.id)
+    if (res.success) revalidateContacts()
+    return res
+  } catch (err) {
+    return fail(err)
+  }
+}
+
+export async function adminMoveContactSection(id: string, dir: -1 | 1): Promise<Result> {
+  try {
+    const { user } = await requirePermission(PERM)
+    const res = await moveContactSection(dioceseDb(), id, dir, user.id)
+    if (res.success) revalidateContacts()
+    return res
+  } catch (err) {
+    return fail(err)
+  }
+}
+
+export async function adminDeleteContactSection(id: string): Promise<Result> {
+  try {
+    const { user } = await requirePermission(PERM)
+    const res = await deleteContactSection(dioceseDb(), id, user.id)
+    if (res.success) revalidateContacts()
+    return res
   } catch (err) {
     return fail(err)
   }

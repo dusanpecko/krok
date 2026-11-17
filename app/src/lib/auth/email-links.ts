@@ -26,11 +26,13 @@ export function safeNext(next: string | null | undefined, fallback = '/auth/post
 export async function generateEmailLink(
   email: string,
   type: EmailLinkType,
-  next: string
+  next: string,
+  /** web, na ktorý odkaz vedie (napr. dcza.sk pre kňazskú zónu); predvolene mojkrok.sk */
+  baseUrl: string = getBaseUrl()
 ): Promise<{ success: true; url: string; user: User } | { success: false; error: string }> {
   const { data, error } = await adminClient().auth.admin.generateLink({ type, email })
   const hashed = data?.properties?.hashed_token
   if (error || !hashed || !data.user) return { success: false, error: error?.message ?? 'Odkaz sa nepodarilo vytvoriť.' }
-  const url = `${getBaseUrl()}/auth/overenie?token_hash=${encodeURIComponent(hashed)}&type=${type}&next=${encodeURIComponent(safeNext(next))}`
+  const url = `${baseUrl}/auth/overenie?token_hash=${encodeURIComponent(hashed)}&type=${type}&next=${encodeURIComponent(safeNext(next))}`
   return { success: true, url, user: data.user }
 }

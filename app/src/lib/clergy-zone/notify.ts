@@ -2,7 +2,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { sendTemplateEmail } from '@/lib/email/send'
 import { generateEmailLink } from '@/lib/auth/email-links'
 import { accessEmailError, isWorkspaceEmail } from '@/lib/parishes/access-policy'
-import { getBaseUrl } from '@/lib/mollie/client'
+import { siteBaseUrl } from '@/lib/site-server'
 import { ZONE_CATEGORIES, ZONE_STATUSES } from './access'
 
 /** E-maily kňazskej zóny: pozvánka z registra (O68) a oznámenie o novom dokumente (O40, O69). Serverový modul. */
@@ -77,6 +77,8 @@ async function findAuthUserByEmail(db: SupabaseClient, email: string): Promise<U
 }
 
 const ZONE_NEXT = '/nastavit-heslo?next=/knazska-zona'
+/** kňazská zóna patrí k webu diecézy – odkazy v e-mailoch vedú na dcza.sk */
+const zoneBase = () => siteBaseUrl('dcza')
 
 /**
  * Pozve kňaza do zóny: bez účtu → založí sa (bez e-mailu od Supabase) a príde naša pozvánka
@@ -119,7 +121,7 @@ export async function inviteClergyToZone(
   await db.from('clergy').update({ auth_user_id: user.id, zone_invited_at: new Date().toISOString() }).eq('id', clergyId)
 
   const salutation = opts.salutation?.trim() || defaultClergySalutation(c.category)
-  const loginUrl = `${getBaseUrl()}/prihlasenie?redirect=${encodeURIComponent('/knazska-zona')}`
+  const loginUrl = `${zoneBase()}/prihlasenie?redirect=${encodeURIComponent('/knazska-zona')}`
   // diecézna adresa – prihlásenie cez Google, bez hesla
   if (isWorkspaceEmail(email)) {
     const res = await sendTemplateEmail({ templateKey: 'clergy_zone_google', to: email, variables: { salutation, email, login_url: loginUrl } })
@@ -133,7 +135,7 @@ export async function inviteClergyToZone(
     })
     return res.success ? { success: true, invited: false } : { success: false, error: `E-mail sa nepodarilo odoslať: ${res.error}` }
   }
-  const link = await generateEmailLink(email, user.email_confirmed_at ? 'magiclink' : 'invite', ZONE_NEXT)
+  const link = await generateEmailLink(email, user.email_confirmed_at ? 'magiclink' : 'invite', ZONE_NEXT, zoneBase())
   if (!link.success) return { success: false, error: link.error }
   const res = await sendTemplateEmail({ templateKey: 'clergy_zone_invite', to: email, variables: { salutation, email, invite_url: link.url } })
   return res.success ? { success: true, invited } : { success: false, error: `E-mail sa nepodarilo odoslať: ${res.error}` }
@@ -145,7 +147,7 @@ export async function notifyNewDoc(db: SupabaseClient, docId: string): Promise<{
   if (!doc) return { sent: 0, failed: 0, withoutEmail: 0 }
   const members = await listZoneMembers(db)
   const emails = Array.from(new Set(members.map((m) => m.email).filter((e): e is string => !!e)))
-  const base = getBaseUrl()
+  const base = zoneBase()
   const category = (doc.clergy_doc_categories as unknown as { name: string }).name
   const variables = {
     category,

@@ -10,6 +10,7 @@ import {
   SAMPLE_EMAIL_VARIABLES,
   renderTemplate,
   wrapEmailLayout,
+  emailBrandOf,
   type EmailTemplate,
 } from '@/lib/email/render'
 import { sendTestEmail, updateEmailTemplate, type EmailLogRow, type EmailTemplateUpdate } from '@/app/admin/emaily/actions'
@@ -61,7 +62,7 @@ export default function EmailTemplateEditor({ initial, logs }: Props) {
     const vars = { ...SAMPLE_EMAIL_VARIABLES, ...flags }
     return {
       subject: renderTemplate(form.subject, vars, { html: false }),
-      html: wrapEmailLayout(renderTemplate(form.body, vars, { html: true }), { siteUrl: String(SAMPLE_EMAIL_VARIABLES.site_url) }),
+      html: wrapEmailLayout(renderTemplate(form.body, vars, { html: true }), { siteUrl: emailBrandOf(initial.category) === 'dcza' ? 'https://www.dcza.sk' : String(SAMPLE_EMAIL_VARIABLES.site_url), brand: emailBrandOf(initial.category) }),
     }
   }, [form.subject, form.body, flags])
 

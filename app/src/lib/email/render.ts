@@ -42,7 +42,12 @@ export const EMAIL_CATEGORY_LABELS: Record<string, string> = {
   donation: 'Dary',
   newsletter: 'Newsletter',
   clergy: 'Kňazská zóna',
+  diocese: 'Web diecézy (podujatia)',
 }
+
+/** Šablóny diecézy (pozvánky na podujatia) majú hlavičku a pätičku Žilinskej diecézy, nie KROK. */
+export type EmailBrand = 'krok' | 'dcza'
+export const emailBrandOf = (category: string | null | undefined): EmailBrand => (category === 'diocese' ? 'dcza' : 'krok')
 
 /** Popis premenných pre admin (čo znamenajú). */
 export const EMAIL_VARIABLE_HELP: Record<string, string> = {
@@ -72,6 +77,10 @@ export const EMAIL_VARIABLE_HELP: Record<string, string> = {
   doc_url: 'Odkaz na dokument v kňazskej zóne',
   zone_url: 'Odkaz na kňazskú zónu',
   salutation: 'Oslovenie (napr. „Vážený pán farár“)',
+  event_title: 'Názov podujatia',
+  event_when: 'Dátum a miesto podujatia',
+  rsvp_url: 'Osobný odkaz na prihlášku (aj na úpravu odpovede)',
+  answers_html: 'Zhrnutie odpovedí z prihlášky – vložte ako {{{answers_html}}}',
 }
 
 /** Ukážkové hodnoty pre náhľad a testovací e-mail. */
@@ -102,6 +111,10 @@ export const SAMPLE_EMAIL_VARIABLES: EmailVariables = {
   doc_url: 'https://mojkrok.sk/knazska-zona/dokument/ukazka',
   zone_url: 'https://mojkrok.sk/knazska-zona',
   salutation: 'Vážený pán farár',
+  event_title: 'Inaugurácia Mons. Petra Beňa, žilinského biskupa',
+  event_when: 'sobota 28. novembra 2026, Katedrála Najsvätejšej Trojice v Žiline',
+  rsvp_url: 'https://www.dcza.sk/podujatia/ukazka?k=ukazka',
+  answers_html: '<ul><li><strong>Účasť na sv. omši:</strong> ÁNO</li><li><strong>Účasť na obede:</strong> ÁNO</li></ul>',
 }
 
 function escapeHtml(s: string): string {
@@ -141,6 +154,14 @@ export function renderTemplate(template: string, variables: EmailVariables, opts
     out = next
   }
 
+  // {{{premenna}}} – hotové HTML zostavené v kóde (napr. zhrnutie odpovedí); hodnoty v ňom kód už escapoval
+  if (opts.html) {
+    out = out.replace(/\{\{\{(\w+)\}\}\}/g, (_m, key: string) => {
+      const v = variables[key]
+      return v === undefined || v === null || typeof v === 'boolean' ? '' : String(v)
+    })
+  }
+
   // Neznáma / nevyplnená premenná → prázdny text (príjemca nesmie vidieť {{…}})
   out = out.replace(/\{\{(\w+)\}\}/g, (_m, key: string) => {
     const v = variables[key]
@@ -152,8 +173,17 @@ export function renderTemplate(template: string, variables: EmailVariables, opts
 }
 
 /** Obalí obsah šablóny do jednotnej hlavičky a pätičky KROK (inline štýly kvôli e-mailovým klientom). */
-export function wrapEmailLayout(bodyHtml: string, opts: { siteUrl: string; preheader?: string }): string {
+export function wrapEmailLayout(bodyHtml: string, opts: { siteUrl: string; preheader?: string; brand?: EmailBrand }): string {
   const siteUrl = escapeHtml(opts.siteUrl)
+  const dcza = opts.brand === 'dcza'
+  const header = dcza
+    ? `<span style="font-size:22px;font-weight:900;letter-spacing:1px;">ŽILINSKÁ DIECÉZA</span>
+          <span style="display:block;font-size:12px;color:#CBBB2D;letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Biskupský úrad Žilina</span>`
+    : `<span style="font-size:26px;font-weight:900;letter-spacing:2px;">KROK</span>
+          <span style="display:block;font-size:12px;color:#CBBB2D;letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Pastoračný fond Žilinskej diecézy</span>`
+  const footer = dcza
+    ? 'Biskupský úrad Žilina · Jána Kalinčiaka 1, 010 01 Žilina'
+    : 'Pastoračný fond KROK · Žilinská diecéza · <a href="mailto:mojkrok@dcza.sk" style="color:#095096;">mojkrok@dcza.sk</a>'
   return `<!doctype html>
 <html lang="sk">
 <head>
@@ -172,15 +202,14 @@ ${opts.preheader ? `<div style="display:none;max-height:0;overflow:hidden;">${es
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;">
       <tr><td style="background:#052342;padding:24px 32px;">
         <a href="${siteUrl}" style="text-decoration:none;color:#ffffff;font-family:Arial,Helvetica,sans-serif;">
-          <span style="font-size:26px;font-weight:900;letter-spacing:2px;">KROK</span>
-          <span style="display:block;font-size:12px;color:#CBBB2D;letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Pastoračný fond Žilinskej diecézy</span>
+          ${header}
         </a>
       </td></tr>
       <tr><td class="krok-body" style="padding:32px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#1f2937;">
 ${bodyHtml}
       </td></tr>
       <tr><td style="padding:20px 32px;background:#e2effb;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#4b5563;">
-        Pastoračný fond KROK · Žilinská diecéza · <a href="mailto:mojkrok@dcza.sk" style="color:#095096;">mojkrok@dcza.sk</a><br>
+        ${footer}<br>
         <a href="${siteUrl}" style="color:#095096;">${siteUrl.replace(/^https?:\/\//, '')}</a>
       </td></tr>
     </table>

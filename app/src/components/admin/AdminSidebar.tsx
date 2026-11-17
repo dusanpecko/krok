@@ -20,7 +20,7 @@ import {
   Megaphone,
   Mail,
   BookUser,
-  Handshake, FolderLock, Building2, BookOpen, HandHeart, Images, LifeBuoy, IdCard, Award, Contact } from 'lucide-react'
+  Handshake, FolderLock, Building2, BookOpen, HandHeart, Images, LifeBuoy, IdCard, Award, Contact, CalendarCheck } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
@@ -93,6 +93,7 @@ const mainLinks: NavLink[] = [
       { href: '/admin/web-dieceza/galeria', label: 'Galéria', icon: Images },
       { href: '/admin/web-dieceza/ocenenia', label: 'Ocenenia', icon: Award },
       { href: '/admin/web-dieceza/kontakty', label: 'Kontakty', icon: Contact },
+      { href: '/admin/web-dieceza/podujatia', label: 'Podujatia', icon: CalendarCheck },
     ],
   },
 ]

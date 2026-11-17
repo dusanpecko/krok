@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import nodemailer, { type Transporter } from 'nodemailer'
 import { getBaseUrl } from '@/lib/mollie/client'
-import { renderTemplate, wrapEmailLayout, type EmailTemplate, type EmailTemplateKey, type EmailVariables } from './render'
+import { emailBrandOf, renderTemplate, wrapEmailLayout, type EmailTemplate, type EmailTemplateKey, type EmailVariables } from './render'
 
 /**
  * Odoslanie automatického e-mailu podľa šablóny z DB (email_templates).
@@ -135,12 +135,13 @@ export async function sendTemplateEmail(input: SendTemplateEmailInput): Promise<
     if (!stored.is_active && !input.isTest) return { success: false, error: 'Šablóna je vypnutá.' }
 
     const tpl = { ...stored, ...(input.templateOverride ?? {}) }
-    const siteUrl = getBaseUrl()
+    const brand = emailBrandOf(tpl.category)
+    const siteUrl = brand === 'dcza' ? (process.env.DCZA_BASE_URL?.trim() || 'https://www.dcza.sk').replace(/\/+$/, '') : getBaseUrl()
     const variables: EmailVariables = { site_url: siteUrl, ...input.variables }
 
     const subject = renderTemplate(tpl.subject, variables, { html: false })
     const body = renderTemplate(tpl.body, variables, { html: true })
-    const html = wrapEmailLayout(body, { siteUrl })
+    const html = wrapEmailLayout(body, { siteUrl, brand })
 
     const result = await deliver({
       fromEmail: tpl.from_email,

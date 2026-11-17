@@ -98,7 +98,8 @@ export async function inviteClergyToZone(
     const { data } = await db.auth.admin.getUserById(c.auth_user_id)
     user = data?.user ?? null
   }
-  const email = (opts.email?.trim() || user?.email || c.work_email || '').toLowerCase()
+  // e-mail z registra má prednosť pred doterajším účtom – po zmene adresy (napr. alias → hlavná schránka) sa kňaz prepojí na nový účet
+  const email = (opts.email?.trim() || c.work_email || user?.email || '').toLowerCase()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Chýba e-mail – doplňte diecézny e-mail (@dcza.sk) v registri alebo ho zadajte.' }
   const emailError = accessEmailError(email, 'kňazskej zóny')
   if (emailError) return { success: false, error: emailError }

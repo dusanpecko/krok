@@ -1,6 +1,8 @@
 import NavBar from '@/components/public/NavBar'
 import Footer from '@/components/public/Footer'
 import DczaFloatingLink from '@/components/public/DczaFloatingLink'
+import KrokAnnouncement from '@/components/public/KrokAnnouncement'
+import { KROK_ANNOUNCEMENT } from '@/lib/krok/announcement'
 import DczaHeader from '@/components/dcza/DczaHeader'
 import DczaFooter from '@/components/dcza/DczaFooter'
 import { getSite } from '@/lib/site-server'
@@ -29,6 +31,7 @@ export default async function PublicLayout({ children }: { children: React.React
       </main>
       <Footer />
       <DczaFloatingLink />
+      {KROK_ANNOUNCEMENT && <KrokAnnouncement announcement={KROK_ANNOUNCEMENT} />}
     </div>
   )
 }

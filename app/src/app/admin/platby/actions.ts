@@ -118,6 +118,29 @@ export async function getOnlineSubscriptionsAdmin(): Promise<AdminOnlineSubscrip
   })) as AdminOnlineSubscription[]
 }
 
+/** Pravidelné dary (Mollie) jedného darcu – pre detail darcu v admine. */
+export async function getDonorOnlineSubscriptionsAdmin(donorId: string): Promise<AdminOnlineSubscription[]> {
+  await requirePermission('view_bank')
+  const { data, error } = await serviceClient()
+    .from('online_subscriptions')
+    .select(
+      'id, mode, mollie_subscription_id, status, amount, interval, email, donor_name, donor_id, started_at, next_payment_at, cancelled_at, created_at, purpose, donors!online_subscriptions_donor_id_fkey(first_name, last_name, variable_symbol), box_parish:parishes!online_subscriptions_box_parish_id_fkey(name)'
+    )
+    .eq('donor_id', donorId)
+    .neq('status', 'pending')
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.error('[admin/platby] getDonorOnlineSubscriptionsAdmin:', error.message)
+    return []
+  }
+  return (data ?? []).map((s) => ({
+    ...s,
+    amount: Number(s.amount),
+    donors: Array.isArray(s.donors) ? (s.donors[0] ?? null) : s.donors,
+    box_parish: Array.isArray(s.box_parish) ? (s.box_parish[0] ?? null) : s.box_parish,
+  })) as AdminOnlineSubscription[]
+}
+
 /** Admin zruší pravidelný dar (u Mollie aj v DB). */
 export async function adminCancelOnlineSubscription(id: string): Promise<{ success: boolean; error?: string }> {
   await requirePermission('view_bank')
@@ -131,6 +154,7 @@ export async function adminCancelOnlineSubscription(id: string): Promise<{ succe
   const result = await cancelOnlineSubscription(sub)
   if (result.success) {
     revalidatePath('/admin/platby')
+    revalidatePath('/admin/darcovia/[id]', 'page')
     revalidatePath('/profil')
   }
   return result

@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import DonorForm from '@/components/admin/donors/DonorForm'
 import { notFound } from 'next/navigation'
 import { updateDonor } from '../actions'
+import { getDonorOnlineSubscriptionsAdmin } from '../../platby/actions'
+import DonorSubscriptions from '@/components/admin/donors/DonorSubscriptions'
 import { ArrowLeft, ChevronRight, Home, Users } from 'lucide-react'
 import Link from 'next/link'
 
@@ -46,6 +48,9 @@ export default async function DonorEditPage({ params }: DonorPageProps) {
     `)
     .eq('donor_id', id)
     .order('donation_date', { ascending: false })
+
+  // 1.2 Pravidelné online dary (Mollie) – len s oprávnením view_bank
+  const subscriptions = await getDonorOnlineSubscriptionsAdmin(id).catch(() => [])
 
   // 2. Fetch parishes and projects for selection
   const { data: parishes } = await supabase
@@ -98,6 +103,8 @@ export default async function DonorEditPage({ params }: DonorPageProps) {
           <ArrowLeft size={18} /> Späť na zoznam
         </Link>
       </div>
+
+      <DonorSubscriptions subscriptions={subscriptions} />
 
       <DonorForm 
         donor={donor} 

@@ -107,10 +107,10 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session – DÔLEŽITÉ pre auth
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Refresh session – DÔLEŽITÉ pre auth. Bez auth cookie (anonymný návštevník, crawler) nie je čo
+  // obnovovať ani overovať – vynecháme sieťové volanie na Supabase Auth (CPU/latencia každej požiadavky).
+  const hasAuthCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
+  const user = hasAuthCookie ? (await supabase.auth.getUser()).data.user : null
 
   // Ochrana admin routov
   if (request.nextUrl.pathname.startsWith('/admin')) {

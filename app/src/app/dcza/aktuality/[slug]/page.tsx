@@ -8,12 +8,18 @@ import PostCard from '@/components/dcza/PostCard'
 import ShareButton from '@/components/parishes/ShareButton'
 import { protectEmails } from '@/lib/email-code'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+
+/** Prázdne = žiadna stránka pri builde, každá sa vyrenderuje pri prvej návšteve a cachuje (ISR). */
+export function generateStaticParams() {
+  return []
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const post = await getPost((await params).slug)
   if (!post) return { title: 'Článok nenájdený' }
-  return { title: post.title, description: post.excerpt ?? undefined, openGraph: { title: post.title, description: post.excerpt ?? undefined, type: 'article', ...(post.image_url ? { images: [{ url: post.image_url }] } : {}) } }
+  return { title: post.title, description: post.excerpt ?? undefined, alternates: { canonical: `/aktuality/${post.slug}` }, openGraph: { title: post.title, description: post.excerpt ?? undefined, type: 'article', ...(post.image_url ? { images: [{ url: post.image_url }] } : {}) } }
 }
 
 export default async function DczaPost({ params }: { params: Promise<{ slug: string }> }) {

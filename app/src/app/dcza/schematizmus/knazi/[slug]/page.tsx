@@ -6,13 +6,19 @@ import ProtectedEmail from '@/components/ProtectedEmail'
 import { getPublicClergy } from '@/lib/diocese/schematizmus'
 import { shortDate } from '@/lib/diocese/format'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+
+/** Prázdne = žiadna stránka pri builde, každá sa vyrenderuje pri prvej návšteve a cachuje (ISR). */
+export function generateStaticParams() {
+  return []
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const c = await getPublicClergy((await params).slug)
   if (!c) return { title: 'Osoba nenájdená' }
   const fn = c.functions[0]
-  return { title: c.name, description: [fn ? `${fn.role}${fn.place ? ` – ${fn.place}` : ''}` : null, 'Schematizmus Žilinskej diecézy'].filter(Boolean).join(' · ') }
+  return { title: c.name, alternates: { canonical: `/schematizmus/knazi/${(await params).slug}` }, description: [fn ? `${fn.role}${fn.place ? ` – ${fn.place}` : ''}` : null, 'Schematizmus Žilinskej diecézy'].filter(Boolean).join(' · ') }
 }
 
 /** Profil v schematizme (O47) – bez fotky a súkromných kontaktov; len diecézny e-mail. */

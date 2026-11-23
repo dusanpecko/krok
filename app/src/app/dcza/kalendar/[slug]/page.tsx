@@ -7,14 +7,20 @@ import { eventWhen } from '@/lib/diocese/format'
 import ShareButton from '@/components/parishes/ShareButton'
 import { hideEmails, protectEmails } from '@/lib/email-code'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+
+/** Prázdne = žiadna stránka pri builde, každá sa vyrenderuje pri prvej návšteve a cachuje (ISR). */
+export function generateStaticParams() {
+  return []
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const e = await getEvent((await params).slug)
   if (!e) return { title: 'Akcia nenájdená' }
   // náhľad pri zdieľaní (Facebook, WhatsApp): kedy, kde, obrázok akcie
   const description = hideEmails([eventWhen(e), e.place].filter(Boolean).join(' · '))
-  return { title: e.title, description, openGraph: { title: e.title, description, type: 'article', ...(e.image_url ? { images: [{ url: e.image_url }] } : {}) } }
+  return { title: e.title, description, alternates: { canonical: `/kalendar/${(await params).slug}` }, openGraph: { title: e.title, description, type: 'article', ...(e.image_url ? { images: [{ url: e.image_url }] } : {}) } }
 }
 
 export default async function DczaEvent({ params }: { params: Promise<{ slug: string }> }) {

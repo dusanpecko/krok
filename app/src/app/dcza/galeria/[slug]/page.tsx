@@ -24,7 +24,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!album) return { title: 'Album nenájdený' }
   const shared = album.photos[photoIndex((await searchParams).foto) ?? -1]
   const image = shared?.url ?? album.cover_url
-  return { title: album.title, description: album.description ?? undefined, openGraph: { title: album.title, ...(image ? { images: [{ url: image }] } : {}) } }
+  return { title: album.title, description: album.description ?? undefined, alternates: { canonical: `/galeria/${(await params).slug}` }, openGraph: { title: album.title, ...(image ? { images: [{ url: image }] } : {}) } }
 }
 
 export default async function DczaAlbum({ params, searchParams }: Props) {

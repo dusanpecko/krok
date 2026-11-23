@@ -7,22 +7,22 @@ import DczaFooter from '@/components/dcza/DczaFooter'
 import ScrollProgress from '@/components/ScrollProgress'
 import DczaAnnouncement from '@/components/dcza/DczaAnnouncement'
 import { DCZA_ANNOUNCEMENT } from '@/lib/diocese/announcement'
-import { getPublicPath, siteBaseUrl } from '@/lib/site-server'
+import { siteBaseUrl } from '@/lib/site-server'
 
 /**
  * Web diecézy dcza.sk (krok_navrh_farnosti.md § 20). Na dcza.sk sem middleware prepisuje všetky nespoločné cesty.
- * Canonical = verejná cesta na dcza.sk (bez ?strana a pod.); stránka si ho môže prepísať (aktuality Kroku → mojkrok.sk).
+ * Bez headers() – stránky sa cachujú (ISR). Canonical si každá stránka nastaví sama (verejná cesta bez /dcza),
+ * aktuality Kroku ho smerujú na mojkrok.sk.
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const path = await getPublicPath()
-  return {
-    metadataBase: new URL(siteBaseUrl('dcza')),
-    title: { default: 'Žilinská diecéza – Rímskokatolícka cirkev', template: '%s | Žilinská diecéza' },
-    description: 'Rímskokatolícka cirkev – Žilinská diecéza: aktuality, kalendár akcií, biskup, kúria, farnosti a kňazi.',
-    icons: { icon: '/dcza/erb-240.png' },
-    alternates: { canonical: path },
-    openGraph: { siteName: 'Žilinská diecéza', locale: 'sk_SK', type: 'website', url: path },
-  }
+/** Najdlhšia doba cache stránok pod týmto layoutom (ISR); platí najnižšia hodnota z layoutu a stránky. */
+export const revalidate = 300
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteBaseUrl('dcza')),
+  title: { default: 'Žilinská diecéza – Rímskokatolícka cirkev', template: '%s | Žilinská diecéza' },
+  description: 'Rímskokatolícka cirkev – Žilinská diecéza: aktuality, kalendár akcií, biskup, kúria, farnosti a kňazi.',
+  icons: { icon: '/dcza/erb-240.png' },
+  openGraph: { siteName: 'Žilinská diecéza', locale: 'sk_SK', type: 'website' },
 }
 
 export default async function DczaLayout({ children }: { children: React.ReactNode }) {

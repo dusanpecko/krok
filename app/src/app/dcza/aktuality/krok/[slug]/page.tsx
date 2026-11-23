@@ -9,7 +9,13 @@ import PostCard from '@/components/dcza/PostCard'
 import ShareButton from '@/components/parishes/ShareButton'
 import { protectEmails } from '@/lib/email-code'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+
+/** Prázdne = žiadna stránka pri builde, každá sa vyrenderuje pri prvej návšteve a cachuje (ISR). */
+export function generateStaticParams() {
+  return []
+}
 
 /** Aktualita Kroku zobrazená na dcza.sk (O74) – hlavná adresa pre vyhľadávače ostáva na mojkrok.sk. */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

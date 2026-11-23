@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { Loader2, Mail, Send } from 'lucide-react'
-import { reportClergyDataCorrection } from '@/app/(public)/knazska-zona/moje-udaje/actions'
+import { reportClergyDataCorrection } from '@/app/(shared)/knazska-zona/moje-udaje/actions'
 
 /** Nahlásenie opravy údajov – odošle správu na sekretariát (bez poštového programu). */
 export default function CorrectionForm() {

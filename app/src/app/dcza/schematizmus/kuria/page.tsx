@@ -4,8 +4,9 @@ import { listCuria, type CuriaBody } from '@/lib/diocese/schematizmus'
 import { BODY_KIND_LABEL, isPlainMember, type BodyKind } from '@/lib/diocese/bodies'
 import SchemaNav from '@/components/dcza/SchemaNav'
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata = {
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+export const metadata: Metadata = { alternates: { canonical: '/schematizmus/kuria' },
   title: 'Schematizmus – kúria, rady a komisie',
   description: 'Biskupský úrad Žilina – biskup, generálny vikár, úrady, tribunál, rady, komisie a pastoračné úseky.',
 }

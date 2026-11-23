@@ -3,26 +3,16 @@ import Footer from '@/components/public/Footer'
 import DczaFloatingLink from '@/components/public/DczaFloatingLink'
 import KrokAnnouncement from '@/components/public/KrokAnnouncement'
 import { KROK_ANNOUNCEMENT } from '@/lib/krok/announcement'
-import DczaHeader from '@/components/dcza/DczaHeader'
-import DczaFooter from '@/components/dcza/DczaFooter'
-import { getSite } from '@/lib/site-server'
-import { getPageTree } from '@/lib/diocese/public'
-import { mainNav } from '@/lib/diocese/nav'
-import { listCuriaLinks } from '@/lib/diocese/schematizmus'
 
-export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  // spoločné stránky (farnosti, kňazská zóna, prihlásenie) na dcza.sk v hlavičke diecézy (§ 20)
-  if ((await getSite()) === 'dcza') {
-    const nav = mainNav(await getPageTree(), await listCuriaLinks())
-    return (
-      <div className="flex flex-col min-h-screen">
-        <DczaHeader nav={nav} />
-        {/* hlavička diecézy je v toku stránky (tmavá lišta odíde hore, menu je lepkavé) – stránky s -mt-24 ho na dcza.sk nesmú použiť */}
-        <main className="grow">{children}</main>
-        <DczaFooter nav={nav} />
-      </div>
-    )
-  }
+/**
+ * Stránky len pre mojkrok.sk – na dcza.sk ich middleware prepisuje na /dcza/…, takže tento layout
+ * nemusí zisťovať web z hlavičiek (headers() by vypol cache všetkých stránok pod ním).
+ * Stránky spoločné pre oba weby (farnosti, kňazská zóna, profil) sú v skupine (shared).
+ * revalidate = najdlhšia doba cache stránok pod layoutom (ISR); platí najnižšia hodnota z layoutu a stránky.
+ */
+export const revalidate = 300
+
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
       <NavBar />

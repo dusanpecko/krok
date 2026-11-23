@@ -12,7 +12,8 @@ import {
   ExternalLink,
 } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Podporené projekty | KROK – Pastoračný fond Žilinskej diecézy',

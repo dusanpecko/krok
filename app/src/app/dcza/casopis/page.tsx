@@ -10,8 +10,9 @@ const MAGAZINE_LINKS = [
   { href: 'https://www.instagram.com/nasazilinskadieceza', label: 'Instagram', icon: <SocialIcon kind="instagram" size={17} /> },
 ]
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Časopis Naša Žilinská diecéza' }
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+export const metadata: Metadata = { alternates: { canonical: '/casopis' }, title: 'Časopis Naša Žilinská diecéza' }
 
 export default async function DczaMagazine() {
   const issues = await getMagazine(60)

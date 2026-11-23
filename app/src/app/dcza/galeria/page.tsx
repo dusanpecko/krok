@@ -5,7 +5,7 @@ import { getDioceseAlbums } from '@/lib/diocese/gallery'
 import AlbumTile from '@/components/dcza/AlbumTile'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Galéria' }
+export const metadata: Metadata = { alternates: { canonical: '/galeria' }, title: 'Galéria' }
 
 const PER_PAGE = 24
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { completeProfile } from '@/app/(public)/profil/actions'
+import { completeProfile } from '@/app/(shared)/profil/actions'
 import { X, Phone, MapPin, Landmark, Heart, Loader2, Check } from 'lucide-react'
 
 interface Option { id: string; name: string }

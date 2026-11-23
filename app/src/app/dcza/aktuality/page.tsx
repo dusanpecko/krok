@@ -4,7 +4,7 @@ import { getCategories, getPosts } from '@/lib/diocese/public'
 import PostCard from '@/components/dcza/PostCard'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Aktuality' }
+export const metadata: Metadata = { alternates: { canonical: '/aktuality' }, title: 'Aktuality' }
 
 const PER_PAGE = 12
 

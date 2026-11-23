@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Upload } from 'lucide-react'
-import { submitCelebretPhoto } from '@/app/(public)/knazska-zona/celebret/actions'
+import { submitCelebretPhoto } from '@/app/(shared)/knazska-zona/celebret/actions'
 import { shrinkForUpload } from '@/lib/shrink-image'
 
 /** Kňaz pošle novú fotku na celebret (schvaľuje kúria). */

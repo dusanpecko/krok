@@ -4,7 +4,7 @@ import { BISHOP_BENO, BISHOP_GALIS, withBishopPages } from '@/lib/diocese/bishop
 import DczaPageFrame from '@/components/dcza/DczaPageFrame'
 import BishopProfile from '@/components/dcza/BishopProfile'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: '/o-nas/biskup/tomas-galis' },
   title: 'Mons. Tomáš Galis',
   description: 'Mons. Tomáš Galis – apoštolský administrátor Žilinskej diecézy, prvý žilinský diecézny biskup (2008 – 2026).',
 }

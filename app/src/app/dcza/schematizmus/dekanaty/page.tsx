@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { listPublicDeaneries } from '@/lib/diocese/schematizmus'
 import SchemaNav from '@/components/dcza/SchemaNav'
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Schematizmus – dekanáty' }
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+export const metadata: Metadata = { alternates: { canonical: '/schematizmus/dekanaty' }, title: 'Schematizmus – dekanáty' }
 
 export default async function DeaneriesPage() {
   const deaneries = await listPublicDeaneries()

@@ -8,7 +8,13 @@ import { AWARDS_PAGE_PATH, getPublicAwards } from '@/lib/diocese/awards'
 import AwardsList from '@/components/dcza/AwardsList'
 import DczaPageFrame from '@/components/dcza/DczaPageFrame'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+
+/** Prázdne = žiadna stránka pri builde, každá sa vyrenderuje pri prvej návšteve a cachuje (ISR). */
+export function generateStaticParams() {
+  return []
+}
 
 interface Props {
   params: Promise<{ path: string[] }>
@@ -18,7 +24,7 @@ const joinPath = (parts: string[]) => parts.map((p) => decodeURIComponent(p)).jo
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await getPage(joinPath((await params).path))
-  return page ? { title: page.title, description: page.excerpt ?? undefined } : { title: 'Stránka nenájdená' }
+  return page ? { title: page.title, description: page.excerpt ?? undefined, alternates: { canonical: `/${joinPath((await params).path)}` } } : { title: 'Stránka nenájdená' }
 }
 
 /** Obsahové stránky webu diecézy (strom z bety) + presmerovania starých adries živého webu (/sk/…). */

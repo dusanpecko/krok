@@ -6,7 +6,7 @@ import {
   CheckCircle2, Mail, MapPin,
   Landmark, LogOut
 } from 'lucide-react'
-import { updateProfile } from '@/app/(public)/profil/actions'
+import { updateProfile } from '@/app/(shared)/profil/actions'
 import { NO_PARISH } from '@/lib/parishes/constants'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useSupabase } from '@/components/providers/SupabaseProvider'

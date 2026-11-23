@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { donorNeedsOnboarding, getCurrentDonor, getDonorDonations } from './actions'
-import { getRegistrationFormOptions } from '../registracia/actions'
-import { getMyOnlineSubscriptions } from '../platby/actions'
+import { getRegistrationFormOptions } from '@/app/(public)/registracia/actions'
+import { getMyOnlineSubscriptions } from '@/app/(public)/platby/actions'
 import ProfileContent from '@/components/public/ProfileContent'
 import ProfileCompletionModal from '@/components/public/ProfileCompletionModal'
 

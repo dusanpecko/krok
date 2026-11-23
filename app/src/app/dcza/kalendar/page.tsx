@@ -3,8 +3,9 @@ import { getCalendarEvents, getPastEvents, getUpcomingEvents } from '@/lib/dioce
 import MonthCalendar from '@/components/dcza/MonthCalendar'
 import EventItem from '@/components/dcza/EventItem'
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Kalendár akcií' }
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+export const metadata: Metadata = { alternates: { canonical: '/kalendar' }, title: 'Kalendár akcií' }
 
 export default async function DczaCalendar() {
   const [upcoming, past, all] = await Promise.all([getUpcomingEvents(50), getPastEvents(24), getCalendarEvents()])

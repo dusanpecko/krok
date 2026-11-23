@@ -9,8 +9,12 @@ import { longDate } from '@/lib/diocese/format'
 import PostCard from '@/components/dcza/PostCard'
 import EventItem from '@/components/dcza/EventItem'
 import LectioTodaySection from '@/components/public/LectioTodaySection'
+import type { Metadata } from 'next'
 
-export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { alternates: { canonical: '/' } }
+
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
 
 /** Úvod webu diecézy dcza.sk (§ 20, D2). */
 export default async function DczaHome() {

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getUserAccess } from '@/lib/auth'
 import { NextResponse } from 'next/server'
-import { donorNeedsOnboarding, getCurrentDonor } from '@/app/(public)/profil/actions'
+import { donorNeedsOnboarding, getCurrentDonor } from '@/app/(shared)/profil/actions'
 import { getMyParishes } from '@/lib/parishes/access'
 import { hasZoneAccess } from '@/lib/clergy-zone/access'
 

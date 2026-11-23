@@ -2,7 +2,8 @@ import { Metadata } from 'next'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { FileText, FileType2, Download, Palette, BookOpen, ExternalLink } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Na stiahnutie | KROK – Pastoračný fond Žilinskej diecézy',

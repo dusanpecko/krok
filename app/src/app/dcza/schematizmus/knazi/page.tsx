@@ -4,8 +4,9 @@ import { dioceseDb } from '@/lib/diocese/public'
 import ClergyDirectory from '@/components/dcza/ClergyDirectory'
 import SchemaNav from '@/components/dcza/SchemaNav'
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Schematizmus – kňazi a diakoni', description: 'Kňazi a diakoni Žilinskej diecézy – pôsobenie, dekanát a farnosť.' }
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+export const metadata: Metadata = { alternates: { canonical: '/schematizmus/knazi' }, title: 'Schematizmus – kňazi a diakoni', description: 'Kňazi a diakoni Žilinskej diecézy – pôsobenie, dekanát a farnosť.' }
 
 export default async function ClergyListPage() {
   const [clergy, { data: deaneries }] = await Promise.all([listPublicClergy(), dioceseDb().from('deaneries').select('id, name').order('name')])

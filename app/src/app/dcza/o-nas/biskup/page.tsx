@@ -4,7 +4,7 @@ import { BISHOP_BENO, BISHOP_GALIS, withBishopPages } from '@/lib/diocese/bishop
 import DczaPageFrame from '@/components/dcza/DczaPageFrame'
 import BishopProfile from '@/components/dcza/BishopProfile'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: '/o-nas/biskup' },
   title: 'Biskup – Mons. Peter Beňo',
   description: 'Mons. Peter Beňo – žilinský diecézny biskup, menovaný 10. novembra 2026. Životopis a pôsobenie.',
 }

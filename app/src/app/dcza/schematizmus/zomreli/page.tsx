@@ -3,8 +3,9 @@ import { listDeceasedClergy } from '@/lib/diocese/schematizmus'
 import { shortDate } from '@/lib/diocese/format'
 import SchemaNav from '@/components/dcza/SchemaNav'
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Schematizmus – zomrelí kňazi' }
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+export const metadata: Metadata = { alternates: { canonical: '/schematizmus/zomreli' }, title: 'Schematizmus – zomrelí kňazi' }
 
 export default async function DeceasedPage() {
   const list = await listDeceasedClergy()

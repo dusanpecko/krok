@@ -2,7 +2,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { Calendar, Volume2, ArrowRight, Newspaper, Pin } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka
+export const revalidate = 300
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

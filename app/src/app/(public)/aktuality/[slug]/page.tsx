@@ -4,7 +4,13 @@ import Link from 'next/link'
 import { Calendar, Volume2, ArrowLeft } from 'lucide-react'
 import { protectEmails } from '@/lib/email-code'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka
+export const revalidate = 300
+
+/** Prázdne = žiadna stránka pri builde, každá sa vyrenderuje pri prvej návšteve a cachuje (ISR). */
+export function generateStaticParams() {
+  return []
+}
 
 interface PageProps {
   params: Promise<{

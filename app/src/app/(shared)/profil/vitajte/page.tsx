@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { donorNeedsOnboarding, getCurrentDonor } from '../actions'
-import { getParishIdBySlug, getRegistrationFormOptions } from '../../registracia/actions'
+import { getParishIdBySlug, getRegistrationFormOptions } from '@/app/(public)/registracia/actions'
 import OnboardingForm from './OnboardingForm'
 
 export const metadata: Metadata = {

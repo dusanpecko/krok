@@ -4,9 +4,10 @@ import { getPublicContacts } from '@/lib/diocese/contacts'
 import DczaPageFrame from '@/components/dcza/DczaPageFrame'
 import ContactsList from '@/components/dcza/ContactsList'
 
-export const dynamic = 'force-dynamic'
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: '/kontakty' },
   title: 'Kontakty',
   description: 'Kontakty Biskupského úradu v Žiline – kúria, tribunál, úrady, čas vyhradený pre verejnosť.',
 }

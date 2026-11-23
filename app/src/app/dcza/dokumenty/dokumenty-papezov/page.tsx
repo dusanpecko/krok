@@ -5,8 +5,9 @@ import { dioceseDb } from '@/lib/diocese/public'
 import { listDocuments, type DioceseDocument } from '@/lib/diocese/documents'
 import { shortDate } from '@/lib/diocese/format'
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Dokumenty pápežov' }
+// ISR – obsah sa mení zriedka; admin po uložení volá revalidatePath('/dcza', 'layout')
+export const revalidate = 300
+export const metadata: Metadata = { alternates: { canonical: '/dokumenty/dokumenty-papezov' }, title: 'Dokumenty pápežov' }
 
 /** Dokumenty pápežov – zo kbs.sk (otvárajú sa tam) + vlastné dokumenty diecézy (O77). */
 export default async function PapalDocuments() {

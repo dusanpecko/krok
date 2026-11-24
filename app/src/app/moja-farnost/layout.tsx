@@ -1,12 +1,16 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { siteIconsMetadata } from '@/lib/site-server'
 import { LifeBuoy } from 'lucide-react'
 import ParishZoneLogout from '@/components/parish-zone/ParishZoneLogout'
 
-export const metadata: Metadata = {
-  title: 'Moja farnosť | KROK – Pastoračný fond Žilinskej diecézy',
-  robots: { index: false },
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Moja farnosť | KROK – Pastoračný fond Žilinskej diecézy',
+    robots: { index: false },
+    ...(await siteIconsMetadata()),
+  }
 }
 
 /** Zóna farnosti – mimo /admin, jednoduché rozloženie (návrh farností § 6.2). */

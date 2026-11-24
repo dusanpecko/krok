@@ -1,5 +1,6 @@
 import { headers } from 'next/headers'
-import { PATH_HEADER, SITE_HEADER, type SiteKey } from './site'
+import type { Metadata } from 'next'
+import { PATH_HEADER, SITE_HEADER, siteIcons, type SiteKey } from './site'
 import { getBaseUrl } from '@/lib/mollie/client'
 
 /** Na ktorom webe sa práve vykresľuje (nastavuje middleware). */
@@ -30,4 +31,9 @@ export function parishCanonicalSite(): SiteKey {
 export async function parishSupportHref(slug: string): Promise<string> {
   const path = `/registracia?farnost=${encodeURIComponent(slug)}`
   return (await getSite()) === 'dcza' ? `${siteBaseUrl('mojkrok')}${path}` : path
+}
+
+/** Ikona prehliadača podľa domény – pre spoločné stránky (admin, prihlásenie, moja farnosť). */
+export async function siteIconsMetadata(): Promise<Metadata> {
+  return { icons: siteIcons(await getSite()) }
 }

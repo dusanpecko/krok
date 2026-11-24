@@ -5,7 +5,7 @@ import ParishBoxZoneTab from './ParishBoxZoneTab'
 import { helpHref } from '@/lib/help-links'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { BarChart3, BookOpen, CalendarClock, CircleHelp, FileText, Images, LayoutDashboard, LifeBuoy, MapPinned, Newspaper, Palette, UserRound, Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft, Globe, Upload, X } from 'lucide-react'
+import { BarChart3, BookOpen, CalendarClock, CircleHelp, FileText, Images, LayoutDashboard, LifeBuoy, MapPinned, Newspaper, Palette, UserRound, Church, Loader2, Save, Send, Clock, CheckCircle2, XCircle, Info, Eye, ArrowLeft, Globe, Upload, X, Users } from 'lucide-react'
 import {
   saveMySchedule,
   submitParishChange,
@@ -17,6 +17,7 @@ import ParishScheduleTab from '@/components/admin/parishes/ParishScheduleTab'
 import ParishPostsTab from '@/components/parish-zone/ParishPostsTab'
 import ParishSacramentsTab from '@/components/parish-zone/ParishSacramentsTab'
 import ParishGalleryTab from '@/components/parish-zone/ParishGalleryTab'
+import ParishTeamTab from '@/components/parish-zone/ParishTeamTab'
 import { deleteMyAlbum, deleteMyPhoto, getMyGallery, listMyAlbumOptions, saveMyAlbum, updateMyPhotos, uploadMyPhoto } from '@/app/moja-farnost/gallery-actions'
 import { getMyParishTraffic, deleteMyPost, setMyWebVisibility, saveMyPost, saveMySacrament, saveMySocialLinks, uploadMyEditorImage, uploadMyParishFile } from '@/app/moja-farnost/web-actions'
 import SocialLinksEditor from '@/components/parishes/SocialLinksEditor'
@@ -27,7 +28,7 @@ import type { ParishClergyEntry } from '@/lib/parishes/parish-clergy'
 import { clergyName } from '@/lib/parishes/format'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, Field, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
-type TabKey = 'overview' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'gallery' | 'sacraments' | 'population' | 'clergy'
+type TabKey = 'overview' | 'traffic' | 'official' | 'presentation' | 'schedule' | 'posts' | 'gallery' | 'sacraments' | 'population' | 'clergy' | 'team'
 
 const POST_ACTIONS = { save: saveMyPost, remove: deleteMyPost, upload: uploadMyParishFile, uploadEditorImage: uploadMyEditorImage, listAlbums: listMyAlbumOptions }
 const GALLERY_ACTIONS = { load: getMyGallery, saveAlbum: saveMyAlbum, upload: uploadMyPhoto, updatePhotos: updateMyPhotos, deletePhoto: deleteMyPhoto, deleteAlbum: deleteMyAlbum }
@@ -47,6 +48,7 @@ const TAB_HELP: Record<TabKey, string> = {
   official: 'uradne-udaje',
   population: 'obce-a-statistika',
   clergy: 'knazi',
+  team: 'ludia-s-pristupom',
 }
 
 type TabDef = { key: TabKey; label: string; icon: ComponentType<{ size?: number; className?: string }> }
@@ -77,6 +79,7 @@ function tabGroups(isAdmin: boolean): { title: string; tabs: TabDef[] }[] {
         { key: 'official', label: 'Úradné údaje', icon: FileText },
         { key: 'population', label: 'Obce a štatistika', icon: MapPinned },
         { key: 'clergy', label: 'Kňazi', icon: UserRound },
+        ...(isAdmin ? [{ key: 'team' as const, label: 'Ľudia s prístupom', icon: Users }] : []),
       ],
     },
   ]
@@ -210,6 +213,7 @@ export default function ParishZoneView({ view }: { view: MyParishView }) {
       {tab === 'official' && <OfficialTab view={view} />}
       {tab === 'population' && <PopulationTab view={view} />}
       {tab === 'clergy' && <ClergyTab clergy={view.clergy} />}
+      {tab === 'team' && isAdmin && <ParishTeamTab parishId={p.id} />}
         </div>
       </div>
     </div>

@@ -4,10 +4,13 @@ import SupabaseProvider from "@/components/providers/SupabaseProvider";
 import { UMAMI_ENABLED, UMAMI_WEBSITE_ID } from "@/lib/analytics";
 import Script from "next/script";
 import EmailDecoder from "@/components/EmailDecoder";
+import { siteIcons } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "KROK – Pastoračný fond Žilinskej diecézy",
   description: "Platforma pre správu pastoračného fondu KROK – darcovia, projekty, finančné prehľady.",
+  // predvolene Krok; dcza.sk, spoločné stránky a farnosti si ikonu prepíšu podľa webu
+  icons: siteIcons("mojkrok"),
 };
 
 export default function RootLayout({

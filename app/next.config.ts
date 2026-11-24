@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
     if (process.env.VERCEL_ENV === 'production') return []
     return [{ source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
   },
+  // /favicon.ico (prehliadače a Google si ho pýtajú aj bez odkazu v stránke) – erb na dcza.sk, logo Kroku inde
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: '/favicon.ico', has: [{ type: 'host', value: '(.*\\.)?dcza\\.(sk|dev)' }], destination: '/icons/dcza.ico' },
+        { source: '/favicon.ico', destination: '/icons/krok.ico' },
+      ],
+      afterFiles: [],
+      fallback: [],
+    }
+  },
   async redirects() {
     return [
       { source: '/grantove-vyzvy', destination: '/vyzvy', permanent: true },

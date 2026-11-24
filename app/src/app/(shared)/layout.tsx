@@ -5,10 +5,17 @@ import KrokAnnouncement from '@/components/public/KrokAnnouncement'
 import { KROK_ANNOUNCEMENT } from '@/lib/krok/announcement'
 import DczaHeader from '@/components/dcza/DczaHeader'
 import DczaFooter from '@/components/dcza/DczaFooter'
+import type { Metadata } from 'next'
 import { getSite } from '@/lib/site-server'
+import { siteIcons } from '@/lib/site'
 import { getPageTree } from '@/lib/diocese/public'
 import { mainNav } from '@/lib/diocese/nav'
 import { listCuriaLinks } from '@/lib/diocese/schematizmus'
+
+/** Ikona prehliadača podľa domény (na dcza.sk erb). */
+export async function generateMetadata(): Promise<Metadata> {
+  return { icons: siteIcons(await getSite()) }
+}
 
 /**
  * Stránky spoločné pre mojkrok.sk aj dcza.sk (farnosti, kňazská zóna, profil) – vzhľad podľa domény,

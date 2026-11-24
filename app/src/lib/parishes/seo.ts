@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { PublicParish, PublicPost } from './public'
 import { hasParishSchedule, officeHoursFor, parishDisplayName } from './format'
 import { getSite, parishCanonicalSite, siteBaseUrl } from '@/lib/site-server'
+import { siteIcons } from '@/lib/site'
 
 /** Hlavná adresa stránok farností – mojkrok.sk, po spustení dcza.sk dcza.sk (O72). */
 const parishBase = () => siteBaseUrl(parishCanonicalSite())
@@ -25,8 +26,10 @@ export async function parishMetadata(parish: PublicParish, opts: { title?: strin
   const description = opts.path ? summary : `${summary.trim()}${villagesText}`
   const url = `${parishBase()}/farnosti/${parish.slug}${opts.path ?? ''}`
   const image = opts.image ?? parish.image_url
+  const site = await getSite()
   return {
-    title: `${title} | ${(await getSite()) === 'dcza' ? 'Žilinská diecéza' : 'KROK'}`,
+    title: `${title} | ${site === 'dcza' ? 'Žilinská diecéza' : 'KROK'}`,
+    icons: siteIcons(site),
     description,
     alternates: { canonical: url },
     robots: parish.preview || parish.is_demo ? { index: false, follow: false } : undefined,

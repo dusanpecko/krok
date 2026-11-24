@@ -58,3 +58,16 @@ export function isCelebretHost(host: string | null | undefined): boolean {
   const h = (host ?? '').toLowerCase().split(':')[0]
   return siteBases().some(({ base, site }) => site === 'dcza' && h === `celebret.${base}`)
 }
+
+/** Ikony prehliadača (favicon) podľa webu – súbory v public/icons (krok = logo1, dcza = erb). */
+export function siteIcons(site: SiteKey) {
+  const k = site === 'dcza' ? 'dcza' : 'krok'
+  return {
+    icon: [
+      { url: `/icons/${k}.ico`, sizes: 'any' },
+      { url: `/icons/${k}-32.png`, type: 'image/png', sizes: '32x32' },
+      { url: `/icons/${k}-192.png`, type: 'image/png', sizes: '192x192' },
+    ],
+    apple: { url: `/icons/${k}-apple.png`, sizes: '180x180' },
+  }
+}

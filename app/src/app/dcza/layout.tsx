@@ -8,6 +8,7 @@ import ScrollProgress from '@/components/ScrollProgress'
 import DczaAnnouncement from '@/components/dcza/DczaAnnouncement'
 import { DCZA_ANNOUNCEMENT } from '@/lib/diocese/announcement'
 import { siteBaseUrl } from '@/lib/site-server'
+import { siteIcons } from '@/lib/site'
 
 /**
  * Web diecézy dcza.sk (krok_navrh_farnosti.md § 20). Na dcza.sk sem middleware prepisuje všetky nespoločné cesty.
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteBaseUrl('dcza')),
   title: { default: 'Žilinská diecéza – Rímskokatolícka cirkev', template: '%s | Žilinská diecéza' },
   description: 'Rímskokatolícka cirkev – Žilinská diecéza: aktuality, kalendár akcií, biskup, kúria, farnosti a kňazi.',
-  icons: { icon: '/dcza/erb-240.png' },
+  icons: siteIcons('dcza'),
   openGraph: { siteName: 'Žilinská diecéza', locale: 'sk_SK', type: 'website' },
 }
 

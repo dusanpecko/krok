@@ -23,7 +23,7 @@ const HTML = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Žilinská diecéza – pripravujeme nový web</title>
 <meta name="description" content="Rímskokatolícka cirkev – Žilinská diecéza. Pripravujeme nový web diecézy.">
-<link rel="icon" href="/dcza/erb-240.png">
+<link rel="icon" href="/icons/dcza.ico" sizes="any"><link rel="icon" href="/icons/dcza-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/icons/dcza-apple.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">

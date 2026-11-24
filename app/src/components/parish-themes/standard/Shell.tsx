@@ -33,8 +33,8 @@ export default async function Shell({
   const krokBase = dcza ? siteBaseUrl('mojkrok') : ''
   const supportHref = await parishSupportHref(parish.slug)
   const hasOffice = officeHoursFor(parish).items.length > 0
-  // základná stránka (nezverejnená): bez oznamov, aktualít a sviatostí, bohoslužby len ak sú vyplnené
-  const hasSchedule = !parish.basic || hasParishSchedule(parish)
+  // základná stránka (nezverejnená): bez oznamov, aktualít a sviatostí; bohoslužby len ak sú vyplnené (aj na zverejnenej)
+  const hasSchedule = hasParishSchedule(parish)
   const items: ParishNavItem[] = [
     ...(hasSchedule ? [{ label: 'Bohoslužby', href: `${base}#bohosluzby` }] : []),
     ...(hasOffice ? [{ label: 'Úradné hodiny', href: `${base}#uradne-hodiny` }] : []),

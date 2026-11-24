@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { Church, Inbox } from 'lucide-react'
 import { countPendingChangeRequests, getDeaneryOptions, getParishesForAdmin } from './actions'
 import ParishTable from '@/components/admin/parishes/ParishTable'
-import ParishAccessSync from '@/components/admin/parishes/ParishAccessSync'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +24,6 @@ export default async function ParishesAdminPage() {
           Register farností a duchovných správ Žilinskej diecézy – úradné údaje, obce a štatistika veriacich, bohoslužby a kňazi.
         </p>
       </div>
-      <ParishAccessSync />
       <ParishTable parishes={parishes} deaneries={deaneries} />
     </div>
   )

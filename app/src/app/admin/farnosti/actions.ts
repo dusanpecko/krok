@@ -9,7 +9,6 @@ import { logParishChange, writeSchedule, writeVillages } from '@/lib/parishes/wr
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS, normalizeParishValue } from '@/lib/parishes/fields'
 import { generateEmailLink } from '@/lib/auth/email-links'
 import { siteBaseUrl } from '@/lib/site-server'
-import { planClergyParishAccess, syncClergyParishAccess, type ClergyAccessPlan, type SyncResult } from '@/lib/parishes/clergy-access'
 import { sendTemplateEmail } from '@/lib/email/send'
 import {
   PARISH_EDITABLE_FIELDS,
@@ -391,22 +390,6 @@ export async function revokeParishAccess(parishId: string, userId: string): Prom
   await logParishChange(admin, parishId, user.id, 'access', 'admin_update', { revoked: [u?.user?.email ?? userId, null] })
   revalidatePath(`/admin/farnosti/${parishId}`)
   return { success: true }
-}
-
-// ------------------------------------------------------------ prístupy podľa schematizmu (069)
-
-/** Náhľad: komu by synchronizácia so schematizmom pridala / odobrala prístup. Nič nemení. */
-export async function planParishAccessFromClergy(): Promise<ClergyAccessPlan[]> {
-  await requirePermission(PERM)
-  return planClergyParishAccess(db())
-}
-
-/** Synchronizácia jedného kňaza (hromadné spustenie volá postupne pre každého z náhľadu – priebeh v admine). */
-export async function syncParishAccessForClergy(clergyId: string, sendEmail: boolean): Promise<Result<{ result: SyncResult | null }>> {
-  const { user } = await requirePermission(PERM)
-  const result = await syncClergyParishAccess(db(), clergyId, { sendEmail, actorId: user.id })
-  revalidatePath('/admin/farnosti')
-  return { success: true, result }
 }
 
 // ------------------------------------------------------------ návrhy zmien od farností (§ 3.6)

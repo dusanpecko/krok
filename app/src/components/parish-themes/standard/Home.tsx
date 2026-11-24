@@ -28,8 +28,8 @@ export default async function Home({ parish, announcements, news, events, sacram
   const address = [parish.street, [parish.postal_code, parish.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   const filials = parish.villages.filter((v) => !v.is_seat)
   const hasFeasts = Boolean(feast || parish.feast_day_note || adoration || parish.adoration_note)
-  // základná stránka: bohoslužby len ak ich farnosť má vyplnené
-  const showSchedule = !parish.basic || hasParishSchedule(parish)
+  // bohoslužby len ak ich farnosť má vyplnené (prázdny rozpis sa nezobrazuje)
+  const showSchedule = hasParishSchedule(parish)
 
   return (
     <Shell parish={parish} active="home" hideBackdrop={churchPhotos.length > 0}>
@@ -48,7 +48,16 @@ export default async function Home({ parish, announcements, news, events, sacram
               <p className="text-lg text-ink/85 leading-relaxed whitespace-pre-line" dangerouslySetInnerHTML={{ __html: protectText(parish.intro) }} />
             ) : parish.basic ? null : (
               <p className="text-lg text-ink/85 leading-relaxed">
-                Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'}. Nájdete tu rozpis bohoslužieb, farské oznamy a kontakt na farský úrad.
+                Vitajte na stránke {parish.kind === 'chaplaincy' ? 'duchovnej správy' : 'farnosti'} v Žilinskej diecéze.
+                {parish.website && (
+                  <>
+                    {' '}Viac nájdete aj na webovej stránke farnosti{' '}
+                    <a href={parish.website.startsWith('http') ? parish.website : `https://${parish.website}`} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline break-all">
+                      {parish.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                    </a>
+                    .
+                  </>
+                )}
               </p>
             )}
           </div>

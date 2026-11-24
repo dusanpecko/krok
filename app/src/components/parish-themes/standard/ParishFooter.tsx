@@ -34,7 +34,7 @@ export default function ParishFooter({ parish, krokBase = '' }: { parish: Public
         <div>
           <p className="text-xs font-black uppercase tracking-widest text-white/80 mb-3">Farnosť</p>
           <ul className="space-y-2">
-            {(!parish.basic || hasParishSchedule(parish)) && <li><a href={`${base}#bohosluzby`} className="hover:text-gold-bright">Bohoslužby</a></li>}
+            {hasParishSchedule(parish) && <li><a href={`${base}#bohosluzby`} className="hover:text-gold-bright">Bohoslužby</a></li>}
             {!parish.basic && (
               <>
                 <li><Link href={`${base}/oznamy`} className="hover:text-gold-bright">Farské oznamy</Link></li>

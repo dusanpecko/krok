@@ -121,8 +121,8 @@ export async function addMyParishEditor(parishId: string, input: { email: string
       const { data: existing } = await db.from('parish_users').select('role').eq('parish_id', parishId).eq('user_id', target.id).maybeSingle()
       if (existing) return { success: false, error: 'Táto adresa už k farnosti prístup má.' }
     } else {
-      // adresa @dcza.sk je overená Google Workspace-om; iné si potvrdia aktiváciou z e-mailu
-      const { data, error } = await db.auth.admin.createUser({ email, email_confirm: isWorkspaceEmail(email) })
+      // potvrdený hneď: bez hesla sa doň dostane len majiteľ schránky (odkaz z e-mailu / Google) a Google prihlásenie sa k nemu pripojí
+      const { data, error } = await db.auth.admin.createUser({ email, email_confirm: true })
       if (error || !data?.user) return { success: false, error: `Účet sa nepodarilo založiť: ${error?.message ?? 'neznáma chyba'}` }
       target = data.user
     }

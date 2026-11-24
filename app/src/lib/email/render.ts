@@ -81,6 +81,11 @@ export const EMAIL_VARIABLE_HELP: Record<string, string> = {
   event_when: 'Dátum a miesto podujatia',
   rsvp_url: 'Osobný odkaz na prihlášku (aj na úpravu odpovede)',
   answers_html: 'Zhrnutie odpovedí z prihlášky – vložte ako {{{answers_html}}}',
+  parishes: 'Farnosti, ku ktorým kňaz dostal prístup (podľa schematizmu)',
+  parishes_added: 'Farnosti s novým prístupom – blok sa zobrazí, len ak nejaké sú',
+  parishes_removed: 'Farnosti, ku ktorým prístup zanikol – blok sa zobrazí, len ak nejaké sú',
+  role_label: 'Rola v správe farnosti (správca farnosti / editor stránky farnosti)',
+  login_url: 'Odkaz na prihlásenie',
 }
 
 /** Ukážkové hodnoty pre náhľad a testovací e-mail. */
@@ -115,6 +120,11 @@ export const SAMPLE_EMAIL_VARIABLES: EmailVariables = {
   event_when: 'sobota 28. novembra 2026, Katedrála Najsvätejšej Trojice v Žiline',
   rsvp_url: 'https://www.dcza.sk/podujatia/ukazka?k=ukazka',
   answers_html: '<ul><li><strong>Účasť na sv. omši:</strong> ÁNO</li><li><strong>Účasť na obede:</strong> ÁNO</li></ul>',
+  parishes: 'Farnosť Nesluša',
+  parishes_added: 'Farnosť Rajec',
+  parishes_removed: 'Farnosť Nesluša',
+  role_label: 'správca farnosti',
+  login_url: 'https://www.dcza.sk/prihlasenie?redirect=%2Fmoja-farnost',
 }
 
 function escapeHtml(s: string): string {

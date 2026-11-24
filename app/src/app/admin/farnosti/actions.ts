@@ -7,8 +7,9 @@ import { generateSlug } from '@/lib/slug'
 import { loadParishDetail } from '@/lib/parishes/load'
 import { logParishChange, writeSchedule, writeVillages } from '@/lib/parishes/writes'
 import { FIELD_LABEL, PROTECTED_PARISH_FIELDS, normalizeParishValue } from '@/lib/parishes/fields'
-import { getBaseUrl } from '@/lib/mollie/client'
 import { generateEmailLink } from '@/lib/auth/email-links'
+import { siteBaseUrl } from '@/lib/site-server'
+import { planClergyParishAccess, syncClergyParishAccess, type ClergyAccessPlan, type SyncResult } from '@/lib/parishes/clergy-access'
 import { sendTemplateEmail } from '@/lib/email/send'
 import {
   PARISH_EDITABLE_FIELDS,
@@ -228,12 +229,14 @@ export interface ParishAccessRow {
   accepted_at: string | null
   /** účet sa už aspoň raz prihlásil (inak má zmysel poslať pozvánku znova) */
   activated: boolean
+  /** manual = pridelené ručne; clergy = zo schematizmu (mení sa samo podľa pôsobenia) */
+  source: 'manual' | 'clergy'
 }
 
 export async function getParishAccess(parishId: string): Promise<ParishAccessRow[]> {
   await requirePermission(PERM)
   const admin = db()
-  const { data } = await admin.from('parish_users').select('user_id, role, position, invited_at, accepted_at').eq('parish_id', parishId)
+  const { data } = await admin.from('parish_users').select('user_id, role, position, invited_at, accepted_at, source').eq('parish_id', parishId)
   const rows: ParishAccessRow[] = []
   for (const r of data ?? []) {
     const { data: u } = await admin.auth.admin.getUserById(r.user_id)
@@ -282,7 +285,8 @@ async function sendAccessEmail(
     has_box: !!box?.enabled,
   }
 
-  const loginUrl = `${getBaseUrl()}/prihlasenie?redirect=${encodeURIComponent('/moja-farnost')}`
+  // správa farnosti je na dcza.sk (rovnako ako kňazská zóna)
+  const loginUrl = `${siteBaseUrl('dcza')}/prihlasenie?redirect=${encodeURIComponent('/moja-farnost')}`
   // diecézna adresa (Google Workspace) – vždy len odkaz na prihlásenie cez Google, bez hesla
   if (isWorkspaceEmail(input.email)) {
     const res = await sendTemplateEmail({ templateKey: 'parish_access_google', to: input.email, variables: { ...common, login_url: loginUrl } })
@@ -299,7 +303,7 @@ async function sendAccessEmail(
   }
 
   // nepotvrdený účet → invite (Supabase ho povolí aj opakovane); potvrdený, no nikdy neprihlásený → magiclink
-  const link = await generateEmailLink(input.email, input.confirmed ? 'magiclink' : 'invite', ZONE_NEXT)
+  const link = await generateEmailLink(input.email, input.confirmed ? 'magiclink' : 'invite', ZONE_NEXT, siteBaseUrl('dcza'))
   if (!link.success) return { sent: false, error: link.error }
   const res = await sendTemplateEmail({ templateKey: 'parish_access_invite', to: input.email, variables: { ...common, invite_url: link.url } })
   return res.success ? { sent: true } : { sent: false, error: res.error }
@@ -387,6 +391,22 @@ export async function revokeParishAccess(parishId: string, userId: string): Prom
   await logParishChange(admin, parishId, user.id, 'access', 'admin_update', { revoked: [u?.user?.email ?? userId, null] })
   revalidatePath(`/admin/farnosti/${parishId}`)
   return { success: true }
+}
+
+// ------------------------------------------------------------ prístupy podľa schematizmu (069)
+
+/** Náhľad: komu by synchronizácia so schematizmom pridala / odobrala prístup. Nič nemení. */
+export async function planParishAccessFromClergy(): Promise<ClergyAccessPlan[]> {
+  await requirePermission(PERM)
+  return planClergyParishAccess(db())
+}
+
+/** Synchronizácia jedného kňaza (hromadné spustenie volá postupne pre každého z náhľadu – priebeh v admine). */
+export async function syncParishAccessForClergy(clergyId: string, sendEmail: boolean): Promise<Result<{ result: SyncResult | null }>> {
+  const { user } = await requirePermission(PERM)
+  const result = await syncClergyParishAccess(db(), clergyId, { sendEmail, actorId: user.id })
+  revalidatePath('/admin/farnosti')
+  return { success: true, result }
 }
 
 // ------------------------------------------------------------ návrhy zmien od farností (§ 3.6)

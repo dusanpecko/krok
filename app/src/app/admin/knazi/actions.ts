@@ -20,6 +20,7 @@ import {
   type ClergyStatus,
 } from '@/lib/clergy/types'
 import { assignmentRoleText, type BodyKind } from '@/lib/diocese/bodies'
+import { syncClergyParishAccess } from '@/lib/parishes/clergy-access'
 import { KIND_LABEL as ANNIVERSARY_LABEL, computeAnniversaries, dayLabel, type AnniversaryPerson } from '@/lib/clergy/anniversaries'
 
 /**
@@ -33,6 +34,19 @@ const MANAGE = 'manage_clergy'
 type Result<T = object> = ({ success: true } & T) | { success: false; error: string }
 
 const db = () => createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+/**
+ * Prístup do správy farnosti podľa schematizmu (069): po zmene pôsobenia alebo stavu kňaza sa prístup
+ * zosúladí a kňaz dostane e-mail. Chyba synchronizácie nezruší uloženie v registri.
+ */
+async function syncParishAccess(clergyId: string, actorId: string) {
+  try {
+    const r = await syncClergyParishAccess(db(), clergyId, { sendEmail: true, actorId })
+    if (r?.error) console.error(`[knazi] prístup do farnosti (${r.name}):`, r.error)
+  } catch (err) {
+    console.error('[knazi] synchronizácia prístupu do farnosti zlyhala:', errorMessage(err))
+  }
+}
 
 function errorMessage(err: unknown) {
   return err instanceof Error ? err.message : 'Neznáma chyba'
@@ -211,6 +225,7 @@ export async function updateClergy(id: string, patch: Record<string, unknown>): 
     const { error } = await client.from('clergy').update({ ...update, updated_at: new Date().toISOString() }).eq('id', id)
     if (error) return { success: false, error: error.code === '23505' ? 'Osobné číslo alebo verejná adresa už patrí inej osobe.' : error.message }
     await log(id, user.id, 'clergy', 'update', changes)
+    if ('status' in update || 'work_email' in update) await syncParishAccess(id, user.id)
     revalidatePath(`/admin/knazi/${id}`)
     revalidatePath('/admin/knazi')
     return { success: true }
@@ -331,6 +346,7 @@ export async function addAssignment(clergyId: string, input: AssignmentInput, en
     })
     if (error) return { success: false, error: error.message }
     await log(clergyId, user.id, 'assignment', 'create', { role, kind: input.kind, parish_id: input.parish_id ?? null, date_from: dateFrom, ended })
+    await syncParishAccess(clergyId, user.id)
     revalidatePath(`/admin/knazi/${clergyId}`)
     revalidatePath('/admin/knazi')
     return { success: true }
@@ -416,6 +432,7 @@ export async function updateAssignment(clergyId: string, assignmentId: string, i
     const changes: Record<string, { from: unknown; to: unknown }> = {}
     for (const [k, v] of Object.entries(patch)) if (k !== 'updated_at' && (before as Record<string, unknown>)[k] !== v) changes[k] = { from: (before as Record<string, unknown>)[k], to: v }
     await log(clergyId, user.id, 'assignment', 'update', { assignment_id: assignmentId, ...changes })
+    await syncParishAccess(clergyId, user.id)
     revalidatePath(`/admin/knazi/${clergyId}`)
     revalidatePath('/admin/knazi')
     return { success: true }
@@ -435,6 +452,7 @@ export async function endAssignment(clergyId: string, assignmentId: string, date
       .eq('clergy_id', clergyId)
     if (error) return { success: false, error: error.message }
     await log(clergyId, user.id, 'assignment', 'end', { assignment_id: assignmentId, date_to: dateTo })
+    await syncParishAccess(clergyId, user.id)
     revalidatePath(`/admin/knazi/${clergyId}`)
     revalidatePath('/admin/knazi')
     return { success: true }
@@ -452,6 +470,7 @@ export async function deleteAssignment(clergyId: string, assignmentId: string): 
     const { error } = await client.from('clergy_assignments').delete().eq('id', assignmentId)
     if (error) return { success: false, error: error.message }
     await log(clergyId, user.id, 'assignment', 'delete', a)
+    await syncParishAccess(clergyId, user.id)
     revalidatePath(`/admin/knazi/${clergyId}`)
     revalidatePath('/admin/knazi')
     return { success: true }

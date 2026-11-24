@@ -40,7 +40,8 @@ export default function ParishAccessTab({ parishId, access, requests, defaultEma
     })
   const revoke = (a: ParishAccessRow) =>
     startTransition(async () => {
-      if (!confirm(`Odobrať prístup pre ${a.email}?`)) return
+      const note = a.source === 'clergy' ? '\n\nPrístup je zo schematizmu – ak kňaz v schematizme stále pôsobí v tejto farnosti, pri ďalšej synchronizácii sa vráti. Natrvalo ho zmeníte úpravou pôsobenia v registri kňazov.' : ''
+      if (!confirm(`Odobrať prístup pre ${a.email}?${note}`)) return
       const res = await revokeParishAccess(parishId, a.user_id)
       if (res.success) router.refresh()
       else setMsg({ kind: 'error', text: res.error })
@@ -49,7 +50,7 @@ export default function ParishAccessTab({ parishId, access, requests, defaultEma
   return (
     <div className="space-y-6">
       <div className={`${cardCls} space-y-4`}>
-        <SectionTitle title="Prístupy do zóny farnosti" description="Účet farnosti vidí /moja-farnost: prehľad plnenia (bez mien darcov), bohoslužby, prezentáciu a návrhy zmien. Admin účet je práve jeden." />
+        <SectionTitle title="Prístupy do zóny farnosti" description="Účet farnosti vidí /moja-farnost: prehľad plnenia (bez mien darcov), bohoslužby, prezentáciu a návrhy zmien. Admin účet je práve jeden. Farár / administrátor (správca) a farský vikár (editor) dostanú prístup automaticky podľa schematizmu." />
         {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
         <table className="w-full text-sm">
           <thead>
@@ -61,7 +62,10 @@ export default function ParishAccessTab({ parishId, access, requests, defaultEma
             {access.map((a) => (
               <tr key={a.user_id}>
                 <td className="py-2 font-bold">{a.email ?? a.user_id}</td>
-                <td className="py-2">{a.role === 'admin' ? 'správca účtu' : 'editor'}</td>
+                <td className="py-2">
+                  {a.role === 'admin' ? 'správca účtu' : 'editor'}
+                  {a.source === 'clergy' && <span className="ml-2 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-black uppercase" title="Pridelené podľa schematizmu – pri zmene pôsobenia kňaza sa prístup zmení sám">schematizmus</span>}
+                </td>
                 <td className="py-2 text-gray-600">{a.position ?? '—'}</td>
                 <td className="py-2 font-mono text-xs">{a.invited_at ? new Date(a.invited_at).toLocaleDateString('sk-SK') : '—'}</td>
                 <td className="py-2 font-mono text-xs">{a.accepted_at ? new Date(a.accepted_at).toLocaleDateString('sk-SK') : <span className="text-amber-600 font-sans font-bold">zatiaľ nie</span>}</td>

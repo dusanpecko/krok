@@ -18,13 +18,17 @@ export interface ZoneMember {
   auth_user_id: string | null
   account_active: boolean
   invited_at: string | null
+  /** posledné prihlásenie účtu (Google / heslo) */
+  last_sign_in_at: string | null
+  /** posledná návšteva kňazskej zóny (068) */
+  last_seen_at: string | null
 }
 
 /** Kňazi a diakoni, ktorí patria do zóny, s e-mailom a stavom účtu. */
 export async function listZoneMembers(db: SupabaseClient): Promise<ZoneMember[]> {
   const { data } = await db
     .from('clergy')
-    .select('id, first_name, last_name, title_before, category, status, work_email, private_email, auth_user_id, zone_invited_at')
+    .select('id, first_name, last_name, title_before, category, status, work_email, private_email, auth_user_id, zone_invited_at, zone_last_seen_at')
     .in('category', ZONE_CATEGORIES as unknown as string[])
     .in('status', ZONE_STATUSES as unknown as string[])
     .order('last_name')
@@ -55,6 +59,8 @@ export async function listZoneMembers(db: SupabaseClient): Promise<ZoneMember[]>
       auth_user_id: r.auth_user_id,
       account_active: !!acc?.last_sign_in_at,
       invited_at: r.zone_invited_at,
+      last_sign_in_at: acc?.last_sign_in_at ?? null,
+      last_seen_at: r.zone_last_seen_at ?? null,
     }
   })
 }

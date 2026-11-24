@@ -23,13 +23,15 @@ export interface ZoneAccess {
   via: 'clergy' | 'parish' | 'staff'
 }
 
+const SEEN_THROTTLE_MS = 10 * 60 * 1000
+
 export async function getZoneAccess(user: User): Promise<ZoneAccess | null> {
   const db = zoneDb()
   const [access, { data: clergy }, { count: parishCount }] = await Promise.all([
     getUserAccess(user.id),
     db
       .from('clergy')
-      .select('first_name, last_name, title_before, category, status')
+      .select('id, first_name, last_name, title_before, category, status, zone_last_seen_at')
       .eq('auth_user_id', user.id)
       .in('category', ZONE_CATEGORIES as unknown as string[])
       .in('status', ZONE_STATUSES as unknown as string[])
@@ -40,6 +42,12 @@ export async function getZoneAccess(user: User): Promise<ZoneAccess | null> {
   const staff = canManage || access.permissions.includes('view_clergy')
   const emailName = (user.email ?? '').split('@')[0]
   if (clergy) {
+    // „naposledy v zóne“ pre admin – zápis najviac raz za 10 minút; chyba zápisu prístup neblokuje
+    const last = clergy.zone_last_seen_at ? new Date(clergy.zone_last_seen_at).getTime() : 0
+    if (Date.now() - last > SEEN_THROTTLE_MS) {
+      const { error } = await db.from('clergy').update({ zone_last_seen_at: new Date().toISOString() }).eq('id', clergy.id)
+      if (error) console.error('[knazska-zona] zone_last_seen_at:', error.message)
+    }
     return { user, db, canManage, via: 'clergy', name: [clergy.title_before, clergy.first_name, clergy.last_name].filter(Boolean).join(' ') }
   }
   if ((parishCount ?? 0) > 0) return { user, db, canManage, via: 'parish', name: emailName }

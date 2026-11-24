@@ -243,6 +243,17 @@ function CategoriesTab({ overview }: { overview: ZoneAdminOverview }) {
 // ------------------------------------------------------------ kňazi a prístupy
 
 type MemberState = 'active' | 'invited' | 'none' | 'no_email'
+/** „24. 11. 2026 9:25“ – dnes/včera slovom */
+function fmtDateTime(iso: string): string {
+  const d = new Date(iso)
+  const time = d.toLocaleTimeString('sk-SK', { hour: 'numeric', minute: '2-digit' })
+  const day = (x: Date) => x.toLocaleDateString('sk-SK')
+  const now = new Date()
+  if (day(d) === day(now)) return `dnes ${time}`
+  if (day(d) === day(new Date(now.getTime() - 864e5))) return `včera ${time}`
+  return `${fmtDate(iso)} ${time}`
+}
+
 const memberState = (m: ZoneMember): MemberState => (m.account_active ? 'active' : m.invited_at ? 'invited' : m.email ? 'none' : 'no_email')
 const STATE_LABEL: Record<MemberState, string> = { active: 'Aktívny účet', invited: 'Pozvaný', none: 'Nepozvaný', no_email: 'Bez e-mailu' }
 const STATE_CLS: Record<MemberState, string> = {
@@ -360,6 +371,12 @@ function MembersTab() {
                   {m.email && ` · ${m.email}`}
                   {m.invited_at && ` · pozvaný ${fmtDate(m.invited_at)}`}
                 </p>
+                {(m.last_seen_at || m.last_sign_in_at) && (
+                  <p className="text-xs text-gray-500">
+                    {m.last_seen_at ? `V zóne naposledy ${fmtDateTime(m.last_seen_at)}` : 'V zóne zatiaľ nebol'}
+                    {m.last_sign_in_at && ` · prihlásený ${fmtDateTime(m.last_sign_in_at)}`}
+                  </p>
+                )}
               </div>
               {st === 'no_email' && (
                 <input

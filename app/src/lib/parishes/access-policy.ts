@@ -10,7 +10,7 @@ export const ACCESS_EMAIL_EXCEPTIONS = ['dusan@pecko.me']
 export const isWorkspaceEmail = (email: string) => email.trim().toLowerCase().endsWith(`@${ACCESS_EMAIL_DOMAIN}`)
 
 /** Chybová hláška, ak adresa nesmie dostať prístup do zóny; inak null. */
-export function accessEmailError(email: string, zone = 'zóny farnosti'): string | null {
+export function accessEmailError(email: string, zone = 'správy farskej stránky'): string | null {
   const e = email.trim().toLowerCase()
   if (isWorkspaceEmail(e) || ACCESS_EMAIL_EXCEPTIONS.includes(e)) return null
   return `Prístup do ${zone} môže dostať len diecézna adresa @${ACCESS_EMAIL_DOMAIN} (prihlásenie cez Google).`

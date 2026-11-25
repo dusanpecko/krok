@@ -11,7 +11,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const article = await getHelpArticle('parish', (await params).slug)
-  return { title: `${article?.title ?? 'Pomoc'} | Moja farnosť` }
+  return { title: `${article?.title ?? 'Pomoc'} | Správa farskej stránky` }
 }
 
 export default async function ParishHelpArticlePage({ params }: PageProps) {

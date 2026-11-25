@@ -29,7 +29,7 @@ export default function ParishSacramentsTab({ parishId, rows, save }: { parishId
 
   return (
     <div className={`${cardCls} space-y-5`}>
-      <SectionTitle title="Sviatosti – čo treba vybaviť" description="Biskupský úrad pripravil spoločné texty. Môžete ich upraviť pre vašu farnosť (napr. termíny prípravy) alebo sekciu na stránke skryť." />
+      <SectionTitle title="Sviatosti a sväteniny – čo treba vybaviť" description="Biskupský úrad pripravil spoločné texty. Môžete ich upraviť pre vašu farnosť (napr. termíny prípravy) alebo ich na stránke skryť." />
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
       <div className="space-y-3">
         {rows.map((r) => (

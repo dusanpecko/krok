@@ -23,7 +23,7 @@ export default async function HelpAdminPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Správa návodov</h1>
-          <p className="text-gray-500 mt-2">Návody pre zónu farnosti a administráciu. Adresu (slug) zverejneného návodu nemeňte – vedú na ňu odkazy „?“ pri záložkách.</p>
+          <p className="text-gray-500 mt-2">Návody pre správu farskej stránky a administráciu. Adresu (slug) zverejneného návodu nemeňte – vedú na ňu odkazy „?“ pri záložkách.</p>
         </div>
         <Link href="/admin/pomoc/sprava/novy" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700">
           <Plus size={16} /> Nový návod

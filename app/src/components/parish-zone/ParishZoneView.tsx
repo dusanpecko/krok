@@ -70,7 +70,7 @@ function tabGroups(isAdmin: boolean): { title: string; tabs: TabDef[] }[] {
         { key: 'schedule', label: 'Bohoslužby a úradné hodiny', icon: CalendarClock },
         { key: 'gallery', label: 'Galéria', icon: Images },
         { key: 'presentation', label: 'Prezentácia', icon: Palette },
-        { key: 'sacraments', label: 'Sviatosti', icon: BookOpen },
+        { key: 'sacraments', label: 'Sviatosti a sväteniny', icon: BookOpen },
       ],
     },
     {

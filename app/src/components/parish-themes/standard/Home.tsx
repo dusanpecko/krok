@@ -270,7 +270,7 @@ export default async function Home({ parish, announcements, news, events, sacram
       {/* Sviatosti */}
       {sacraments.length > 0 && (
         <section className="mb-16">
-          <SectionHeading id="sviatosti" icon={<BookOpen size={22} />}>Sviatosti – čo treba vybaviť</SectionHeading>
+          <SectionHeading id="sviatosti" icon={<BookOpen size={22} />}>Sviatosti a sväteniny – čo treba vybaviť</SectionHeading>
           <SacramentsSection sacraments={sacraments} />
         </section>
       )}

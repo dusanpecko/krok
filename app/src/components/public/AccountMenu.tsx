@@ -20,7 +20,7 @@ export function accountItems(menu: AccountMenuData | null): Item[] {
     { href: '/profil#dary', label: 'Moje dary', icon: HandHeart },
   ]
   if (menu?.myParishSlug) items.push({ href: `/farnosti/${menu.myParishSlug}`, label: 'Moja farnosť', icon: Church })
-  if (menu?.hasParishZone) items.push({ href: '/moja-farnost', label: 'Správa farnosti', icon: Settings })
+  if (menu?.hasParishZone) items.push({ href: '/moja-farnost', label: 'Správa farskej stránky', icon: Settings })
   if (menu?.hasClergyZone) items.push({ href: '/knazska-zona', label: 'Kňazská zóna', icon: BookLock })
   if (menu?.canAdmin) items.push({ href: '/admin', label: 'Administrácia', icon: LayoutDashboard })
   return items

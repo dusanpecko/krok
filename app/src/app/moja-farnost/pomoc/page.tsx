@@ -7,7 +7,7 @@ import HelpIndex from '@/components/help/HelpIndex'
 import { KROK_ORG } from '@/lib/legal'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Pomoc | Moja farnosť' }
+export const metadata = { title: 'Pomoc | Správa farskej stránky' }
 
 /** Pomoc – návody pre zónu farnosti (migrácia 052). */
 export default async function ParishHelpPage() {

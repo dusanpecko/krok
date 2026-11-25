@@ -60,7 +60,7 @@ export default function ParishTable({ parishes, deaneries }: { parishes: ParishL
           <Newspaper size={14} /> Príspevky
         </Link>
         <Link href="/admin/farnosti/sviatosti" className={btnSecondary}>
-          <BookOpen size={14} /> Sviatosti
+          <BookOpen size={14} /> Sviatosti a sväteniny
         </Link>
         <Link href="/admin/farnosti/e-zvoncek" className={btnSecondary}>
           <Bell size={14} /> E-zvonček

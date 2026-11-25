@@ -2,7 +2,7 @@
 
 export type HelpZone = 'parish' | 'admin'
 
-export const HELP_ZONE_LABEL: Record<HelpZone, string> = { parish: 'Zóna farnosti', admin: 'Administrácia' }
+export const HELP_ZONE_LABEL: Record<HelpZone, string> = { parish: 'Správa farskej stránky', admin: 'Administrácia' }
 
 /** Kde sa návody zóny zobrazujú (zoznam a detail /…/pomoc/<slug>). */
 export const HELP_BASE: Record<HelpZone, string> = { parish: '/moja-farnost/pomoc', admin: '/admin/pomoc' }

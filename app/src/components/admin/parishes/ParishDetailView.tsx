@@ -41,7 +41,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'schedule', label: 'Bohoslužby a úradné hodiny' },
   { key: 'posts', label: 'Oznamy a aktuality' },
   { key: 'gallery', label: 'Galéria' },
-  { key: 'sacraments', label: 'Sviatosti' },
+  { key: 'sacraments', label: 'Sviatosti a sväteniny' },
   { key: 'clergy', label: 'Kňazi' },
   { key: 'donations', label: 'Dary a história' },
   { key: 'box', label: 'E-zvonček' },
@@ -96,7 +96,7 @@ export default function ParishDetailView({
           <Link
             href={`/moja-farnost/${parish.id}`}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-black hover:bg-amber-100"
-            title="Otvorí zónu farnosti presne tak, ako ju vidí kňaz"
+            title="Otvorí správu farskej stránky presne tak, ako ju vidí kňaz"
           >
             <LogIn size={16} /> Prihlásiť sa za farnosť
           </Link>

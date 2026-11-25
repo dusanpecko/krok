@@ -7,7 +7,7 @@ import ParishZoneLogout from '@/components/parish-zone/ParishZoneLogout'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Moja farnosť | KROK – Pastoračný fond Žilinskej diecézy',
+    title: 'Správa farskej stránky | KROK – Pastoračný fond Žilinskej diecézy',
     robots: { index: false },
     ...(await siteIconsMetadata()),
   }
@@ -21,7 +21,7 @@ export default function ParishZoneLayout({ children }: { children: React.ReactNo
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <Link href="/moja-farnost" className="flex items-center gap-3">
             <Image src="/logo/logo_w.webp" alt="KROK" width={69} height={40} priority />
-            <span className="text-sm font-bold tracking-wide border-l border-white/20 pl-3">Moja farnosť</span>
+            <span className="text-sm font-bold tracking-wide border-l border-white/20 pl-3">Správa farskej stránky</span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/moja-farnost/pomoc" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white">

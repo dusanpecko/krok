@@ -15,7 +15,7 @@ export default async function MyParishIndexPage() {
 
   return (
     <div className="max-w-xl mx-auto bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-5">
-      <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2"><Church className="text-blue-600" /> Moja farnosť</h1>
+      <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2"><Church className="text-blue-600" /> Správa farskej stránky</h1>
       {parishes.length === 0 ? (
         <p className="text-sm text-gray-600 leading-relaxed">
           K vášmu účtu zatiaľ nie je priradená žiadna farnosť. Prístup prideľuje biskupský úrad – ak ste ho už dostali, skontrolujte,

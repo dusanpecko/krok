@@ -39,7 +39,7 @@ export default function ParishFooter({ parish, krokBase = '' }: { parish: Public
               <>
                 <li><Link href={`${base}/oznamy`} className="hover:text-gold-bright">Farské oznamy</Link></li>
                 <li><Link href={`${base}/aktuality`} className="hover:text-gold-bright">Aktuality</Link></li>
-                <li><a href={`${base}#sviatosti`} className="hover:text-gold-bright">Sviatosti</a></li>
+                <li><a href={`${base}#sviatosti`} className="hover:text-gold-bright">Sviatosti a sväteniny</a></li>
               </>
             )}
             <li><a href={`${base}#kontakt`} className="hover:text-gold-bright">Kontakt</a></li>

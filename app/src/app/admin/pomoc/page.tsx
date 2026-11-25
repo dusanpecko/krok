@@ -20,7 +20,7 @@ export default async function AdminHelpPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-2"><LifeBuoy className="text-blue-600" /> Pomoc</h1>
           <p className="text-gray-500 mt-2">
-            Návody na prácu v administrácii. Návody pre farnosti nájdete v <Link href={HELP_BASE.parish} className="text-blue-600 font-bold hover:underline">zóne farnosti</Link>.
+            Návody na prácu v administrácii. Návody pre farnosti nájdete v <Link href={HELP_BASE.parish} className="text-blue-600 font-bold hover:underline">správe farskej stránky</Link>.
           </p>
         </div>
         {canEdit && (

@@ -9,7 +9,7 @@ export const PROTECTED_PARISH_FIELDS = [
 ] as const
 export type ProtectedParishField = (typeof PROTECTED_PARISH_FIELDS)[number]
 
-export const LIVE_PARISH_FIELDS = ['intro', 'feast_day', 'feast_day_note', 'adoration_date', 'adoration_note', 'latitude', 'longitude', 'image_url', 'logo_url'] as const
+export const LIVE_PARISH_FIELDS = ['intro', 'feast_day', 'feast_day_note', 'adoration_date', 'adoration_note', 'monthly_adoration', 'latitude', 'longitude', 'image_url', 'logo_url'] as const
 export type LiveParishField = (typeof LIVE_PARISH_FIELDS)[number]
 
 export const FIELD_LABEL: Record<string, string> = {
@@ -17,7 +17,7 @@ export const FIELD_LABEL: Record<string, string> = {
   parish_code: 'Kód farnosti', ico: 'IČO', dic: 'DIČ', street: 'Ulica', postal_code: 'PSČ', city: 'Obec / pošta',
   district: 'Okres', phone: 'Telefón', email: 'E-mail', website: 'Web', iban: 'IBAN', administrator_name: 'Správca farnosti',
   intro: 'Text na web', feast_day: 'Hody', feast_day_note: 'Hody – poznámka', adoration_date: 'Výročná poklona',
-  adoration_note: 'Výročná poklona – poznámka', latitude: 'GPS šírka', longitude: 'GPS dĺžka', image_url: 'Titulná fotka', logo_url: 'Erb / logo',
+  adoration_note: 'Výročná poklona – poznámka', monthly_adoration: 'Pravidelná poklona', latitude: 'GPS šírka', longitude: 'GPS dĺžka', image_url: 'Titulná fotka', logo_url: 'Erb / logo',
 }
 
 /** Normalizácia a kontrola hodnôt úradných údajov (admin úprava aj schválenie návrhu). */

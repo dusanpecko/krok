@@ -31,6 +31,7 @@ const toForm = (p: ParishRow): Form => ({
   feast_day_note: p.feast_day_note ?? '',
   adoration_date: p.adoration_date ?? '',
   adoration_note: p.adoration_note ?? '',
+  monthly_adoration: p.monthly_adoration ?? '',
   schematizmus_url: p.schematizmus_url ?? '',
   subdomain: p.subdomain ?? '',
   latitude: p.latitude != null ? String(p.latitude) : '',
@@ -117,6 +118,7 @@ export default function ParishBasicTab({ parish, deaneries }: { parish: ParishRo
           <Field label="Hody – poznámka" hint="Ak je sviatok pohyblivý, napr. „nedeľa po 15. 8.“">{text('feast_day_note')}</Field>
           <Field label="Výročná celodenná poklona (dátum)">{text('adoration_date', { type: 'date' })}</Field>
           <Field label="Výročná poklona – poznámka">{text('adoration_note', { placeholder: '1. septembrová nedeľa' })}</Field>
+          <Field label="Pravidelná celodenná poklona">{text('monthly_adoration', { placeholder: '2. štvrtok v mesiaci, po rannej svätej omši do 19.00' })}</Field>
         </div>
       </div>
 

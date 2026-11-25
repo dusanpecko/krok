@@ -27,7 +27,7 @@ export default async function Home({ parish, announcements, news, events, sacram
   const hasGps = parish.latitude != null && parish.longitude != null
   const address = [parish.street, [parish.postal_code, parish.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   const filials = parish.villages.filter((v) => !v.is_seat)
-  const hasFeasts = Boolean(feast || parish.feast_day_note || adoration || parish.adoration_note)
+  const hasFeasts = Boolean(feast || parish.feast_day_note || adoration || parish.adoration_note || parish.monthly_adoration)
   // bohoslužby len ak ich farnosť má vyplnené (prázdny rozpis sa nezobrazuje)
   const showSchedule = hasParishSchedule(parish)
 
@@ -81,7 +81,7 @@ export default async function Home({ parish, announcements, news, events, sacram
       {(showSchedule || hasFeasts) && (
         <section className="mb-16">
           {!showSchedule ? (
-            <SectionHeading icon={<CalendarDays size={22} />}>Hody a výročná poklona</SectionHeading>
+            <SectionHeading icon={<CalendarDays size={22} />}>Hody a poklona</SectionHeading>
           ) : (
             <>
               <SectionHeading id="bohosluzby" icon={<Clock size={22} />}>Bohoslužby</SectionHeading>
@@ -102,6 +102,12 @@ export default async function Home({ parish, announcements, news, events, sacram
                   <p className="text-xs font-black uppercase tracking-widest text-mute mb-1">Výročná celodenná poklona</p>
                   <p className="font-extrabold">{adoration ?? parish.adoration_note}</p>
                   {adoration && parish.adoration_note && <p className="text-sm text-mute">{parish.adoration_note}</p>}
+                </div>
+              )}
+              {parish.monthly_adoration && (
+                <div className={`${cardCls} p-4`}>
+                  <p className="text-xs font-black uppercase tracking-widest text-mute mb-1">Pravidelná celodenná poklona</p>
+                  <p className="font-extrabold">{parish.monthly_adoration}</p>
                 </div>
               )}
             </div>

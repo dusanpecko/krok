@@ -389,6 +389,7 @@ function PresentationTab({ view }: { view: MyParishView }) {
   const [form, setForm] = useState({
     intro: p.intro ?? '', feast_day: p.feast_day ?? '', feast_day_note: p.feast_day_note ?? '',
     adoration_date: p.adoration_date ?? '', adoration_note: p.adoration_note ?? '',
+    monthly_adoration: p.monthly_adoration ?? '',
     latitude: p.latitude != null ? String(p.latitude) : '', longitude: p.longitude != null ? String(p.longitude) : '',
     image_url: p.image_url ?? '', logo_url: p.logo_url ?? '',
   })
@@ -451,6 +452,7 @@ function PresentationTab({ view }: { view: MyParishView }) {
         <Field label="Hody – poznámka" hint="Ak je sviatok pohyblivý."><input value={form.feast_day_note} onChange={(e) => set('feast_day_note', e.target.value)} className={inputCls} /></Field>
         <Field label="Výročná celodenná poklona (dátum)"><input type="date" value={form.adoration_date} onChange={(e) => set('adoration_date', e.target.value)} className={inputCls} /></Field>
         <Field label="Výročná poklona – poznámka"><input value={form.adoration_note} onChange={(e) => set('adoration_note', e.target.value)} className={inputCls} placeholder="1. septembrová nedeľa" /></Field>
+        <Field label="Pravidelná celodenná poklona" className="md:col-span-2" hint="Ak ju farnosť má, napr. každý mesiac. Zobrazí sa vedľa výročnej poklony."><input value={form.monthly_adoration} onChange={(e) => set('monthly_adoration', e.target.value)} className={inputCls} maxLength={200} placeholder="2. štvrtok v mesiaci, po rannej svätej omši do 19.00" /></Field>
         <Field label="GPS šírka (farský kostol)"><input value={form.latitude} onChange={(e) => set('latitude', e.target.value)} className={inputCls} inputMode="decimal" /></Field>
         <Field label="GPS dĺžka"><input value={form.longitude} onChange={(e) => set('longitude', e.target.value)} className={inputCls} inputMode="decimal" /></Field>
       </div>

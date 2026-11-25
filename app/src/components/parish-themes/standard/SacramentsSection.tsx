@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BookOpen, Cross, Droplets, Flame, HandHeart, HeartHandshake, KeyRound, Wheat, type LucideIcon } from 'lucide-react'
+import { BookOpen, Cross, Droplets, Flame, HandHeart, HeartHandshake, KeyRound, Sparkles, Wheat, type LucideIcon } from 'lucide-react'
 import type { PublicSacrament } from '@/lib/parishes/public'
 import { NON_SACRAMENT_TYPES } from '@/lib/parishes/format'
 import { protectEmails } from '@/lib/email-code'
@@ -13,6 +13,7 @@ const ICONS: Record<string, LucideIcon> = {
   manzelstvo: HeartHandshake,
   pomazanie: HandHeart,
   pohreb: Cross,
+  pozehnania: Sparkles,
   zmierenie: KeyRound,
 }
 
@@ -30,14 +31,14 @@ export default function SacramentsSection({ sacraments }: { sacraments: PublicSa
         type="button"
         onClick={() => setOpen(active ? null : s.type)}
         aria-expanded={active}
-        className={`w-[calc(50%-6px)] sm:w-32 flex flex-col items-center gap-3 p-4 rounded-2xl border text-center cursor-pointer transition-colors ${
+        className={`w-[calc(50%-6px)] sm:w-32 lg:w-auto lg:flex-1 lg:min-w-0 lg:px-2 flex flex-col items-center gap-3 p-4 rounded-2xl border text-center cursor-pointer transition-colors ${
           active ? 'bg-gold/15 border-gold text-gold-ink' : 'bg-white/[0.04] border-blue/10 hover:border-gold/40 hover:text-gold-bright'
         }`}
       >
         <span className={`w-14 h-14 rounded-full flex items-center justify-center border ${active ? 'border-gold bg-gold/10' : 'border-gold/30 bg-white'} text-gold-ink`}>
           <Icon size={26} strokeWidth={1.6} />
         </span>
-        <span className="text-sm font-extrabold leading-tight">{s.title}</span>
+        <span className="text-sm font-extrabold leading-tight hyphens-auto" lang="sk">{s.title}</span>
       </button>
     )
   }
@@ -46,11 +47,12 @@ export default function SacramentsSection({ sacraments }: { sacraments: PublicSa
 
   return (
     <div>
-      <div className="flex flex-wrap gap-3">
+      {/* mobil po dvoch, tablet zalomené, veľký monitor v jednom riadku */}
+      <div className="flex flex-wrap lg:flex-nowrap gap-3">
         {sacr.map(tile)}
         {sacr.length > 0 && other.length > 0 && (
           <>
-            <span aria-hidden className="hidden sm:block w-px self-stretch bg-blue/10 mx-2" />
+            <span aria-hidden className="hidden sm:block w-px shrink-0 self-stretch bg-blue/10 mx-2 lg:mx-1" />
             <span aria-hidden className="basis-full h-px bg-blue-soft/60 sm:hidden" />
           </>
         )}

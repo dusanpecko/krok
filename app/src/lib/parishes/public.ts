@@ -17,7 +17,7 @@ import { getChurchPhotos, getLifeAlbums, getPublicAlbum, type PublicAlbumSummary
 
 const PUBLIC_PARISH_COLUMNS =
   'id, slug, name, official_name, kind, deanery_id, patrocinium, street, postal_code, city, phone, email, website, ' +
-  'feast_day, feast_day_note, adoration_date, adoration_note, latitude, longitude, image_url, logo_url, intro, social_links, theme, visible_on_web, is_active, is_demo, updated_at'
+  'feast_day, feast_day_note, adoration_date, adoration_note, monthly_adoration, latitude, longitude, image_url, logo_url, intro, social_links, theme, visible_on_web, is_active, is_demo, updated_at'
 
 export interface PublicScheduleItem {
   service_type: ParishServiceType
@@ -103,6 +103,7 @@ export interface PublicParish {
   feast_day_note: string | null
   adoration_date: string | null
   adoration_note: string | null
+  monthly_adoration: string | null
   latitude: number | null
   longitude: number | null
   image_url: string | null

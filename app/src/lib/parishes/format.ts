@@ -1,7 +1,7 @@
 /** Formátovanie pre verejné stránky farností – bez serverových závislostí. */
 
 /** Texty v sekcii Sviatosti, ktoré nie sú sviatosťou – zobrazia sa za oddeľovačom (migrácia 037). */
-export const NON_SACRAMENT_TYPES = ['pohreb']
+export const NON_SACRAMENT_TYPES = ['pozehnania', 'pohreb']
 
 const MONTHS_GEN = ['januára', 'februára', 'marca', 'apríla', 'mája', 'júna', 'júla', 'augusta', 'septembra', 'októbra', 'novembra', 'decembra']
 

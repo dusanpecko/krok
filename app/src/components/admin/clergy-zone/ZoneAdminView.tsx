@@ -7,14 +7,15 @@ import {
   AlertTriangle, ArrowDown, ArrowUp, Archive, Eye, EyeOff, FileText, Loader2, Mail, MailCheck, Pencil, Plus, Save, Search, ShieldAlert, Trash2, UserCheck, Users, X,
 } from 'lucide-react'
 import {
-  deleteZoneCategory, getZoneMembers, inviteZoneMember, moveZoneCategory, saveZoneCategory, type ZoneAdminOverview,
+  deleteAccessException, deleteZoneCategory, getAccessExceptions, getZoneMembers, inviteZoneMember, moveZoneCategory, saveAccessException,
+  saveZoneCategory, type AccessExceptionRow, type ZoneAdminOverview,
 } from '@/app/admin/knazska-zona/actions'
 import type { ZoneMember } from '@/lib/clergy-zone/notify'
 import { fmtDate } from '@/lib/clergy-zone/types'
 import { CATEGORY_LABEL, type ClergyCategory } from '@/lib/clergy/types'
 import { btnPrimary, btnSecondary, cardCls, checkboxCls, inputCls, Notice, SectionTitle } from '@/components/admin/projects/ui'
 
-type Tab = 'docs' | 'categories' | 'members'
+type Tab = 'docs' | 'categories' | 'members' | 'exceptions'
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null
 
 export default function ZoneAdminView({ overview }: { overview: ZoneAdminOverview }) {
@@ -50,6 +51,7 @@ export default function ZoneAdminView({ overview }: { overview: ZoneAdminOvervie
             ['docs', `Dokumenty (${overview.docs.length})`],
             ['categories', 'Kategórie'],
             ['members', 'Kňazi a prístupy'],
+            ['exceptions', 'Výnimky'],
           ] as [Tab, string][]
         ).map(([k, l]) => (
           <button
@@ -65,6 +67,7 @@ export default function ZoneAdminView({ overview }: { overview: ZoneAdminOvervie
       {tab === 'docs' && <DocsTab overview={overview} />}
       {tab === 'categories' && <CategoriesTab overview={overview} />}
       {tab === 'members' && <MembersTab />}
+      {tab === 'exceptions' && <ExceptionsTab />}
     </div>
   )
 }
@@ -309,7 +312,7 @@ function MembersTab() {
     <div className={`${cardCls} space-y-4`}>
       <SectionTitle
         title="Kňazi a prístupy"
-        description="Kňazi a diakoni z registra (v službe, na odpočinku, na štúdiu). Pozvánka príde len na diecézny e-mail @dcza.sk z registra; prihlasujú sa cez Google, bez hesla. Účty farností vidia zónu automaticky."
+        description="Kňazi a diakoni z registra (v službe, na odpočinku, na štúdiu). Pozvánka príde na diecézny e-mail @dcza.sk z registra (prihlásenie cez Google, bez hesla), alebo na adresu z výnimky (prihlásenie e-mailom a heslom). Účty farností vidia zónu automaticky."
       />
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
       <div className="flex flex-wrap gap-2 items-center">
@@ -405,6 +408,129 @@ function MembersTab() {
           )
         })}
       </ul>
+    </div>
+  )
+}
+
+// ------------------------------------------------------------ výnimky z @dcza.sk (075)
+
+const EMPTY_EX = { email: '', clergyId: '', note: '', previousEmail: null as string | null }
+
+function ExceptionsTab() {
+  const [rows, setRows] = useState<AccessExceptionRow[] | null>(null)
+  const [people, setPeople] = useState<ZoneMember[]>([])
+  const [form, setForm] = useState(EMPTY_EX)
+  const [msg, setMsg] = useState<Msg>(null)
+  const [pending, start] = useTransition()
+
+  const load = () => getAccessExceptions().then(setRows, () => setMsg({ kind: 'error', text: 'Výnimky sa nepodarilo načítať.' }))
+  useEffect(() => {
+    load()
+    getZoneMembers().then(setPeople, () => {})
+  }, [])
+
+  const save = () =>
+    start(async () => {
+      setMsg(null)
+      const res = await saveAccessException({ email: form.email, clergyId: form.clergyId || null, note: form.note, previousEmail: form.previousEmail })
+      if (!res.success) return setMsg({ kind: 'error', text: res.error })
+      setMsg({
+        kind: 'success',
+        text: form.clergyId
+          ? 'Výnimka uložená. Pozvánku pošlete v záložke Kňazi a prístupy; prístup do správy farskej stránky podľa schematizmu sa pridelí pri najbližšej synchronizácii.'
+          : 'Výnimka uložená. Adresu teraz môžete použiť pri pozvánke alebo pri prístupe k farnosti.',
+      })
+      setForm(EMPTY_EX)
+      load()
+    })
+
+  const remove = (email: string) =>
+    confirm(`Odobrať výnimku ${email}? Existujúce prístupy ostanú, nové pozvánky na túto adresu už nepôjdu.`) &&
+    start(async () => {
+      const res = await deleteAccessException(email)
+      setMsg(res.success ? { kind: 'success', text: 'Výnimka odobratá.' } : { kind: 'error', text: res.error })
+      load()
+    })
+
+  return (
+    <div className={`${cardCls} space-y-5`}>
+      <SectionTitle
+        title="Výnimky z diecéznej adresy"
+        description="Prístup do kňazskej zóny a do správy farskej stránky dostávajú len adresy @dcza.sk (prihlásenie cez Google). Biskupi, rehoľníci (saleziáni, verbisti…) či iní, ktorí diecéznu adresu nemajú, potrebujú výnimku – prihlasujú sa potom e-mailom a heslom. Ak výnimku priradíte osobe z registra, pozvánky a prístup podľa schematizmu pôjdu na túto adresu."
+      />
+      {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
+      <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] items-end">
+        <label className="text-xs font-bold text-gray-600 space-y-1">
+          <span>E-mail</span>
+          <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="meno@rehola.sk" className={inputCls} />
+        </label>
+        <label className="text-xs font-bold text-gray-600 space-y-1">
+          <span>Osoba z registra (nepovinné)</span>
+          <select value={form.clergyId} onChange={(e) => setForm({ ...form, clergyId: e.target.value })} className={inputCls}>
+            <option value="">– nepriradená –</option>
+            {people.map((p) => (
+              <option key={p.clergy_id} value={p.clergy_id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-bold text-gray-600 space-y-1">
+          <span>Poznámka</span>
+          <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="napr. saleziáni, farnosť …" className={inputCls} />
+        </label>
+        <div className="flex gap-2">
+          <button type="button" disabled={pending || !form.email.trim()} onClick={save} className={btnPrimary}>
+            {pending ? <Loader2 size={14} className="animate-spin" /> : form.previousEmail ? <Save size={14} /> : <Plus size={14} />} {form.previousEmail ? 'Uložiť' : 'Pridať'}
+          </button>
+          {form.previousEmail && (
+            <button type="button" onClick={() => setForm(EMPTY_EX)} className={btnSecondary}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+      {!rows ? (
+        <p className="flex items-center gap-2 text-sm text-gray-500">
+          <Loader2 size={16} className="animate-spin" /> Načítavam…
+        </p>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-gray-500">Zatiaľ žiadne výnimky.</p>
+      ) : (
+        <ul className="divide-y divide-gray-100">
+          {rows.map((r) => (
+            <li key={r.email} className="py-2.5 flex flex-wrap items-center gap-3">
+              <div className="flex-1 min-w-[220px]">
+                <p className="font-bold text-gray-900">{r.email}</p>
+                <p className="text-xs text-gray-500">
+                  {r.clergy_id ? (
+                    <Link href={`/admin/knazi/${r.clergy_id}`} className="hover:text-blue-600">
+                      {r.clergy_name}
+                    </Link>
+                  ) : (
+                    'nepriradená k osobe z registra'
+                  )}
+                  {r.note && ` · ${r.note}`}
+                </p>
+              </div>
+              <span className={`px-2 py-1 rounded-lg text-xs font-bold ${r.activated ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                {r.activated ? 'Prihlásil sa' : 'Zatiaľ neprihlásený'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setForm({ email: r.email, clergyId: r.clergy_id ?? '', note: r.note ?? '', previousEmail: r.email })}
+                className={btnSecondary}
+                title="Upraviť"
+              >
+                <Pencil size={14} />
+              </button>
+              <button type="button" disabled={pending} onClick={() => remove(r.email)} className={btnSecondary} title="Odobrať">
+                <Trash2 size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

@@ -11,11 +11,26 @@ function resolveSite(request: NextRequest): SiteKey {
   return 'mojkrok'
 }
 
+/** Vlastný web farnosti ako absolútna URL (v registri býva bez https://); nie späť na našu doménu (slučka). */
+function externalWebsite(website: string | null, base: string): string | null {
+  const w = website?.trim()
+  if (!w) return null
+  try {
+    const url = new URL(/^https?:\/\//i.test(w) ? w : `https://${w}`)
+    const host = url.hostname.toLowerCase()
+    if (!host.includes('.') || host === base || host.endsWith(`.${base}`)) return null
+    return url.toString()
+  } catch {
+    return null
+  }
+}
+
 /**
  * Subdoména farnosti (D5, O13, § 4.4): <subdomena>.mojkrok.sk / .dcza.sk je len vstupná adresa –
  * presmeruje na stránku farnosti (zachová podstránku, napr. /oznamy). Subdoména = meno e-mailovej
- * schránky farnosti (062); vždy naša stránka farnosti – vlastný web farnosti je na nej ako odkaz
- * (rozhodnutie 2026-10-16). Záložne aj slug farnosti (moja-farnost.dcza.sk). Neznáma → zoznam farností s hľadaním.
+ * schránky farnosti (062). Kam (rozhodnutie 2026-11-26): farnosť so zapnutou stránkou na dcza.sk → naša stránka;
+ * inak jej vlastný web, ak ho má; inak naša (základná) stránka zo schematizmu.
+ * Záložne aj slug farnosti (moja-farnost.dcza.sk). Neznáma → zoznam farností s hľadaním.
  * 302 (nie 301): prehliadač si presmerovanie nezapamätá navždy, ak farnosť neskôr zmení web alebo subdoménu.
  */
 async function parishSubdomainRedirect(request: NextRequest, target: { sub: string; site: SiteKey; base: string }) {
@@ -23,12 +38,14 @@ async function parishSubdomainRedirect(request: NextRequest, target: { sub: stri
   // subdoména (schránka) alebo slug farnosti – ľudia skúšajú aj <názov-farnosti>.dcza.sk; zhoda subdomény má prednosť
   const sub = encodeURIComponent(target.sub)
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/parishes?select=slug,subdomain&is_active=eq.true&or=(subdomain.eq.${sub},slug.eq.${sub})&limit=2`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/parishes?select=slug,subdomain,website,visible_on_web&is_active=eq.true&or=(subdomain.eq.${sub},slug.eq.${sub})&limit=2`,
     { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` } },
   ).catch(() => null)
-  const rows: { slug: string; subdomain: string | null }[] = res?.ok ? await res.json() : []
+  const rows: { slug: string; subdomain: string | null; website: string | null; visible_on_web: boolean | null }[] = res?.ok ? await res.json() : []
   const parish = rows.find((r) => r.subdomain === target.sub) ?? rows[0]
   if (!parish) return NextResponse.redirect(`${origin}/farnosti?q=${encodeURIComponent(target.sub)}`, 302)
+  const own = !parish.visible_on_web ? externalWebsite(parish.website, target.base) : null
+  if (own) return NextResponse.redirect(own, 302)
   const rest = request.nextUrl.pathname === '/' ? '' : request.nextUrl.pathname
   return NextResponse.redirect(`${origin}/farnosti/${parish.slug}${rest}`, 302)
 }

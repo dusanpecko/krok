@@ -1,6 +1,8 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { sendTemplateEmail } from '@/lib/email/send'
 import { isWorkspaceEmail } from '@/lib/parishes/access-policy'
+import { loadAccessExceptions, type AccessExceptions } from '@/lib/parishes/access-exceptions'
+import { generateEmailLink } from '@/lib/auth/email-links'
 import { logParishChange } from '@/lib/parishes/writes'
 import { siteBaseUrl } from '@/lib/site-server'
 
@@ -78,7 +80,7 @@ async function loadState(db: SupabaseClient, clergyIds?: string[]) {
     asgQ = asgQ.in('clergy_id', clergyIds)
     rowQ = rowQ.in('clergy_id', clergyIds)
   }
-  const [{ data: asg }, { data: rows }] = await Promise.all([asgQ, rowQ])
+  const [{ data: asg }, { data: rows }, ex] = await Promise.all([asgQ, rowQ, loadAccessExceptions(db)])
 
   const d = today()
   const desired = new Map<string, Desired[]>()
@@ -111,38 +113,46 @@ async function loadState(db: SupabaseClient, clergyIds?: string[]) {
   const { data: parishes } = parishIds.size ? await db.from('parishes').select('id, name, official_name').in('id', [...parishIds]) : { data: [] }
   const parishName = new Map((parishes ?? []).map((p) => [p.id as string, (p.official_name || p.name) as string]))
 
-  return { desired, existing, clergy: (clergy ?? []) as ClergyRow[], parishName }
+  return { desired, existing, clergy: (clergy ?? []) as ClergyRow[], parishName, ex }
 }
 
 const nameOf = (c: ClergyRow) => [c.title_before, c.first_name, c.last_name].filter(Boolean).join(' ')
 
+/** Adresa na prístup: výnimka priradená kňazovi (rehoľník, biskup – 075), inak diecézny e-mail z registra. */
+function accessEmailOf(c: ClergyRow, ex: AccessExceptions): string | null {
+  const e = ex.byClergy.get(c.id) ?? c.work_email?.trim().toLowerCase() ?? null
+  return e && (isWorkspaceEmail(e) || ex.emails.has(e)) ? e : null
+}
+const NO_EMAIL = 'chýba diecézny e-mail @dcza.sk v registri (alebo výnimka v Kňazskej zóne → Výnimky)'
+
 /** Plán zmien (náhľad pre admin) – nič nemení. */
 export async function planClergyParishAccess(db: SupabaseClient, clergyIds?: string[]): Promise<ClergyAccessPlan[]> {
-  const { desired, existing, clergy, parishName } = await loadState(db, clergyIds)
+  const { desired, existing, clergy, parishName, ex } = await loadState(db, clergyIds)
   const plans: ClergyAccessPlan[] = []
   for (const c of clergy) {
     const want = CLERGY_STATUSES.includes(c.status) ? (desired.get(c.id) ?? []) : []
     const have = existing.get(c.id) ?? []
-    const email = c.work_email?.trim().toLowerCase() || null
+    const email = accessEmailOf(c, ex) ?? (c.work_email?.trim().toLowerCase() || null)
     const add = want
       .filter((w) => !have.some((h) => h.parish_id === w.parish_id && h.role === w.role))
       .map((w) => ({ parish_id: w.parish_id, parish: parishName.get(w.parish_id) ?? '?', role: w.role }))
     const remove = have.filter((h) => !want.some((w) => w.parish_id === h.parish_id)).map((h) => ({ parish_id: h.parish_id, parish: parishName.get(h.parish_id) ?? '?' }))
     if (!add.length && !remove.length) continue
-    const problem = add.length && !c.auth_user_id && !(email && isWorkspaceEmail(email)) ? 'chýba diecézny e-mail @dcza.sk v registri' : null
+    const problem = add.length && !c.auth_user_id && !accessEmailOf(c, ex) ? NO_EMAIL : null
     plans.push({ clergy_id: c.id, name: nameOf(c), email, add, remove, problem })
   }
   return plans.sort((a, b) => a.name.localeCompare(b.name, 'sk'))
 }
 
 /** Účet kňaza: prepojený z registra, inak existujúci podľa diecézneho e-mailu, inak nový (Google ho pri prihlásení pripojí). */
-async function ensureAccount(db: SupabaseClient, c: ClergyRow): Promise<{ user: User } | { error: string }> {
+async function ensureAccount(db: SupabaseClient, c: ClergyRow, ex: AccessExceptions): Promise<{ user: User } | { error: string }> {
+  const email = accessEmailOf(c, ex)
   if (c.auth_user_id) {
     const { data } = await db.auth.admin.getUserById(c.auth_user_id)
-    if (data?.user) return { user: data.user }
+    // prepojený účet platí, kým výnimka neurčí inú adresu
+    if (data?.user && (!ex.byClergy.has(c.id) || data.user.email?.toLowerCase() === email)) return { user: data.user }
   }
-  const email = c.work_email?.trim().toLowerCase()
-  if (!email || !isWorkspaceEmail(email)) return { error: 'chýba diecézny e-mail @dcza.sk v registri' }
+  if (!email) return { error: NO_EMAIL }
   let user: User | null = null
   for (let page = 1; page <= 20 && !user; page++) {
     const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 })
@@ -151,7 +161,8 @@ async function ensureAccount(db: SupabaseClient, c: ClergyRow): Promise<{ user: 
     if (data.users.length < 1000) break
   }
   if (!user) {
-    const { data, error } = await db.auth.admin.createUser({ email, email_confirm: true })
+    // @dcza.sk overuje Google Workspace; adresa z výnimky sa potvrdí pozvánkou s nastavením hesla
+    const { data, error } = await db.auth.admin.createUser({ email, email_confirm: isWorkspaceEmail(email) })
     if (error || !data?.user) return { error: `účet sa nepodarilo založiť: ${error?.message ?? 'neznáma chyba'}` }
     user = data.user
   }
@@ -187,7 +198,7 @@ export async function syncClergyParishAccess(
   clergyId: string,
   opts: { sendEmail: boolean; actorId: string | null }
 ): Promise<SyncResult | null> {
-  const { desired, existing, clergy, parishName } = await loadState(db, [clergyId])
+  const { desired, existing, clergy, parishName, ex } = await loadState(db, [clergyId])
   const c = clergy[0]
   if (!c) return null
   const want = CLERGY_STATUSES.includes(c.status) ? (desired.get(c.id) ?? []) : []
@@ -208,7 +219,7 @@ export async function syncClergyParishAccess(
   let user: User | null = null
   const addedRoles: ParishRole[] = []
   if (toAdd.length) {
-    const acc = await ensureAccount(db, c)
+    const acc = await ensureAccount(db, c, ex)
     if ('error' in acc) result.error = acc.error
     else {
       user = acc.user
@@ -236,21 +247,34 @@ export async function syncClergyParishAccess(
     }
   }
 
-  const email = user?.email ?? c.work_email?.trim().toLowerCase() ?? null
+  const email = (user?.email ?? accessEmailOf(c, ex) ?? c.work_email?.trim().toLowerCase() ?? null)?.toLowerCase() ?? null
   if (opts.sendEmail && email && (result.added.length || result.removed.length)) {
     const position = toAdd[0]?.position ?? 'farár'
     const role: ParishRole = addedRoles.includes('admin') ? 'admin' : 'editor'
-    const loginUrl = `${siteBaseUrl('dcza')}/prihlasenie?redirect=${encodeURIComponent('/moja-farnost')}`
-    const common = { salutation: salutationFor(role, position), email, login_url: loginUrl, role_label: PARISH_ROLE_LABEL[role] }
-    // len nový prístup (prvé pridelenie) → „bol Vám udelený prístup“; inak (preloženie, ukončenie) → „zmena prístupu“
-    const res =
-      result.added.length && !result.removed.length && !have.length
-        ? await sendTemplateEmail({ templateKey: 'parish_access_clergy_granted', to: email, variables: { ...common, parishes: result.added.join(', ') } })
-        : await sendTemplateEmail({
-            templateKey: 'parish_access_clergy_changed',
-            to: email,
-            variables: { ...common, parishes_added: result.added.join(', '), parishes_removed: result.removed.join(', ') },
-          })
+    const base = siteBaseUrl('dcza')
+    const loginUrl = `${base}/prihlasenie?redirect=${encodeURIComponent('/moja-farnost')}`
+    const google = isWorkspaceEmail(email)
+    const common = { salutation: salutationFor(role, position), email, login_url: loginUrl, role_label: PARISH_ROLE_LABEL[role], google }
+    const firstGrant = result.added.length && !result.removed.length && !have.length
+    let res: { success: boolean; error?: string }
+    if (firstGrant && google) {
+      res = await sendTemplateEmail({ templateKey: 'parish_access_clergy_granted', to: email, variables: { ...common, parishes: result.added.join(', ') } })
+    } else if (firstGrant && user && !user.last_sign_in_at) {
+      // výnimka (rehoľník, biskup) bez aktivovaného účtu → pozvánka s nastavením hesla
+      const link = await generateEmailLink(email, user.email_confirmed_at ? 'magiclink' : 'invite', '/nastavit-heslo?next=/moja-farnost', base)
+      res = link.success
+        ? await sendTemplateEmail({ templateKey: 'parish_access_invite', to: email, variables: { ...common, parish_name: result.added.join(', '), has_box: false, invite_url: link.url } })
+        : { success: false, error: link.error }
+    } else if (firstGrant) {
+      res = await sendTemplateEmail({ templateKey: 'parish_access_granted', to: email, variables: { ...common, parish_name: result.added.join(', ') } })
+    } else {
+      // preloženie, ukončenie → „zmena prístupu“
+      res = await sendTemplateEmail({
+        templateKey: 'parish_access_clergy_changed',
+        to: email,
+        variables: { ...common, parishes_added: result.added.join(', '), parishes_removed: result.removed.join(', ') },
+      })
+    }
     result.emailSent = res.success
     if (!res.success) result.error = [result.error, `e-mail neodišiel: ${res.error}`].filter(Boolean).join('; ')
   }

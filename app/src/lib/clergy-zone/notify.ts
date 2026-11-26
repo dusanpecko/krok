@@ -2,6 +2,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { sendTemplateEmail } from '@/lib/email/send'
 import { generateEmailLink } from '@/lib/auth/email-links'
 import { accessEmailError, isWorkspaceEmail } from '@/lib/parishes/access-policy'
+import { loadAccessExceptions } from '@/lib/parishes/access-exceptions'
 import { siteBaseUrl } from '@/lib/site-server'
 import { ZONE_CATEGORIES, ZONE_STATUSES } from './access'
 
@@ -13,8 +14,8 @@ export interface ZoneMember {
   category: string
   status: string
   email: string | null
-  /** odkiaľ je e-mail: účet, pracovný, súkromný */
-  email_source: 'account' | 'work' | null
+  /** odkiaľ je e-mail: výnimka (075), účet, diecézny z registra */
+  email_source: 'exception' | 'account' | 'work' | null
   auth_user_id: string | null
   account_active: boolean
   invited_at: string | null
@@ -34,6 +35,7 @@ export async function listZoneMembers(db: SupabaseClient): Promise<ZoneMember[]>
     .order('last_name')
     .order('first_name')
   const rows = data ?? []
+  const ex = await loadAccessExceptions(db)
   // e-maily a aktivita účtov (auth) – len pre tých, čo účet majú
   const accounts = new Map<string, User>()
   if (rows.some((r) => r.auth_user_id)) {
@@ -48,14 +50,16 @@ export async function listZoneMembers(db: SupabaseClient): Promise<ZoneMember[]>
     const acc = r.auth_user_id ? accounts.get(r.auth_user_id) : undefined
     // pozvánka len na diecéznu adresu (@dcza.sk, Google Workspace); súkromný e-mail sa nepoužíva
     const work = r.work_email && !accessEmailError(r.work_email) ? r.work_email : null
-    const email = acc?.email ?? work ?? null
+    // výnimka priradená kňazovi (napr. biskup s adresou kbs.sk) má prednosť – pozvánka ho na ňu prepojí
+    const exEmail = ex.byClergy.get(r.id) ?? null
+    const email = exEmail ?? acc?.email ?? work ?? null
     return {
       clergy_id: r.id,
       name: [r.title_before, r.first_name, r.last_name].filter(Boolean).join(' '),
       category: r.category,
       status: r.status,
       email: email?.trim().toLowerCase() || null,
-      email_source: acc?.email ? 'account' : work ? 'work' : null,
+      email_source: exEmail ? 'exception' : acc?.email ? 'account' : work ? 'work' : null,
       auth_user_id: r.auth_user_id,
       account_active: !!acc?.last_sign_in_at,
       invited_at: r.zone_invited_at,
@@ -107,9 +111,10 @@ export async function inviteClergyToZone(
     user = data?.user ?? null
   }
   // e-mail z registra má prednosť pred doterajším účtom – po zmene adresy (napr. alias → hlavná schránka) sa kňaz prepojí na nový účet
-  const email = (opts.email?.trim() || c.work_email || user?.email || '').toLowerCase()
+  const ex = await loadAccessExceptions(db)
+  const email = (opts.email?.trim() || ex.byClergy.get(clergyId) || c.work_email || user?.email || '').toLowerCase()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Chýba e-mail – doplňte diecézny e-mail (@dcza.sk) v registri alebo ho zadajte.' }
-  const emailError = accessEmailError(email, 'kňazskej zóny')
+  const emailError = accessEmailError(email, 'kňazskej zóny', ex.emails)
   if (emailError) return { success: false, error: emailError }
 
   if (!user || user.email?.toLowerCase() !== email) user = await findAuthUserByEmail(db, email)

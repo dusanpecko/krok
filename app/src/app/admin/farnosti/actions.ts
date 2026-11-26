@@ -19,6 +19,7 @@ import {
 } from '@/lib/parishes/types'
 import { RESERVED_SUBDOMAINS } from '@/lib/site'
 import { accessEmailError, isWorkspaceEmail } from '@/lib/parishes/access-policy'
+import { loadAccessExceptions } from '@/lib/parishes/access-exceptions'
 
 /**
  * Admin modul farností (návrh farností § 6.1, fáza F2).
@@ -321,7 +322,7 @@ export async function grantParishAccess(
   const admin = db()
   const email = input.email?.trim().toLowerCase()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Zadajte platný e-mail.' }
-  const emailError = accessEmailError(email)
+  const emailError = accessEmailError(email, undefined, (await loadAccessExceptions(admin)).emails)
   if (emailError) return { success: false, error: emailError }
   const role = input.role === 'editor' ? 'editor' : 'admin'
 

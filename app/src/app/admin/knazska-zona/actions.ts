@@ -328,3 +328,79 @@ export async function inviteZoneMember(clergyId: string, opts: { email?: string 
     return fail(err)
   }
 }
+
+// ------------------------------------------------------------ výnimky z @dcza.sk (075)
+
+export interface AccessExceptionRow {
+  email: string
+  clergy_id: string | null
+  clergy_name: string | null
+  note: string | null
+  created_at: string
+  /** účet už existuje a prihlásil sa */
+  activated: boolean
+}
+
+/** Biskupi, rehoľníci a pod. – adresy mimo @dcza.sk, ktoré smú dostať prístup (prihlásenie e-mailom a heslom). */
+export async function getAccessExceptions(): Promise<AccessExceptionRow[]> {
+  await requirePermission(PERM)
+  const db = zoneDb()
+  const { data } = await db
+    .from('access_email_exceptions')
+    .select('email, clergy_id, note, created_at, clergy(title_before, first_name, last_name)')
+    .order('created_at')
+  const signedIn = new Set<string>()
+  for (let page = 1; page <= 50; page++) {
+    const { data: list, error } = await db.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) break
+    for (const u of list.users) if (u.last_sign_in_at && u.email) signedIn.add(u.email.toLowerCase())
+    if (list.users.length < 1000) break
+  }
+  return (data ?? []).map((r) => {
+    const c = r.clergy as unknown as { title_before: string | null; first_name: string; last_name: string } | null
+    return {
+      email: r.email,
+      clergy_id: r.clergy_id,
+      clergy_name: c ? [c.title_before, c.first_name, c.last_name].filter(Boolean).join(' ') : null,
+      note: r.note,
+      created_at: r.created_at,
+      activated: signedIn.has(r.email),
+    }
+  })
+}
+
+export async function saveAccessException(input: { email: string; clergyId?: string | null; note?: string | null; previousEmail?: string | null }): Promise<Result> {
+  try {
+    const { user } = await requirePermission(PERM)
+    const email = input.email?.trim().toLowerCase()
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Zadajte platný e-mail.' }
+    if (email.endsWith('@dcza.sk')) return { success: false, error: 'Adresy @dcza.sk výnimku nepotrebujú.' }
+    const db = zoneDb()
+    const row = { email, clergy_id: input.clergyId || null, note: input.note?.trim().slice(0, 200) || null }
+    const prev = input.previousEmail?.trim().toLowerCase()
+    const { error } = prev
+      ? await db.from('access_email_exceptions').update(row).eq('email', prev)
+      : await db.from('access_email_exceptions').insert({ ...row, created_by: user.id })
+    if (error) {
+      if (error.code === '23505') return { success: false, error: error.message.includes('clergy') ? 'Táto osoba už výnimku má.' : 'Táto adresa už medzi výnimkami je.' }
+      return { success: false, error: 'Výnimku sa nepodarilo uložiť.' }
+    }
+    revalidatePath('/admin/knazska-zona')
+    return { success: true }
+  } catch (err) {
+    return fail(err)
+  }
+}
+
+/** Odobratie výnimky nezruší existujúce prístupy – len nové pozvánky na túto adresu už nepôjdu. */
+export async function deleteAccessException(email: string): Promise<Result> {
+  try {
+    await requirePermission(PERM)
+    const { error } = await zoneDb().from('access_email_exceptions').delete().eq('email', email.trim().toLowerCase())
+    if (error) return { success: false, error: 'Výnimku sa nepodarilo odobrať.' }
+    revalidatePath('/admin/knazska-zona')
+    return { success: true }
+  } catch (err) {
+    return fail(err)
+  }
+}
